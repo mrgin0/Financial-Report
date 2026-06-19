@@ -6,42 +6,43 @@
   <title>Laporan Keuangan Pribadi - Dinamis</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <aside class="sidebar">
-    <div class="brand-mini">▥</div>
+    <div class="brand-mini"><i data-lucide="bar-chart-3"></i></div>
     <nav>
-      <button class="nav-link active" data-page="dashboard">⌂ <span>Dashboard</span></button>
+      <button class="nav-link active" data-page="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
       <p>LAPORAN KEUANGAN</p>
-      <button class="nav-link" data-page="laporan">▧ <span>Laporan Posisi Keuangan</span></button>
+      <button class="nav-link" data-page="laporan"><i data-lucide="clipboard-list"></i><span>Laporan Posisi Keuangan</span></button>
       <p>MASTER DATA</p>
-      <button class="nav-link" data-page="receivable">♚ <span>Accounts Receivable</span></button>
-      <button class="nav-link" data-page="ppe">▣ <span>Property, Plant & Equipment</span></button>
-      <button class="nav-link" data-page="investment">◔ <span>Investment</span></button>
-      <button class="nav-link" data-page="accounts">☷ <span>Master Akun</span></button>
+      <button class="nav-link" data-page="receivable"><i data-lucide="users-round"></i><span>Accounts Receivable</span></button>
+      <button class="nav-link" data-page="ppe"><i data-lucide="building-2"></i><span>Property, Plant & Equipment</span></button>
+      <button class="nav-link" data-page="investment"><i data-lucide="pie-chart"></i><span>Investment</span></button>
+      <button class="nav-link" data-page="accounts"><i data-lucide="database"></i><span>Master Akun</span></button>
       <p>ANALISIS</p>
-      <button class="nav-link" data-page="dashboard">⌁ <span>Growth Aset</span></button>
-      <button class="nav-link" data-page="dashboard">◕ <span>Alokasi Uang</span></button>
-      <button class="nav-link" data-page="dashboard">◕ <span>Investment Gain</span></button>
+      <button class="nav-link" data-page="dashboard"><i data-lucide="trending-up"></i><span>Growth Aset</span></button>
+      <button class="nav-link" data-page="dashboard"><i data-lucide="wallet-cards"></i><span>Alokasi Uang</span></button>
+      <button class="nav-link" data-page="dashboard"><i data-lucide="chart-no-axes-combined"></i><span>Investment Gain</span></button>
     </nav>
   </aside>
 
   <main>
     <header class="topbar">
-      <h1><span class="logo">▥</span>Laporan Keuangan Pribadi</h1>
+      <h1><span class="logo"><i data-lucide="bar-chart-3"></i></span>Laporan Keuangan Pribadi</h1>
       <div class="top-actions">
-        <button id="darkBtn">☾ Dark</button>
+        <button id="darkBtn"><i data-lucide="moon"></i> Dark</button>
         <span class="pill">no-login mode</span>
         <span class="logout">Supabase Ready</span>
       </div>
     </header>
 
     <section class="cards">
-      <div class="card stat"><div><p>TOTAL ASET</p><h2 id="totalAsset">$0</h2></div><b class="blue">⌁</b></div>
-      <div class="card stat"><div><p>TOTAL CURRENT ASSET</p><h2 id="currentAsset">$0</h2></div><b class="green">▣</b></div>
-      <div class="card stat"><div><p>TOTAL NON CURRENT ASSET</p><h2 id="nonCurrentAsset">$0</h2></div><b class="orange">▥</b></div>
-      <div class="card stat"><div><p>TOTAL ASSET HARI INI</p><h2 id="todayAsset">$0</h2></div><b class="purple">◉</b></div>
+      <div class="card stat"><div><p>TOTAL ASET</p><h2 id="totalAsset">$0</h2></div><b class="stat-icon blue"><i data-lucide="trending-up"></i></b></div>
+      <div class="card stat"><div><p>TOTAL CURRENT ASSET</p><h2 id="currentAsset">$0</h2></div><b class="stat-icon green"><i data-lucide="wallet"></i></b></div>
+      <div class="card stat"><div><p>TOTAL NON CURRENT ASSET</p><h2 id="nonCurrentAsset">$0</h2></div><b class="stat-icon orange"><i data-lucide="building-2"></i></b></div>
+      <div class="card stat"><div><p>TOTAL ASSET HARI INI</p><h2 id="todayAsset">$0</h2></div><b class="stat-icon purple"><i data-lucide="coins"></i></b></div>
     </section>
 
     <section id="dashboard" class="page active grid-main">
