@@ -134,6 +134,16 @@ body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text
 .badge-red { background:#fef2f2; color:#dc2626; }
 .badge-blue { background:#eff6ff; color:#2563eb; }
 
+/* DETAIL REPORT */
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
+.detail-list { font-size:12.5px; }
+.detail-row { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); }
+.detail-row:last-child { border-bottom:none; }
+.detail-name { color:var(--text); font-weight:600; }
+.detail-meta { color:var(--text-muted); font-size:11px; margin-top:2px; }
+.detail-empty { color:var(--text-muted); font-size:12px; padding:10px 0; }
+@media(max-width:900px){ .detail-grid { grid-template-columns:1fr; } }
+
 /* PAGE */
 .page { display:none; }
 .page.active { display:block; }
@@ -258,7 +268,7 @@ body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text
               <div class="card-subtitle" id="dash-report-month" style="margin-top:2px;font-size:13px;">—</div>
             </div>
             <div class="card-date-wrap">
-              Tanggal <input type="date" id="dash-report-date" value="2026-06-17" onchange="onDashDateChange(this.value)">
+              Bulan <input type="month" id="dash-report-date" onchange="onDashDateChange(this.value)">
             </div>
           </div>
           <div id="fin-report-dash"></div>
@@ -268,10 +278,12 @@ body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text
         <div class="card">
           <div class="card-header">
             <span class="card-title">History Growth Aset</span>
-            <select class="select-period" onchange="updateGrowthChart(this.value)">
-              <option value="30">30 Hari Terakhir</option>
+            <select class="select-period" id="growth-period" onchange="updateGrowthChart(this.value)">
+              <option value="1">1 Hari Terakhir</option>
               <option value="7">7 Hari Terakhir</option>
-              <option value="90">90 Hari Terakhir</option>
+              <option value="30" selected>30 Hari Terakhir</option>
+              <option value="365">1 Tahun Terakhir</option>
+              <option value="all">All</option>
             </select>
           </div>
           <canvas id="growthChart" height="170"></canvas>
@@ -294,9 +306,12 @@ body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text
         <div class="card">
           <div class="card-header">
             <span class="card-title">History Growth Receivable</span>
-            <select class="select-period" onchange="updateReceivableChart(this.value)">
-              <option value="30">30 Hari Terakhir</option>
+            <select class="select-period" id="receivable-period" onchange="updateReceivableChart(this.value)">
+              <option value="1">1 Hari Terakhir</option>
               <option value="7">7 Hari Terakhir</option>
+              <option value="30" selected>30 Hari Terakhir</option>
+              <option value="365">1 Tahun Terakhir</option>
+              <option value="all">All</option>
             </select>
           </div>
           <canvas id="receivableChart" height="150"></canvas>
@@ -312,9 +327,12 @@ body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text
         <div class="card">
           <div class="card-header">
             <span class="card-title">Investment Gain</span>
-            <select class="select-period" onchange="updateGainChart(this.value)">
-              <option value="30">30 Hari Terakhir</option>
+            <select class="select-period" id="gain-period" onchange="updateGainChart(this.value)">
+              <option value="1">1 Hari Terakhir</option>
               <option value="7">7 Hari Terakhir</option>
+              <option value="30" selected>30 Hari Terakhir</option>
+              <option value="365">1 Tahun Terakhir</option>
+              <option value="all">All</option>
             </select>
           </div>
           <canvas id="gainChart" height="150"></canvas>
@@ -331,12 +349,13 @@ body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text
             <div class="card-subtitle" id="laporan-month-title" style="margin-top:3px;font-size:15px;font-weight:700;">—</div>
           </div>
           <div class="card-date-wrap">
-            Tanggal <input type="date" id="laporan-date" value="2026-06-17" onchange="onLaporanDateChange(this.value)">
+            Bulan <input type="month" id="laporan-date" onchange="onLaporanDateChange(this.value)">
           </div>
         </div>
         <div id="fin-report-full"></div>
         <button class="btn-save" onclick="saveReport()">Simpan Laporan</button>
       </div>
+      <div id="laporan-detail-cards" style="margin-top:14px;"></div>
     </div>
 
     <!-- ═══ CURRENT ASSET (Cash, Bank, Tiktok, dll) ═══ -->
@@ -436,8 +455,6 @@ body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text
 const SUPABASE_URL =  'https://prybtaghmbajrahijrjt.supabase.co/rest/v1/'; 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByeWJ0YWdobWJhanJhaGlqcmp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTc0NDMsImV4cCI6MjA5NzIzMzQ0M30.kALEkLvw4a4aQYEgnYvdajUP4YG1yvjKfhPqBaakAnM';
 
-  
-
 const USE_SUPABASE = SUPABASE_URL && SUPABASE_ANON_KEY;
 const supabaseClient = USE_SUPABASE ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
@@ -474,9 +491,9 @@ const defaultState = () => ({
     { id:1, name:'Aset Tak Berwujud', amount:0, date:todayISO() },
   ],
   investments: [
-    { id:1, name:'Saham', type:'Saham', amount:0, gain:0 },
-    { id:2, name:'Crypto', type:'Crypto', amount:0, gain:0 },
-    { id:3, name:'Emas', type:'Emas', amount:0, gain:0 },
+    { id:1, name:'Saham', type:'Saham', amount:0, gain:0, date:todayISO() },
+    { id:2, name:'Crypto', type:'Crypto', amount:0, gain:0, date:todayISO() },
+    { id:3, name:'Emas', type:'Emas', amount:0, gain:0, date:todayISO() },
   ],
   history: [],
   prevMonth: { total:0, current:0, nonCurrent:0 }
@@ -540,18 +557,17 @@ async function persistState({toast=false} = {}) {
 }
 
 function recordSnapshot() {
-  const snap = {
-    date: todayISO(),
-    total: totalAsset(),
-    current: totalCurrentAsset(),
-    receivable: totalAR(),
-    gain: totalGain(),
-    investment: totalInv()
-  };
+  const snap = snapshotForDate(todayISO());
+  // Simpan juga total saat ini supaya dashboard tetap menangkap kondisi terbaru harian.
+  snap.total = totalAsset();
+  snap.current = totalCurrentAsset();
+  snap.receivable = totalAR();
+  snap.gain = totalGain();
+  snap.investment = totalInv();
   const idx = state.history.findIndex(x => x.date === snap.date);
   if (idx >= 0) state.history[idx] = snap;
   else state.history.push(snap);
-  state.history = state.history.slice(-180);
+  state.history.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
 }
 
 // ════════════════════════════════════════
@@ -575,12 +591,64 @@ const fmtSigned = v => (n(v)>=0?'+':'-')+'$'+Math.abs(n(v)).toFixed(2);
 
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
+function normalizeDateInput(value) {
+  if (!value) return todayISO();
+  // input type=month menghasilkan format YYYY-MM. Kita pakai tanggal 01 untuk kalkulasi bulan.
+  if (/^\d{4}-\d{2}$/.test(value)) return value + '-01';
+  return value;
+}
+function monthKey(value) { return normalizeDateInput(value).slice(0,7); }
 function monthLabel(dateStr) {
   if (!dateStr) return '—';
-  const d = new Date(dateStr + 'T00:00:00');
+  const d = new Date(normalizeDateInput(dateStr) + 'T00:00:00');
   return MONTHS_ID[d.getMonth()] + ' ' + d.getFullYear();
 }
-
+function isSameMonth(dateValue, selectedValue) {
+  return monthKey(dateValue || todayISO()) === monthKey(selectedValue || todayISO());
+}
+function filterByMonth(items, selectedValue) {
+  return (items || []).filter(x => isSameMonth(x.date, selectedValue));
+}
+function sumItems(items) { return (items || []).reduce((a,x)=>a+n(x.amount),0); }
+function reportData(selectedValue) {
+  const ca = filterByMonth(state.currentAssets, selectedValue);
+  const ar = filterByMonth(state.ar, selectedValue);
+  const inventory = filterByMonth(state.inventoryItems, selectedValue);
+  const ppe = filterByMonth(state.ppe, selectedValue);
+  const intangible = filterByMonth(state.intangibles, selectedValue);
+  const investments = filterByMonth(state.investments, selectedValue);
+  const cash = sumItems(ca);
+  const receivable = sumItems(ar);
+  const invStock = sumItems(inventory);
+  const current = cash + receivable + invStock;
+  const ppeTotal = sumItems(ppe);
+  const investmentTotal = sumItems(investments);
+  const intangibleTotal = sumItems(intangible);
+  const nonCurrent = ppeTotal + investmentTotal + intangibleTotal;
+  const gain = (investments || []).reduce((a,x)=>a+n(x.gain),0);
+  return { ca, ar, inventory, ppe, intangible, investments, cash, receivable, invStock, current, ppeTotal, investmentTotal, intangibleTotal, nonCurrent, total: current + nonCurrent, gain };
+}
+function itemsUntil(items, isoDate) {
+  const limit = normalizeDateInput(isoDate);
+  return (items || []).filter(x => normalizeDateInput(x.date || todayISO()) <= limit);
+}
+function snapshotForDate(isoDate) {
+  // Untuk chart: hitung progres kumulatif sampai tanggal tersebut, jadi garis bisa naik/turun sesuai tanggal input.
+  const ca = itemsUntil(state.currentAssets, isoDate);
+  const ar = itemsUntil(state.ar, isoDate);
+  const inventory = itemsUntil(state.inventoryItems, isoDate);
+  const ppe = itemsUntil(state.ppe, isoDate);
+  const intangible = itemsUntil(state.intangibles, isoDate);
+  const investments = itemsUntil(state.investments, isoDate);
+  const cash = sumItems(ca);
+  const receivable = sumItems(ar);
+  const invStock = sumItems(inventory);
+  const current = cash + receivable + invStock;
+  const investment = sumItems(investments);
+  const nonCurrent = sumItems(ppe) + investment + sumItems(intangible);
+  const gain = investments.reduce((a,x)=>a+n(x.gain),0);
+  return { date: isoDate, total: current + nonCurrent, current, receivable, gain, investment };
+}
 function safeItems(items, fallbackLabel='Belum ada data') {
   const filtered = items.filter(x => n(x.value) > 0);
   return filtered.length ? filtered : [{ label:fallbackLabel, value:0 }];
@@ -637,22 +705,56 @@ function renderFinReport(targetId, dateStr) {
   const el = document.getElementById(targetId);
   if(!el) return;
   const label = monthLabel(dateStr);
+  const r = reportData(dateStr);
   el.innerHTML = `
 <div class="fin-table">
   <div class="fin-section-label">A. Current Asset</div>
-  <div class="fin-row"><span class="fn">1.</span><span class="fl">Cash and cash equivalents</span><span class="fv">${fmt(cashEquiv())}</span></div>
-  ${state.currentAssets.map(c=>`<div class="fin-row indent1"><span class="fn"></span><span class="fl">- ${c.name || 'Tanpa nama'}</span><span class="fv">${fmt(c.amount)}</span></div>`).join('')}
-  <div class="fin-row subtotal"><span class="fn"><b>2.</b></span><span class="fl"><b>Total Cash and equivalent</b></span><span class="fv"><b>${fmt(cashEquiv())}</b></span></div>
-  <div class="fin-row"><span class="fn">3.</span><span class="fl">Accounts receivable</span><span class="fv">${fmt(totalAR())}</span></div>
-  <div class="fin-row"><span class="fn">4.</span><span class="fl">Inventory</span><span class="fv">${fmt(totalInventory())}</span></div>
-  <div class="fin-row subtotal"><span class="fn"><b>5.</b></span><span class="fl"><b>Total Current Asset</b></span><span class="fv"><b>${fmt(totalCurrentAsset())}</b></span></div>
+  <div class="fin-row"><span class="fn">1.</span><span class="fl">Cash and cash equivalents</span><span class="fv">${fmt(r.cash)}</span></div>
+  ${r.ca.map(c=>`<div class="fin-row indent1"><span class="fn"></span><span class="fl">- ${c.name || 'Tanpa nama'}</span><span class="fv">${fmt(c.amount)}</span></div>`).join('') || `<div class="fin-row indent1"><span class="fn"></span><span class="fl">- Belum ada data bulan ini</span><span class="fv">${fmt(0)}</span></div>`}
+  <div class="fin-row subtotal"><span class="fn"><b>2.</b></span><span class="fl"><b>Total Cash and equivalent</b></span><span class="fv"><b>${fmt(r.cash)}</b></span></div>
+  <div class="fin-row"><span class="fn">3.</span><span class="fl">Accounts receivable</span><span class="fv">${fmt(r.receivable)}</span></div>
+  <div class="fin-row"><span class="fn">4.</span><span class="fl">Inventory</span><span class="fv">${fmt(r.invStock)}</span></div>
+  <div class="fin-row subtotal"><span class="fn"><b>5.</b></span><span class="fl"><b>Total Current Asset</b></span><span class="fv"><b>${fmt(r.current)}</b></span></div>
   <div class="fin-section-label" style="margin-top:8px;">B. Non Current Asset</div>
-  <div class="fin-row"><span class="fn">6.</span><span class="fl">Property, plant and equipment</span><span class="fv">${fmt(totalPPE())}</span></div>
-  <div class="fin-row"><span class="fn">7.</span><span class="fl">Investment</span><span class="fv">${fmt(totalInv())}</span></div>
-  <div class="fin-row"><span class="fn">8.</span><span class="fl">Intangible assets</span><span class="fv">${fmt(totalIntangible())}</span></div>
-  <div class="fin-row subtotal"><span class="fn"><b>9.</b></span><span class="fl"><b>Total Non-current Asset</b></span><span class="fv"><b>${fmt(totalNonCurrent())}</b></span></div>
-  <div class="fin-row total-final"><span class="fn"><b>10.</b></span><span class="fl"><b>TOTAL ASSET — ${label}</b></span><span class="fv"><b>${fmt(totalAsset())}</b></span></div>
+  <div class="fin-row"><span class="fn">6.</span><span class="fl">Property, plant and equipment</span><span class="fv">${fmt(r.ppeTotal)}</span></div>
+  <div class="fin-row"><span class="fn">7.</span><span class="fl">Investment</span><span class="fv">${fmt(r.investmentTotal)}</span></div>
+  <div class="fin-row"><span class="fn">8.</span><span class="fl">Intangible assets</span><span class="fv">${fmt(r.intangibleTotal)}</span></div>
+  <div class="fin-row subtotal"><span class="fn"><b>9.</b></span><span class="fl"><b>Total Non-current Asset</b></span><span class="fv"><b>${fmt(r.nonCurrent)}</b></span></div>
+  <div class="fin-row total-final"><span class="fn"><b>10.</b></span><span class="fl"><b>TOTAL ASSET — ${label}</b></span><span class="fv"><b>${fmt(r.total)}</b></span></div>
 </div>`;
+  if (targetId === 'fin-report-full') renderReportDetails(dateStr);
+}
+
+function detailRows(items, fields='default') {
+  if (!items || !items.length) return `<div class="detail-empty">Belum ada data pada bulan ini.</div>`;
+  return `<div class="detail-list">` + items.map(x => {
+    let meta = x.date || '';
+    if (fields === 'ar') meta += x.status ? ` • ${x.status}` : '';
+    if (fields === 'inv') meta += x.type ? ` • ${x.type} • Gain/Loss ${fmtSigned(x.gain)}` : ` • Gain/Loss ${fmtSigned(x.gain)}`;
+    if (fields === 'ca') meta += x.category ? ` • ${x.category}` : '';
+    return `<div class="detail-row"><div><div class="detail-name">${x.name || 'Tanpa nama'}</div><div class="detail-meta">${meta}</div></div><strong>${fmt(x.amount)}</strong></div>`;
+  }).join('') + `</div>`;
+}
+
+function detailCard(title, subtitle, html, total) {
+  return `<div class="card"><div class="card-header"><div><div class="card-title">${title}</div><div class="card-subtitle" style="font-size:13px;margin-top:3px;">${subtitle}</div></div><strong>${fmt(total)}</strong></div>${html}</div>`;
+}
+
+function renderReportDetails(dateStr) {
+  const target = document.getElementById('laporan-detail-cards');
+  if (!target) return;
+  const r = reportData(dateStr);
+  target.innerHTML = `
+    <div class="detail-grid">
+      ${detailCard('Detail Total Cash and Equivalent', 'Cash, bank, platform, dan kas lain', detailRows(r.ca, 'ca'), r.cash)}
+      ${detailCard('Detail Accounts Receivable', 'Isi laporan piutang bulan ini', detailRows(r.ar, 'ar'), r.receivable)}
+      ${detailCard('Detail Inventory', 'Isi laporan inventory bulan ini', detailRows(r.inventory), r.invStock)}
+      ${detailCard('Detail Non Current Asset', 'Property, investment, intangible', `
+        <div class="fin-section-label">Property, plant and equipment</div>${detailRows(r.ppe)}
+        <div class="fin-section-label">Investment</div>${detailRows(r.investments, 'inv')}
+        <div class="fin-section-label">Intangible assets</div>${detailRows(r.intangible)}
+      `, r.nonCurrent)}
+    </div>`;
 }
 
 // ════════════════════════════════════════
@@ -664,7 +766,8 @@ function setChangeBadge(elId, valId, current, prev) {
   const vEl = document.getElementById(valId);
   if(!el||!vEl) return;
   el.className = 'stat-change ' + (diff>=0?'up':'down');
-  vEl.textContent = (diff>=0?'↑ ':'↓ ') + fmtSigned(diff) + ' dari bulan lalu';
+  const pct = n(prev) === 0 ? (diff === 0 ? 0 : 100) : (diff / Math.abs(n(prev))) * 100;
+  vEl.textContent = (diff>=0?'↑ ':'↓ ') + fmtSigned(diff) + ' (' + pct.toFixed(1).replace('.0','') + '%) dari bulan lalu';
 }
 
 function updateStats() {
@@ -681,7 +784,7 @@ function updateStats() {
 
   const dashDate = document.getElementById('dash-report-date').value;
   const laporanDate = document.getElementById('laporan-date').value;
-  document.getElementById('dash-report-month').textContent = monthLabel(dashDate);
+  document.getElementById('dash-report-month').textContent = 'Laporan Bulan ' + monthLabel(dashDate);
   document.getElementById('laporan-month-title').textContent = 'Laporan Bulan ' + monthLabel(laporanDate);
   renderFinReport('fin-report-dash', dashDate);
   renderFinReport('fin-report-full', laporanDate);
@@ -697,25 +800,42 @@ async function saveReport() {
 // ════════════════════════════════════════
 // CHARTS — DINAMIS SESUAI INPUT, TANPA RANDOM
 // ════════════════════════════════════════
-function genDates(nDays) {
+function allRelevantDates() {
+  const dates = [];
+  ['currentAssets','ar','inventoryItems','ppe','intangibles','investments'].forEach(k => (state[k] || []).forEach(x => dates.push(x.date || todayISO())));
+  (state.history || []).forEach(x => dates.push(x.date || todayISO()));
+  dates.push(todayISO());
+  return [...new Set(dates.map(x => normalizeDateInput(x)))].sort();
+}
+function genDates(period) {
+  if (period === 'all') {
+    const dates = allRelevantDates();
+    const first = dates[0] || todayISO();
+    const last = dates[dates.length-1] || todayISO();
+    const out = [];
+    let d = new Date(first + 'T00:00:00');
+    const end = new Date(last + 'T00:00:00');
+    while (d <= end) {
+      out.push({iso:d.toISOString().slice(0,10), label:d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'2-digit'})});
+      d.setDate(d.getDate()+1);
+    }
+    return out.length ? out : [{iso:todayISO(), label:'Hari ini'}];
+  }
+  const nDays = Math.max(1, parseInt(period,10) || 30);
   const d=[];
   const now=new Date();
   for(let i=nDays-1;i>=0;i--){
     const dd=new Date(now); dd.setDate(dd.getDate()-i);
-    d.push({
-      iso: dd.toISOString().slice(0,10),
-      label: dd.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})
-    });
+    d.push({ iso: dd.toISOString().slice(0,10), label: dd.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) });
   }
   return d;
 }
-
-function historySeries(days, key, fallbackValue=0) {
-  const labels = genDates(+days);
-  const map = new Map((state.history || []).map(x => [x.date, x]));
+function historySeries(period, key) {
+  const labels = genDates(period);
+  const map = new Map((state.history || []).map(x => [normalizeDateInput(x.date), x]));
   return {
     labels: labels.map(x=>x.label),
-    values: labels.map(x => n(map.get(x.iso)?.[key] ?? fallbackValue))
+    values: labels.map(x => n(map.get(x.iso)?.[key] ?? snapshotForDate(x.iso)[key]))
   };
 }
 
@@ -723,24 +843,36 @@ function chartTextColor() {
   return getComputedStyle(document.body).getPropertyValue('--text-muted').trim() || '#6b7280';
 }
 
-function createOrUpdateLineChart(id, chartKey, label, values, labels) {
+function createOrUpdateLineChart(id, chartKey, label, values, labels, mode='blue') {
   const ctx=document.getElementById(id).getContext('2d');
+  const dataset = {
+    label,
+    data:values,
+    borderColor: mode === 'gain' ? '#22c55e' : '#2563eb',
+    backgroundColor: mode === 'gain' ? 'rgba(34,197,94,.10)' : 'rgba(37,99,235,.08)',
+    tension:.35,
+    pointRadius:3,
+    fill: mode === 'gain' ? {target:'origin', above:'rgba(34,197,94,.16)', below:'rgba(239,68,68,.16)'} : true,
+    segment: mode === 'gain' ? { borderColor: ctx => ((ctx.p0.parsed.y + ctx.p1.parsed.y) / 2) >= 0 ? '#22c55e' : '#ef4444' } : undefined,
+    pointBackgroundColor: mode === 'gain' ? values.map(v=>v>=0?'#22c55e':'#ef4444') : undefined
+  };
   if(charts[chartKey]) {
     charts[chartKey].data.labels = labels;
-    charts[chartKey].data.datasets[0].data = values;
+    charts[chartKey].data.datasets[0] = dataset;
+    charts[chartKey].options.scales.y.beginAtZero = mode !== 'gain';
     charts[chartKey].update();
     return;
   }
   charts[chartKey]=new Chart(ctx,{
     type:'line',
-    data:{labels,datasets:[{label,data:values,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',tension:.35,pointRadius:3,fill:true}]},
-    options:{responsive:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:11}}}},scales:{x:{ticks:{maxTicksLimit:6,font:{size:10,color:chartTextColor()}}},y:{beginAtZero:true,ticks:{callback:v=>'$'+v,font:{size:10,color:chartTextColor()}}}}}
+    data:{labels,datasets:[dataset]},
+    options:{responsive:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:11}}}},scales:{x:{ticks:{maxTicksLimit:6,font:{size:10,color:chartTextColor()}}},y:{beginAtZero:mode !== 'gain',ticks:{callback:v=>'$'+v,font:{size:10,color:chartTextColor()}}}}}
   });
 }
 
-function initGrowthChart(){ updateGrowthChart(30); }
-function updateGrowthChart(days){
-  const s = historySeries(days, 'total', totalAsset());
+function initGrowthChart(){ updateGrowthChart(document.getElementById('growth-period')?.value || 30); }
+function updateGrowthChart(period){
+  const s = historySeries(period, 'total');
   createOrUpdateLineChart('growthChart','growth','Total Asset',s.values,s.labels);
 }
 
@@ -772,32 +904,24 @@ function updateInvestChart(){
   else{const ctx=document.getElementById('investChart').getContext('2d');charts.invest=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:values,backgroundColor:bg,borderWidth:2}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false}}}});}
 }
 
-function initReceivableChart(){ updateReceivableChart(30); }
-function updateReceivableChart(days){
-  const s = historySeries(days, 'receivable', totalAR());
+function initReceivableChart(){ updateReceivableChart(document.getElementById('receivable-period')?.value || 30); }
+function updateReceivableChart(period){
+  const s = historySeries(period, 'receivable');
   createOrUpdateLineChart('receivableChart','receivable','Total Receivable',s.values,s.labels);
 }
 
-function initGainChart(){ updateGainChart(30); }
-function updateGainChart(days){
-  const s = historySeries(days, 'gain', totalGain());
-  const ctx=document.getElementById('gainChart').getContext('2d');
-  if(charts.gain){
-    charts.gain.data.labels=s.labels;
-    charts.gain.data.datasets[0].data=s.values;
-    charts.gain.data.datasets[0].backgroundColor=s.values.map(v=>v>=0?'#22c55e':'#ef4444');
-    charts.gain.update();
-    return;
-  }
-  charts.gain=new Chart(ctx,{type:'bar',data:{labels:s.labels,datasets:[{label:'Gain / Loss',data:s.values,backgroundColor:s.values.map(v=>v>=0?'#22c55e':'#ef4444'),borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:11}}}},scales:{x:{ticks:{maxTicksLimit:6,font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>'$'+v,font:{size:10}}}}}});
+function initGainChart(){ updateGainChart(document.getElementById('gain-period')?.value || 30); }
+function updateGainChart(period){
+  const s = historySeries(period, 'gain');
+  createOrUpdateLineChart('gainChart','gain','Investment Gain / Loss',s.values,s.labels,'gain');
 }
 
 function updateAllCharts() {
-  updateGrowthChart(document.querySelector('#growthChart')?.closest('.card')?.querySelector('select')?.value || 30);
+  updateGrowthChart(document.getElementById('growth-period')?.value || 30);
   updateAlokasiChart();
-  updateReceivableChart(30);
+  updateReceivableChart(document.getElementById('receivable-period')?.value || 30);
   updateInvestChart();
-  updateGainChart(30);
+  updateGainChart(document.getElementById('gain-period')?.value || 30);
 }
 
 // ════════════════════════════════════════
@@ -873,7 +997,8 @@ const MODAL_FORMS = {
     <div class="form-group"><label>Nama Investasi</label><input id="f-name" value="${row?row.name:''}"></div>
     <div class="form-group"><label>Tipe</label><select id="f-type">${['Saham','Reksa Dana','Crypto','Emas','Obligasi','Lainnya'].map(t=>`<option ${row&&row.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
     <div class="form-group"><label>Nilai ($)</label><input id="f-amount" type="number" step="0.01" value="${row?n(row.amount):0}"></div>
-    <div class="form-group"><label>Gain/Loss ($)</label><input id="f-gain" type="number" step="0.01" value="${row?n(row.gain):0}"></div>`,
+    <div class="form-group"><label>Gain/Loss ($)</label><input id="f-gain" type="number" step="0.01" value="${row?n(row.gain):0}"></div>
+    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${row?row.date:todayISO()}"></div>`,
 };
 
 function getRow(type, id) {
@@ -916,8 +1041,8 @@ async function saveModal(){
   } else if(modalType==='inv'){
     const type=document.getElementById('f-type').value;
     const gain=n(document.getElementById('f-gain')?.value);
-    if(modalEditId){Object.assign(state.investments.find(r=>r.id===modalEditId),{name,type,amount,gain});}
-    else{state.investments.push({id:Date.now(),name,type,amount,gain});}
+    if(modalEditId){Object.assign(state.investments.find(r=>r.id===modalEditId),{name,type,amount,gain,date});}
+    else{state.investments.push({id:Date.now(),name,type,amount,gain,date});}
     renderInvTable();
   }
 
@@ -952,8 +1077,8 @@ function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.
 // ════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', async ()=>{
   const now = todayISO();
-  document.getElementById('dash-report-date').value = now;
-  document.getElementById('laporan-date').value = now;
+  document.getElementById('dash-report-date').value = now.slice(0,7);
+  document.getElementById('laporan-date').value = now.slice(0,7);
   if (localStorage.getItem('finance_dark_mode') === '1') document.body.classList.add('dark');
 
   await loadState();
