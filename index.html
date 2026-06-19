@@ -433,8 +433,10 @@ body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text
 // ════════════════════════════════════════
 // Isi 2 data ini dari Supabase Project Settings > API.
 // Kalau masih kosong, app tetap jalan di GitHub Pages pakai localStorage.
-const SUPABASE_URL = '';
-const SUPABASE_ANON_KEY = '';
+const SUPABASE_URL =  'https://prybtaghmbajrahijrjt.supabase.co/rest/v1/'; 
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByeWJ0YWdobWJhanJhaGlqcmp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTc0NDMsImV4cCI6MjA5NzIzMzQ0M30.kALEkLvw4a4aQYEgnYvdajUP4YG1yvjKfhPqBaakAnM';
+
+  
 
 const USE_SUPABASE = SUPABASE_URL && SUPABASE_ANON_KEY;
 const supabaseClient = USE_SUPABASE ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
