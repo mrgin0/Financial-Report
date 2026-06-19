@@ -1,102 +1,978 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laporan Keuangan Pribadi - Dinamis</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Keuangan Pribadi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#f4f6fa; --sidebar-bg:#fff; --card-bg:#fff; --text:#1a1a2e;
+  --text-muted:#6b7280; --border:#e5e7eb; --primary:#2563eb;
+  --primary-light:#eff6ff; --success:#10b981; --danger:#ef4444;
+  --warning:#f59e0b; --sw:230px; --header-h:56px;
+}
+body.dark {
+  --bg:#0f172a; --sidebar-bg:#1e293b; --card-bg:#1e293b;
+  --text:#f1f5f9; --text-muted:#94a3b8; --border:#334155; --primary-light:#1e3a5f;
+}
+body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; transition:background .3s,color .3s; }
+
+/* HEADER */
+.header { background:var(--card-bg); border-bottom:1px solid var(--border); padding:0 16px; height:var(--header-h); display:flex; align-items:center; justify-content:space-between; position:fixed; top:0; left:0; right:0; z-index:200; }
+.header-left { display:flex; align-items:center; gap:12px; }
+.btn-toggle-sidebar { background:none; border:none; cursor:pointer; color:var(--text); padding:6px; border-radius:7px; display:flex; align-items:center; transition:background .2s; }
+.btn-toggle-sidebar:hover { background:var(--bg); }
+.header-logo { display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px; }
+.header-right { display:flex; align-items:center; gap:10px; }
+.btn-dark { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:5px 12px; font-size:12px; cursor:pointer; color:var(--text); display:flex; align-items:center; gap:5px; }
+.btn-dark:hover { background:var(--border); }
+.user-email { font-size:12px; color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:5px 10px; }
+.btn-logout { background:none; border:none; color:var(--primary); font-size:13px; cursor:pointer; font-weight:600; }
+
+/* LAYOUT */
+.layout { display:flex; margin-top:var(--header-h); min-height:calc(100vh - var(--header-h)); }
+
+/* SIDEBAR */
+.sidebar { width:var(--sw); background:var(--sidebar-bg); border-right:1px solid var(--border); position:fixed; top:var(--header-h); bottom:0; overflow-y:auto; overflow-x:hidden; transition:width .25s ease, transform .25s ease; z-index:150; }
+.sidebar.collapsed { width:0; transform:translateX(-100%); }
+.sidebar-inner { width:var(--sw); }
+.sidebar-section { font-size:10px; font-weight:700; letter-spacing:1px; color:var(--text-muted); padding:14px 18px 5px; text-transform:uppercase; white-space:nowrap; }
+.sidebar-item { display:flex; align-items:center; gap:10px; padding:9px 18px; font-size:13px; cursor:pointer; color:var(--text-muted); transition:all .2s; white-space:nowrap; }
+.sidebar-item:hover, .sidebar-item.active { background:var(--primary-light); color:var(--primary); }
+.sidebar-item svg { width:16px; height:16px; flex-shrink:0; }
+.sidebar-divider { height:1px; background:var(--border); margin:8px 14px; }
+
+/* MAIN */
+.main { margin-left:var(--sw); flex:1; padding:22px; transition:margin-left .25s ease; min-width:0; }
+.main.expanded { margin-left:0; }
+
+/* STAT CARDS */
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
+.stat-card { background:var(--card-bg); border-radius:12px; padding:18px; display:flex; align-items:flex-start; justify-content:space-between; border:1px solid var(--border); }
+.stat-info { flex:1; }
+.stat-label { font-size:10px; color:var(--text-muted); font-weight:700; letter-spacing:.5px; text-transform:uppercase; margin-bottom:5px; }
+.stat-value { font-size:24px; font-weight:700; margin-bottom:5px; }
+.stat-change { font-size:11px; display:flex; align-items:center; gap:3px; font-weight:600; }
+.stat-change.up { color:var(--success); }
+.stat-change.down { color:var(--danger); }
+.stat-change.neutral { color:var(--text-muted); }
+.stat-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.stat-icon.blue { background:#eff6ff; }
+.stat-icon.green { background:#ecfdf5; }
+.stat-icon.orange { background:#fff7ed; }
+.stat-icon.purple { background:#f5f3ff; }
+
+/* CONTENT GRID */
+.content-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.content-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+
+/* CARD */
+.card { background:var(--card-bg); border-radius:12px; border:1px solid var(--border); padding:18px; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+.card-title { font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; }
+.card-subtitle { font-size:14px; font-weight:700; color:var(--text); }
+.card-date-wrap { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); }
+.card-date-wrap input[type=date] { border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:12px; background:var(--bg); color:var(--text); }
+.select-period { border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:12px; background:var(--bg); color:var(--text); cursor:pointer; }
+
+/* FINANCIAL TABLE */
+.fin-table { font-size:12.5px; }
+.fin-section-label { font-weight:700; font-size:11px; letter-spacing:.5px; color:var(--text-muted); padding:10px 0 4px; text-transform:uppercase; }
+.fin-row { display:flex; align-items:center; padding:3px 0; gap:4px; }
+.fin-row.indent1 { padding-left:14px; color:var(--text-muted); }
+.fin-row.indent2 { padding-left:28px; color:var(--text-muted); font-size:12px; }
+.fin-row.subtotal { font-weight:700; padding:6px 0; border-top:1px solid var(--border); margin-top:2px; }
+.fin-row.total-final { font-weight:700; color:var(--primary); background:var(--primary-light); padding:8px 10px; border-radius:6px; margin-top:8px; }
+.fn { font-size:10px; color:var(--text-muted); min-width:18px; }
+.fl { flex:1; }
+.fv { font-weight:600; white-space:nowrap; }
+.btn-save { background:var(--primary); color:#fff; border:none; border-radius:8px; padding:9px 20px; font-size:13px; cursor:pointer; font-weight:600; margin-top:14px; }
+.btn-save:hover { opacity:.9; }
+
+/* DONUT */
+.donut-wrap { display:flex; align-items:center; gap:16px; }
+.donut-canvas { width:120px !important; height:120px !important; flex-shrink:0; }
+.legend-row { display:flex; align-items:center; gap:6px; padding:2.5px 0; font-size:11.5px; }
+.legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.legend-name { flex:1; }
+.legend-pct { color:var(--text-muted); min-width:36px; }
+.legend-val { font-weight:600; min-width:46px; text-align:right; }
+.legend-total { border-top:1px solid var(--border); margin-top:4px; padding-top:4px; display:flex; justify-content:space-between; font-weight:600; font-size:12px; }
+
+/* FOOTER */
+.footer { text-align:center; padding:14px; font-size:11px; color:var(--text-muted); border-top:1px solid var(--border); background:var(--card-bg); margin-left:var(--sw); transition:margin-left .25s ease; }
+.footer.expanded { margin-left:0; }
+.footer a { color:var(--primary); }
+
+/* MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:300; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--card-bg); border-radius:14px; padding:26px; width:460px; max-width:95vw; max-height:85vh; overflow-y:auto; }
+.modal h3 { font-size:16px; font-weight:700; margin-bottom:16px; }
+.form-group { margin-bottom:12px; }
+.form-group label { display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:.3px; }
+.form-group input,.form-group select { width:100%; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; background:var(--bg); color:var(--text); outline:none; }
+.form-group input:focus,.form-group select:focus { border-color:var(--primary); }
+.modal-btns { display:flex; gap:10px; margin-top:18px; justify-content:flex-end; }
+.btn-cancel { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 16px; font-size:13px; cursor:pointer; color:var(--text); }
+.btn-primary { background:var(--primary); color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:13px; cursor:pointer; font-weight:600; }
+
+/* CRUD TABLE */
+.crud-table { width:100%; border-collapse:collapse; font-size:12.5px; margin-top:10px; }
+.crud-table th { text-align:left; padding:8px 10px; font-size:10px; font-weight:700; letter-spacing:.5px; color:var(--text-muted); text-transform:uppercase; border-bottom:2px solid var(--border); background:var(--bg); }
+.crud-table td { padding:8px 10px; border-bottom:1px solid var(--border); }
+.crud-table tr:last-child td { border-bottom:none; }
+.crud-table tr:hover td { background:var(--primary-light); }
+.btn-edit { background:#eff6ff; color:var(--primary); border:none; border-radius:5px; padding:3px 9px; font-size:11px; cursor:pointer; font-weight:600; }
+.btn-del { background:#fef2f2; color:var(--danger); border:none; border-radius:5px; padding:3px 9px; font-size:11px; cursor:pointer; font-weight:600; margin-left:4px; }
+.btn-add { background:var(--primary); color:#fff; border:none; border-radius:7px; padding:6px 14px; font-size:12px; cursor:pointer; font-weight:600; }
+.badge { display:inline-block; border-radius:5px; padding:2px 8px; font-size:10px; font-weight:700; }
+.badge-green { background:#ecfdf5; color:#059669; }
+.badge-red { background:#fef2f2; color:#dc2626; }
+.badge-blue { background:#eff6ff; color:#2563eb; }
+
+/* PAGE */
+.page { display:none; }
+.page.active { display:block; }
+
+/* TOAST */
+.toast { position:fixed; bottom:26px; right:26px; background:#1e293b; color:#fff; border-radius:10px; padding:11px 18px; font-size:13px; font-weight:600; z-index:999; opacity:0; transition:opacity .3s; pointer-events:none; display:flex; align-items:center; gap:8px; }
+.toast.show { opacity:1; }
+
+/* SECTION HEADER on master pages */
+.page-heading { font-size:18px; font-weight:700; margin-bottom:16px; }
+.page-heading span { font-size:13px; font-weight:400; color:var(--text-muted); margin-left:8px; }
+
+@media(max-width:900px){
+  .stats-row { grid-template-columns:1fr 1fr; }
+  .content-grid,.content-grid-3 { grid-template-columns:1fr; }
+  .user-email { display:none; }
+}
+</style>
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="brand-mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8v8M12 8v8M16 8v8"/></svg></div>
-    <nav>
-      <button class="nav-link active" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg><span>Dashboard</span></button>
-      <p>LAPORAN KEUANGAN</p>
-      <button class="nav-link" data-page="laporan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h6"/></svg><span>Laporan Posisi Keuangan</span></button>
-      <p>MASTER DATA</p>
-      <button class="nav-link" data-page="receivable"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/></svg><span>Accounts Receivable</span></button>
-      <button class="nav-link" data-page="ppe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M8 21v-3h8v3"/></svg><span>Property, Plant & Equipment</span></button>
-      <button class="nav-link" data-page="investment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9v9z"/><path d="M12 3a9 9 0 0 1 9 9h-9z"/></svg><span>Investment</span></button>
-      <button class="nav-link" data-page="accounts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Master Akun</span></button>
-      <p>ANALISIS</p>
-      <button class="nav-link" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg><span>Growth Aset</span></button>
-      <button class="nav-link" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9v9z"/><path d="M12 3a9 9 0 0 1 9 9h-9z"/></svg><span>Alokasi Uang</span></button>
-      <button class="nav-link" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg><span>Investment Gain</span></button>
-    </nav>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <button class="btn-toggle-sidebar" onclick="toggleSidebar()" title="Toggle Sidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="header-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Laporan Keuangan Pribadi
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn-dark" onclick="toggleDark()">🌙 Dark</button>
+    <span class="user-email">GitHub Pages + Supabase Ready</span>
+    <button class="btn-logout">Logout</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-item active" onclick="showPage('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">Laporan Keuangan</div>
+      <div class="sidebar-item" onclick="showPage('laporan',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Laporan Posisi Keuangan
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">Master Data</div>
+      <div class="sidebar-item" onclick="showPage('current-asset',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Current Asset
+      </div>
+      <div class="sidebar-item" onclick="showPage('cash-equiv',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Total Cash Equivalent
+      </div>
+      <div class="sidebar-item" onclick="showPage('non-current',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Non Current Asset
+      </div>
+      <div class="sidebar-item" onclick="showPage('investment',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Investment
+      </div>
+    </div>
   </aside>
 
-  <main>
-    <header class="topbar">
-      <h1><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8v8M12 8v8M16 8v8"/></svg></span>Laporan Keuangan Pribadi</h1>
-      <div class="top-actions">
-        <button id="darkBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8z"/></svg>Dark</button>
-        <span class="pill">no-login mode</span>
-        <span class="logout">Supabase Ready</span>
+  <!-- MAIN -->
+  <main class="main" id="main-content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div id="page-dashboard" class="page active">
+      <!-- STAT CARDS -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Total Aset</div>
+            <div class="stat-value" id="stat-total">$0.00</div>
+            <div class="stat-change" id="change-total"><span>↓</span><span id="cv-total">—</span></div>
+          </div>
+          <div class="stat-icon blue">📈</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Total Current Asset</div>
+            <div class="stat-value" id="stat-current">$0.00</div>
+            <div class="stat-change" id="change-current"><span>↓</span><span id="cv-current">—</span></div>
+          </div>
+          <div class="stat-icon green">💼</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Total Non Current Asset</div>
+            <div class="stat-value" id="stat-noncurrent">$0.00</div>
+            <div class="stat-change" id="change-noncurrent"><span>↑</span><span id="cv-noncurrent">—</span></div>
+          </div>
+          <div class="stat-icon orange">🏢</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-label">Total Asset Hari Ini</div>
+            <div class="stat-value" id="stat-today">$0.00</div>
+            <div class="stat-change" id="change-today"><span>↑</span><span id="cv-today">—</span></div>
+          </div>
+          <div class="stat-icon purple">🗄️</div>
+        </div>
       </div>
-    </header>
 
-    <section class="cards">
-      <div class="card stat"><div><p>TOTAL ASET</p><h2 id="totalAsset">$0</h2></div><b class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></b></div>
-      <div class="card stat"><div><p>TOTAL CURRENT ASSET</p><h2 id="currentAsset">$0</h2></div><b class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M3 5v14a2 2 0 0 0 2 2h15V7"/><path d="M16 14h.01"/></svg></b></div>
-      <div class="card stat"><div><p>TOTAL NON CURRENT ASSET</p><h2 id="nonCurrentAsset">$0</h2></div><b class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10"/><path d="M19 21V10"/><path d="M9 21V10"/><path d="M15 21V10"/><path d="M12 3 3 8h18z"/></svg></b></div>
-      <div class="card stat"><div><p>TOTAL ASSET HARI INI</p><h2 id="todayAsset">$0</h2></div><b class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></b></div>
-    </section>
+      <!-- ROW 2: Laporan + Chart Growth -->
+      <div class="content-grid">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Laporan Posisi Keuangan</div>
+              <div class="card-subtitle" id="dash-report-month" style="margin-top:2px;font-size:13px;">—</div>
+            </div>
+            <div class="card-date-wrap">
+              Tanggal <input type="date" id="dash-report-date" value="2026-06-17" onchange="onDashDateChange(this.value)">
+            </div>
+          </div>
+          <div id="fin-report-dash"></div>
+          <button class="btn-save" onclick="saveReport()">Simpan Laporan</button>
+        </div>
 
-    <section id="dashboard" class="page active grid-main">
-      <div class="card report-card">
-        <div class="card-head"><h3>LAPORAN POSISI KEUANGAN</h3><label>Tanggal <input id="reportDate" type="date"></label></div>
-        <div class="report-table" id="reportTable"></div>
-        <button class="save" id="saveSnapshot">Simpan Snapshot Hari Ini</button>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">History Growth Aset</span>
+            <select class="select-period" onchange="updateGrowthChart(this.value)">
+              <option value="30">30 Hari Terakhir</option>
+              <option value="7">7 Hari Terakhir</option>
+              <option value="90">90 Hari Terakhir</option>
+            </select>
+          </div>
+          <canvas id="growthChart" height="170"></canvas>
+          <!-- ALOKASI -->
+          <div style="margin-top:18px;">
+            <div class="card-title" style="margin-bottom:10px;">Alokasi Uang (Current Asset)</div>
+            <div class="donut-wrap">
+              <canvas id="alokasiChart" class="donut-canvas"></canvas>
+              <div style="flex:1">
+                <div id="alokasi-legend"></div>
+                <div class="legend-total"><span>Total</span><span>100%</span><span id="alokasi-total">—</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="card chart-card"><div class="card-head"><h3>HISTORY GROWTH ASET</h3><select><option>30 Hari Terakhir</option></select></div><canvas id="growthChart"></canvas></div>
-      <div class="card chart-card allocation"><h3>ALOKASI UANG (CURRENT ASSET)</h3><div class="donut-layout"><div class="donut-box"><canvas id="moneyChart"></canvas></div><div id="moneyLegend" class="legend"></div></div></div>
-      <div class="card chart-card small"><div class="card-head"><h3>HISTORY GROWTH RECEIVABLE</h3><select><option>30 Hari Terakhir</option></select></div><canvas id="receivableChart"></canvas></div>
-      <div class="card chart-card small allocation"><h3>INVESTMENT ALLOCATION</h3><div class="donut-layout"><div class="donut-box"><canvas id="investmentChart"></canvas></div><div id="investmentLegend" class="legend"></div></div></div>
-      <div class="card chart-card small"><div class="card-head"><h3>INVESTMENT GAIN</h3><select><option>30 Hari Terakhir</option></select></div><canvas id="gainChart"></canvas></div>
-    </section>
 
-    <section id="laporan" class="page page-pad">
-      <div class="card crud-card">
-        <div class="card-head"><h3>CRUD LAPORAN KEUANGAN</h3><button class="save" id="newReportBtn">+ Data Baru</button></div>
-        <form id="reportForm" class="crud-form">
-          <input type="hidden" id="reportId">
-          <label>Tanggal<input id="fDate" type="date" required></label>
-          <label>Akun<select id="fAccount" required></select></label>
-          <label>Keterangan<input id="fDesc" placeholder="contoh: Saldo bank BCA"></label>
-          <label>Nominal<input id="fAmount" type="number" step="0.01" required></label>
-          <button class="save" type="submit">Simpan</button>
-        </form>
-        <div class="toolbar"><input id="searchReport" placeholder="Cari laporan..."><button id="exportJson">Export JSON</button></div>
-        <div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Akun</th><th>Kategori</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody id="reportRows"></tbody></table></div>
+      <!-- ROW 3 -->
+      <div class="content-grid-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">History Growth Receivable</span>
+            <select class="select-period" onchange="updateReceivableChart(this.value)">
+              <option value="30">30 Hari Terakhir</option>
+              <option value="7">7 Hari Terakhir</option>
+            </select>
+          </div>
+          <canvas id="receivableChart" height="150"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Investment Allocation</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <canvas id="investChart" style="width:120px;height:120px;"></canvas>
+            <div id="invest-legend" style="width:100%;"></div>
+            <div class="legend-total" style="width:100%;"><span>Total</span><span>100%</span><span id="invest-total">—</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Investment Gain</span>
+            <select class="select-period" onchange="updateGainChart(this.value)">
+              <option value="30">30 Hari Terakhir</option>
+              <option value="7">7 Hari Terakhir</option>
+            </select>
+          </div>
+          <canvas id="gainChart" height="150"></canvas>
+        </div>
       </div>
-    </section>
+    </div><!-- /dashboard -->
 
-    <section id="accounts" class="page page-pad">
-      <div class="card crud-card">
-        <div class="card-head"><h3>MASTER AKUN</h3><button class="save" id="newAccountBtn">+ Akun Baru</button></div>
-        <form id="accountForm" class="crud-form master">
-          <input type="hidden" id="accountId">
-          <label>Nama Akun<input id="aName" required placeholder="Cash / Bank / Inventory"></label>
-          <label>Kategori<select id="aType"><option value="current">Current Asset</option><option value="noncurrent">Non Current Asset</option></select></label>
-          <label>Grup<select id="aGroup"><option value="cash">Cash</option><option value="receivable">Accounts Receivable</option><option value="inventory">Inventory</option><option value="ppe">PPE</option><option value="investment">Investment</option><option value="intangible">Intangible</option></select></label>
-          <button class="save" type="submit">Simpan</button>
-        </form>
-        <div class="table-wrap"><table><thead><tr><th>Nama</th><th>Kategori</th><th>Grup</th><th>Aksi</th></tr></thead><tbody id="accountRows"></tbody></table></div>
+    <!-- ═══ LAPORAN POSISI KEUANGAN ═══ -->
+    <div id="page-laporan" class="page">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Laporan Posisi Keuangan</div>
+            <div class="card-subtitle" id="laporan-month-title" style="margin-top:3px;font-size:15px;font-weight:700;">—</div>
+          </div>
+          <div class="card-date-wrap">
+            Tanggal <input type="date" id="laporan-date" value="2026-06-17" onchange="onLaporanDateChange(this.value)">
+          </div>
+        </div>
+        <div id="fin-report-full"></div>
+        <button class="btn-save" onclick="saveReport()">Simpan Laporan</button>
       </div>
-    </section>
+    </div>
 
-    <section id="receivable" class="page page-pad"><div class="card crud-card"><div class="card-head"><h3>ACCOUNTS RECEIVABLE</h3><button class="save quick-add" data-group="receivable">+ Tambah</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Akun</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody id="receivableRows"></tbody></table></div></div></section>
-    <section id="ppe" class="page page-pad"><div class="card crud-card"><div class="card-head"><h3>PROPERTY, PLANT & EQUIPMENT</h3><button class="save quick-add" data-group="ppe">+ Tambah</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Akun</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody id="ppeRows"></tbody></table></div></div></section>
-    <section id="investment" class="page page-pad"><div class="card crud-card"><div class="card-head"><h3>INVESTMENT</h3><button class="save quick-add" data-group="investment">+ Tambah</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Akun</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody id="investmentRows"></tbody></table></div></div></section>
+    <!-- ═══ CURRENT ASSET (Cash, Bank, Tiktok, dll) ═══ -->
+    <div id="page-current-asset" class="page">
+      <div class="page-heading">Current Asset <span>Cash &amp; Setara Kas</span></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Daftar Current Asset</span>
+          <button class="btn-add" onclick="openModal('ca')">+ Tambah</button>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Kelola kas, bank, penghasilan platform, dan sumber kas lainnya.</p>
+        <table class="crud-table" id="ca-table"></table>
+      </div>
+    </div>
 
-    <footer>© 2026 Laporan Keuangan Pribadi. All rights reserved. <span>Dibuat dengan ❤ menggunakan <b>Supabase</b>.</span></footer>
+    <!-- ═══ CASH EQUIVALENT (AR + Inventory) ═══ -->
+    <div id="page-cash-equiv" class="page">
+      <div class="page-heading">Total Cash Equivalent <span>Accounts Receivable &amp; Inventory</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Accounts Receivable</span>
+            <button class="btn-add" onclick="openModal('ar')">+ Tambah</button>
+          </div>
+          <table class="crud-table" id="ar-table"></table>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Inventory</span>
+            <button class="btn-add" onclick="openModal('inv-item')">+ Tambah</button>
+          </div>
+          <table class="crud-table" id="inventory-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ NON CURRENT ASSET ═══ -->
+    <div id="page-non-current" class="page">
+      <div class="page-heading">Non Current Asset</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Property, Plant &amp; Equipment</span>
+            <button class="btn-add" onclick="openModal('ppe')">+ Tambah</button>
+          </div>
+          <table class="crud-table" id="ppe-table"></table>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Intangible Assets</span>
+            <button class="btn-add" onclick="openModal('intangible')">+ Tambah</button>
+          </div>
+          <table class="crud-table" id="intangible-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ INVESTMENT ═══ -->
+    <div id="page-investment" class="page">
+      <div class="page-heading">Investment</div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Portofolio Investasi</span>
+          <button class="btn-add" onclick="openModal('inv')">+ Tambah</button>
+        </div>
+        <table class="crud-table" id="inv-table"></table>
+      </div>
+    </div>
+
   </main>
+</div>
 
-  <div class="modal" id="modal"><div class="modal-box"><h3 id="modalTitle">Konfirmasi</h3><p id="modalText">Yakin?</p><div><button id="cancelModal">Batal</button><button class="danger" id="okModal">Hapus</button></div></div></div>
-  <div class="toast" id="toast">Data tersimpan</div>
-  <script src="app.js"></script>
+<footer class="footer" id="footer">
+  © 2026 Laporan Keuangan Pribadi. All rights reserved. &nbsp; Dibuat dengan ❤️ menggunakan <a href="#">Supabase</a>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">Tambah Data</h3>
+    <div id="modal-body"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-primary" onclick="saveModal()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// SUPABASE CONFIG
+// ════════════════════════════════════════
+// Isi 2 data ini dari Supabase Project Settings > API.
+// Kalau masih kosong, app tetap jalan di GitHub Pages pakai localStorage.
+const SUPABASE_URL = '';
+const SUPABASE_ANON_KEY = '';
+
+const USE_SUPABASE = SUPABASE_URL && SUPABASE_ANON_KEY;
+const supabaseClient = USE_SUPABASE ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+}) : null;
+
+// ID lokal agar data tetap kebaca walau belum pakai login Supabase.
+// Kalau lu mau multi-user beneran, nanti bisa gua ubah ke auth.uid().
+const DEVICE_ID_KEY = 'finance_device_id_v1';
+const deviceId = localStorage.getItem(DEVICE_ID_KEY) || crypto.randomUUID();
+localStorage.setItem(DEVICE_ID_KEY, deviceId);
+
+const STORAGE_KEY = 'finance_app_state_v3';
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+// ════════════════════════════════════════
+// STATE — DEFAULT SEMUA INPUTAN 0 / KOSONG
+// ════════════════════════════════════════
+const defaultState = () => ({
+  currentAssets: [
+    { id:1, name:'Cash', category:'Kas', amount:0, date:todayISO() },
+    { id:2, name:'Bank BCA', category:'Bank', amount:0, date:todayISO() },
+    { id:3, name:'Penghasilan TikTok', category:'Platform', amount:0, date:todayISO() },
+  ],
+  ar: [
+    { id:1, name:'Piutang', amount:0, date:todayISO(), status:'Outstanding' },
+  ],
+  inventoryItems: [
+    { id:1, name:'Inventory', amount:0, date:todayISO() },
+  ],
+  ppe: [
+    { id:1, name:'Aset Tetap', amount:0, date:todayISO() },
+  ],
+  intangibles: [
+    { id:1, name:'Aset Tak Berwujud', amount:0, date:todayISO() },
+  ],
+  investments: [
+    { id:1, name:'Saham', type:'Saham', amount:0, gain:0 },
+    { id:2, name:'Crypto', type:'Crypto', amount:0, gain:0 },
+    { id:3, name:'Emas', type:'Emas', amount:0, gain:0 },
+  ],
+  history: [],
+  prevMonth: { total:0, current:0, nonCurrent:0 }
+});
+
+let state = defaultState();
+let modalType='', modalEditId=null;
+let charts={};
+let sidebarOpen=true;
+let isSavingRemote = false;
+
+// ════════════════════════════════════════
+// PERSISTENCE: localStorage + optional Supabase
+// ════════════════════════════════════════
+async function loadState() {
+  try {
+    const local = localStorage.getItem(STORAGE_KEY);
+    if (local) state = { ...defaultState(), ...JSON.parse(local) };
+
+    if (USE_SUPABASE) {
+      const { data, error } = await supabaseClient
+        .from('finance_app_state')
+        .select('payload')
+        .eq('device_id', deviceId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data?.payload) {
+        state = { ...defaultState(), ...data.payload };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+    }
+  } catch (err) {
+    console.warn('Load state gagal, pakai data lokal/default:', err);
+    showToast('⚠️ Data Supabase gagal dimuat, pakai localStorage');
+  }
+}
+
+async function persistState({toast=false} = {}) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (!USE_SUPABASE || isSavingRemote) return;
+
+  try {
+    isSavingRemote = true;
+    const { error } = await supabaseClient
+      .from('finance_app_state')
+      .upsert({
+        device_id: deviceId,
+        payload: state,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'device_id' });
+
+    if (error) throw error;
+    if (toast) showToast('✅ Data tersimpan ke Supabase');
+  } catch (err) {
+    console.warn('Save Supabase gagal:', err);
+    if (toast) showToast('⚠️ Supabase gagal, data tetap aman lokal');
+  } finally {
+    isSavingRemote = false;
+  }
+}
+
+function recordSnapshot() {
+  const snap = {
+    date: todayISO(),
+    total: totalAsset(),
+    current: totalCurrentAsset(),
+    receivable: totalAR(),
+    gain: totalGain(),
+    investment: totalInv()
+  };
+  const idx = state.history.findIndex(x => x.date === snap.date);
+  if (idx >= 0) state.history[idx] = snap;
+  else state.history.push(snap);
+  state.history = state.history.slice(-180);
+}
+
+// ════════════════════════════════════════
+// COMPUTED
+// ════════════════════════════════════════
+const n = v => Number.isFinite(parseFloat(v)) ? parseFloat(v) : 0;
+const sum = arr => arr.reduce((a,x)=>a+n(x.amount),0);
+const totalCA = () => sum(state.currentAssets);
+const totalAR = () => sum(state.ar);
+const totalInventory = () => sum(state.inventoryItems);
+const cashEquiv = () => totalCA();
+const totalCurrentAsset = () => cashEquiv() + totalAR() + totalInventory();
+const totalPPE = () => sum(state.ppe);
+const totalIntangible = () => sum(state.intangibles);
+const totalInv = () => sum(state.investments);
+const totalGain = () => state.investments.reduce((a,x)=>a+n(x.gain),0);
+const totalNonCurrent = () => totalPPE() + totalInv() + totalIntangible();
+const totalAsset = () => totalCurrentAsset() + totalNonCurrent();
+const fmt = v => '$'+Math.abs(n(v)).toFixed(2);
+const fmtSigned = v => (n(v)>=0?'+':'-')+'$'+Math.abs(n(v)).toFixed(2);
+
+const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+function monthLabel(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  return MONTHS_ID[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function safeItems(items, fallbackLabel='Belum ada data') {
+  const filtered = items.filter(x => n(x.value) > 0);
+  return filtered.length ? filtered : [{ label:fallbackLabel, value:0 }];
+}
+
+// ════════════════════════════════════════
+// SIDEBAR, DARK, PAGE
+// ════════════════════════════════════════
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  const sb = document.getElementById('sidebar');
+  const main = document.getElementById('main-content');
+  const footer = document.getElementById('footer');
+  if (sidebarOpen) {
+    sb.classList.remove('collapsed'); main.classList.remove('expanded'); footer.classList.remove('expanded');
+  } else {
+    sb.classList.add('collapsed'); main.classList.add('expanded'); footer.classList.add('expanded');
+  }
+}
+
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  localStorage.setItem('finance_dark_mode', document.body.classList.contains('dark') ? '1' : '0');
+}
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(id==='current-asset') renderCATable();
+  if(id==='cash-equiv') { renderARTable(); renderInventoryTable(); }
+  if(id==='non-current') { renderPPETable(); renderIntangibleTable(); }
+  if(id==='investment') renderInvTable();
+  if(id==='laporan') renderFinReport('fin-report-full', document.getElementById('laporan-date').value);
+}
+
+// ════════════════════════════════════════
+// DATE HANDLERS
+// ════════════════════════════════════════
+function onDashDateChange(val) {
+  document.getElementById('dash-report-month').textContent = monthLabel(val);
+  renderFinReport('fin-report-dash', val);
+}
+function onLaporanDateChange(val) {
+  document.getElementById('laporan-month-title').textContent = 'Laporan Bulan ' + monthLabel(val);
+  renderFinReport('fin-report-full', val);
+}
+
+// ════════════════════════════════════════
+// FINANCIAL REPORT
+// ════════════════════════════════════════
+function renderFinReport(targetId, dateStr) {
+  const el = document.getElementById(targetId);
+  if(!el) return;
+  const label = monthLabel(dateStr);
+  el.innerHTML = `
+<div class="fin-table">
+  <div class="fin-section-label">A. Current Asset</div>
+  <div class="fin-row"><span class="fn">1.</span><span class="fl">Cash and cash equivalents</span><span class="fv">${fmt(cashEquiv())}</span></div>
+  ${state.currentAssets.map(c=>`<div class="fin-row indent1"><span class="fn"></span><span class="fl">- ${c.name || 'Tanpa nama'}</span><span class="fv">${fmt(c.amount)}</span></div>`).join('')}
+  <div class="fin-row subtotal"><span class="fn"><b>2.</b></span><span class="fl"><b>Total Cash and equivalent</b></span><span class="fv"><b>${fmt(cashEquiv())}</b></span></div>
+  <div class="fin-row"><span class="fn">3.</span><span class="fl">Accounts receivable</span><span class="fv">${fmt(totalAR())}</span></div>
+  <div class="fin-row"><span class="fn">4.</span><span class="fl">Inventory</span><span class="fv">${fmt(totalInventory())}</span></div>
+  <div class="fin-row subtotal"><span class="fn"><b>5.</b></span><span class="fl"><b>Total Current Asset</b></span><span class="fv"><b>${fmt(totalCurrentAsset())}</b></span></div>
+  <div class="fin-section-label" style="margin-top:8px;">B. Non Current Asset</div>
+  <div class="fin-row"><span class="fn">6.</span><span class="fl">Property, plant and equipment</span><span class="fv">${fmt(totalPPE())}</span></div>
+  <div class="fin-row"><span class="fn">7.</span><span class="fl">Investment</span><span class="fv">${fmt(totalInv())}</span></div>
+  <div class="fin-row"><span class="fn">8.</span><span class="fl">Intangible assets</span><span class="fv">${fmt(totalIntangible())}</span></div>
+  <div class="fin-row subtotal"><span class="fn"><b>9.</b></span><span class="fl"><b>Total Non-current Asset</b></span><span class="fv"><b>${fmt(totalNonCurrent())}</b></span></div>
+  <div class="fin-row total-final"><span class="fn"><b>10.</b></span><span class="fl"><b>TOTAL ASSET — ${label}</b></span><span class="fv"><b>${fmt(totalAsset())}</b></span></div>
+</div>`;
+}
+
+// ════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════
+function setChangeBadge(elId, valId, current, prev) {
+  const diff = n(current) - n(prev);
+  const el = document.getElementById(elId);
+  const vEl = document.getElementById(valId);
+  if(!el||!vEl) return;
+  el.className = 'stat-change ' + (diff>=0?'up':'down');
+  vEl.textContent = (diff>=0?'↑ ':'↓ ') + fmtSigned(diff) + ' dari bulan lalu';
+}
+
+function updateStats() {
+  const ta = totalAsset(), tc = totalCurrentAsset(), tnc = totalNonCurrent();
+  document.getElementById('stat-total').textContent = fmt(ta);
+  document.getElementById('stat-current').textContent = fmt(tc);
+  document.getElementById('stat-noncurrent').textContent = fmt(tnc);
+  document.getElementById('stat-today').textContent = fmt(ta);
+
+  setChangeBadge('change-total','cv-total', ta, state.prevMonth.total);
+  setChangeBadge('change-current','cv-current', tc, state.prevMonth.current);
+  setChangeBadge('change-noncurrent','cv-noncurrent', tnc, state.prevMonth.nonCurrent);
+  setChangeBadge('change-today','cv-today', ta, state.prevMonth.total);
+
+  const dashDate = document.getElementById('dash-report-date').value;
+  const laporanDate = document.getElementById('laporan-date').value;
+  document.getElementById('dash-report-month').textContent = monthLabel(dashDate);
+  document.getElementById('laporan-month-title').textContent = 'Laporan Bulan ' + monthLabel(laporanDate);
+  renderFinReport('fin-report-dash', dashDate);
+  renderFinReport('fin-report-full', laporanDate);
+  updateAllCharts();
+}
+
+async function saveReport() {
+  recordSnapshot();
+  await persistState({toast:true});
+  updateStats();
+}
+
+// ════════════════════════════════════════
+// CHARTS — DINAMIS SESUAI INPUT, TANPA RANDOM
+// ════════════════════════════════════════
+function genDates(nDays) {
+  const d=[];
+  const now=new Date();
+  for(let i=nDays-1;i>=0;i--){
+    const dd=new Date(now); dd.setDate(dd.getDate()-i);
+    d.push({
+      iso: dd.toISOString().slice(0,10),
+      label: dd.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})
+    });
+  }
+  return d;
+}
+
+function historySeries(days, key, fallbackValue=0) {
+  const labels = genDates(+days);
+  const map = new Map((state.history || []).map(x => [x.date, x]));
+  return {
+    labels: labels.map(x=>x.label),
+    values: labels.map(x => n(map.get(x.iso)?.[key] ?? fallbackValue))
+  };
+}
+
+function chartTextColor() {
+  return getComputedStyle(document.body).getPropertyValue('--text-muted').trim() || '#6b7280';
+}
+
+function createOrUpdateLineChart(id, chartKey, label, values, labels) {
+  const ctx=document.getElementById(id).getContext('2d');
+  if(charts[chartKey]) {
+    charts[chartKey].data.labels = labels;
+    charts[chartKey].data.datasets[0].data = values;
+    charts[chartKey].update();
+    return;
+  }
+  charts[chartKey]=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[{label,data:values,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',tension:.35,pointRadius:3,fill:true}]},
+    options:{responsive:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:11}}}},scales:{x:{ticks:{maxTicksLimit:6,font:{size:10,color:chartTextColor()}}},y:{beginAtZero:true,ticks:{callback:v=>'$'+v,font:{size:10,color:chartTextColor()}}}}}
+  });
+}
+
+function initGrowthChart(){ updateGrowthChart(30); }
+function updateGrowthChart(days){
+  const s = historySeries(days, 'total', totalAsset());
+  createOrUpdateLineChart('growthChart','growth','Total Asset',s.values,s.labels);
+}
+
+function updateAlokasiChart(){
+  const colors=['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316','#14b8a6'];
+  const items=safeItems([
+    ...state.currentAssets.map((c,i)=>({label:c.name || 'Tanpa nama',value:n(c.amount),color:colors[i%colors.length]})),
+    {label:'Accounts Receivable',value:totalAR(),color:colors[state.currentAssets.length%colors.length]},
+    {label:'Inventory',value:totalInventory(),color:colors[(state.currentAssets.length+1)%colors.length]},
+  ], 'Belum ada current asset');
+  const total=totalCurrentAsset();
+  document.getElementById('alokasi-total').textContent=fmt(total);
+  document.getElementById('alokasi-legend').innerHTML=items.map((d,i)=>`<div class="legend-row"><div class="legend-dot" style="background:${d.color || colors[i%colors.length]}"></div><span class="legend-name">${d.label}</span><span class="legend-pct">${total?((d.value/total)*100).toFixed(1):'0'}%</span><span class="legend-val">${fmt(d.value)}</span></div>`).join('');
+  const labels = items.map(d=>d.label), values=items.map(d=>d.value), bg=items.map((d,i)=>d.color || colors[i%colors.length]);
+  if(charts.alokasi){charts.alokasi.data.labels=labels;charts.alokasi.data.datasets[0].data=values;charts.alokasi.data.datasets[0].backgroundColor=bg;charts.alokasi.update();}
+  else{const ctx=document.getElementById('alokasiChart').getContext('2d');charts.alokasi=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:values,backgroundColor:bg,borderWidth:2}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false}}}});}
+}
+
+function updateInvestChart(){
+  const colors=['#3b82f6','#22c55e','#f59e0b','#f97316','#8b5cf6','#06b6d4'];
+  const grouped = {};
+  state.investments.forEach(x => grouped[x.type || 'Lainnya'] = (grouped[x.type || 'Lainnya'] || 0) + n(x.amount));
+  const items=safeItems(Object.entries(grouped).map(([label,value],i)=>({label,value,color:colors[i%colors.length]})), 'Belum ada investasi');
+  const total=totalInv();
+  document.getElementById('invest-total').textContent=fmt(total);
+  document.getElementById('invest-legend').innerHTML=items.map((d,i)=>`<div class="legend-row"><div class="legend-dot" style="background:${d.color || colors[i%colors.length]}"></div><span class="legend-name">${d.label}</span><span class="legend-pct">${total?((d.value/total)*100).toFixed(1):'0'}%</span><span class="legend-val">${fmt(d.value)}</span></div>`).join('');
+  const labels=items.map(d=>d.label), values=items.map(d=>d.value), bg=items.map((d,i)=>d.color || colors[i%colors.length]);
+  if(charts.invest){charts.invest.data.labels=labels;charts.invest.data.datasets[0].data=values;charts.invest.data.datasets[0].backgroundColor=bg;charts.invest.update();}
+  else{const ctx=document.getElementById('investChart').getContext('2d');charts.invest=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:values,backgroundColor:bg,borderWidth:2}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false}}}});}
+}
+
+function initReceivableChart(){ updateReceivableChart(30); }
+function updateReceivableChart(days){
+  const s = historySeries(days, 'receivable', totalAR());
+  createOrUpdateLineChart('receivableChart','receivable','Total Receivable',s.values,s.labels);
+}
+
+function initGainChart(){ updateGainChart(30); }
+function updateGainChart(days){
+  const s = historySeries(days, 'gain', totalGain());
+  const ctx=document.getElementById('gainChart').getContext('2d');
+  if(charts.gain){
+    charts.gain.data.labels=s.labels;
+    charts.gain.data.datasets[0].data=s.values;
+    charts.gain.data.datasets[0].backgroundColor=s.values.map(v=>v>=0?'#22c55e':'#ef4444');
+    charts.gain.update();
+    return;
+  }
+  charts.gain=new Chart(ctx,{type:'bar',data:{labels:s.labels,datasets:[{label:'Gain / Loss',data:s.values,backgroundColor:s.values.map(v=>v>=0?'#22c55e':'#ef4444'),borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:11}}}},scales:{x:{ticks:{maxTicksLimit:6,font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>'$'+v,font:{size:10}}}}}});
+}
+
+function updateAllCharts() {
+  updateGrowthChart(document.querySelector('#growthChart')?.closest('.card')?.querySelector('select')?.value || 30);
+  updateAlokasiChart();
+  updateReceivableChart(30);
+  updateInvestChart();
+  updateGainChart(30);
+}
+
+// ════════════════════════════════════════
+// CRUD TABLES
+// ════════════════════════════════════════
+function emptyRow(colspan, text='Belum ada data') {
+  return `<tr><td colspan="${colspan}" style="text-align:center;color:var(--text-muted);padding:14px;">${text}</td></tr>`;
+}
+
+function renderCATable(){
+  const t=document.getElementById('ca-table');
+  t.innerHTML=`<tr><th>No</th><th>Nama</th><th>Kategori</th><th>Jumlah</th><th>Tanggal</th><th>Aksi</th></tr>`+
+  (state.currentAssets.length ? state.currentAssets.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge badge-blue">${r.category}</span></td><td>${fmt(r.amount)}</td><td>${r.date}</td><td><button class="btn-edit" onclick="openEdit('ca',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('ca',${r.id})">Hapus</button></td></tr>`).join('') : emptyRow(6));
+}
+
+function renderARTable(){
+  const t=document.getElementById('ar-table');
+  t.innerHTML=`<tr><th>No</th><th>Nama</th><th>Jumlah</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr>`+
+  (state.ar.length ? state.ar.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${fmt(r.amount)}</td><td>${r.date}</td><td><span class="badge ${r.status==='Paid'?'badge-green':'badge-blue'}">${r.status}</span></td><td><button class="btn-edit" onclick="openEdit('ar',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('ar',${r.id})">Hapus</button></td></tr>`).join('') : emptyRow(6));
+}
+
+function renderInventoryTable(){
+  const t=document.getElementById('inventory-table');
+  t.innerHTML=`<tr><th>No</th><th>Nama</th><th>Nilai</th><th>Tanggal</th><th>Aksi</th></tr>`+
+  (state.inventoryItems.length ? state.inventoryItems.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${fmt(r.amount)}</td><td>${r.date}</td><td><button class="btn-edit" onclick="openEdit('inv-item',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('inv-item',${r.id})">Hapus</button></td></tr>`).join('') : emptyRow(5));
+}
+
+function renderPPETable(){
+  const t=document.getElementById('ppe-table');
+  t.innerHTML=`<tr><th>No</th><th>Nama Aset</th><th>Nilai</th><th>Tanggal Beli</th><th>Aksi</th></tr>`+
+  (state.ppe.length ? state.ppe.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${fmt(r.amount)}</td><td>${r.date}</td><td><button class="btn-edit" onclick="openEdit('ppe',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('ppe',${r.id})">Hapus</button></td></tr>`).join('') : emptyRow(5));
+}
+
+function renderIntangibleTable(){
+  const t=document.getElementById('intangible-table');
+  t.innerHTML=`<tr><th>No</th><th>Nama Aset</th><th>Nilai</th><th>Tanggal</th><th>Aksi</th></tr>`+
+  (state.intangibles.length ? state.intangibles.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${fmt(r.amount)}</td><td>${r.date}</td><td><button class="btn-edit" onclick="openEdit('intangible',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('intangible',${r.id})">Hapus</button></td></tr>`).join('') : emptyRow(5));
+}
+
+function renderInvTable(){
+  const t=document.getElementById('inv-table');
+  t.innerHTML=`<tr><th>No</th><th>Nama</th><th>Tipe</th><th>Nilai</th><th>Gain/Loss</th><th>Aksi</th></tr>`+
+  (state.investments.length ? state.investments.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge badge-blue">${r.type}</span></td><td>${fmt(r.amount)}</td><td style="color:${n(r.gain)>=0?'#059669':'#dc2626'};font-weight:600">${n(r.gain)>=0?'+':'-'}${fmt(r.gain)}</td><td><button class="btn-edit" onclick="openEdit('inv',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('inv',${r.id})">Hapus</button></td></tr>`).join('') : emptyRow(6));
+}
+
+// ════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════
+const MODAL_FORMS = {
+  ca: (row)=>`
+    <div class="form-group"><label>Nama</label><input id="f-name" value="${row?row.name:''}" placeholder="Cash / Bank BCA / Penghasilan"></div>
+    <div class="form-group"><label>Kategori</label><select id="f-cat">${['Kas','Bank','Platform','Lainnya'].map(c=>`<option ${row&&row.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Jumlah ($)</label><input id="f-amount" type="number" step="0.01" value="${row?n(row.amount):0}"></div>
+    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${row?row.date:todayISO()}"></div>`,
+  ar: (row)=>`
+    <div class="form-group"><label>Nama Piutang</label><input id="f-name" value="${row?row.name:''}"></div>
+    <div class="form-group"><label>Jumlah ($)</label><input id="f-amount" type="number" step="0.01" value="${row?n(row.amount):0}"></div>
+    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${row?row.date:todayISO()}"></div>
+    <div class="form-group"><label>Status</label><select id="f-status">${['Outstanding','Paid','Overdue'].map(s=>`<option ${row&&row.status===s?'selected':''}>${s}</option>`).join('')}</select></div>`,
+  'inv-item': (row)=>`
+    <div class="form-group"><label>Nama Inventory</label><input id="f-name" value="${row?row.name:''}"></div>
+    <div class="form-group"><label>Nilai ($)</label><input id="f-amount" type="number" step="0.01" value="${row?n(row.amount):0}"></div>
+    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${row?row.date:todayISO()}"></div>`,
+  ppe: (row)=>`
+    <div class="form-group"><label>Nama Aset</label><input id="f-name" value="${row?row.name:''}"></div>
+    <div class="form-group"><label>Nilai ($)</label><input id="f-amount" type="number" step="0.01" value="${row?n(row.amount):0}"></div>
+    <div class="form-group"><label>Tanggal Beli</label><input id="f-date" type="date" value="${row?row.date:todayISO()}"></div>`,
+  intangible: (row)=>`
+    <div class="form-group"><label>Nama Aset Tak Berwujud</label><input id="f-name" value="${row?row.name:''}"></div>
+    <div class="form-group"><label>Nilai ($)</label><input id="f-amount" type="number" step="0.01" value="${row?n(row.amount):0}"></div>
+    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${row?row.date:todayISO()}"></div>`,
+  inv: (row)=>`
+    <div class="form-group"><label>Nama Investasi</label><input id="f-name" value="${row?row.name:''}"></div>
+    <div class="form-group"><label>Tipe</label><select id="f-type">${['Saham','Reksa Dana','Crypto','Emas','Obligasi','Lainnya'].map(t=>`<option ${row&&row.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Nilai ($)</label><input id="f-amount" type="number" step="0.01" value="${row?n(row.amount):0}"></div>
+    <div class="form-group"><label>Gain/Loss ($)</label><input id="f-gain" type="number" step="0.01" value="${row?n(row.gain):0}"></div>`,
+};
+
+function getRow(type, id) {
+  const map = { ca:'currentAssets', ar:'ar', 'inv-item':'inventoryItems', ppe:'ppe', intangible:'intangibles', inv:'investments' };
+  return state[map[type]]?.find(r=>r.id===id);
+}
+const TYPE_LABELS = {ca:'Current Asset',ar:'Accounts Receivable','inv-item':'Inventory',ppe:'Property/Plant/Equipment',intangible:'Intangible Asset',inv:'Investment'};
+
+function openModal(type){modalType=type;modalEditId=null;document.getElementById('modal-title').textContent='Tambah '+TYPE_LABELS[type];document.getElementById('modal-body').innerHTML=MODAL_FORMS[type](null);document.getElementById('modal-overlay').classList.add('open');}
+function openEdit(type,id){modalType=type;modalEditId=id;const row=getRow(type,id);document.getElementById('modal-title').textContent='Edit '+TYPE_LABELS[type];document.getElementById('modal-body').innerHTML=MODAL_FORMS[type](row);document.getElementById('modal-overlay').classList.add('open');}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+async function saveModal(){
+  const name=document.getElementById('f-name')?.value.trim() || 'Tanpa nama';
+  const amount=n(document.getElementById('f-amount')?.value);
+  const date=document.getElementById('f-date')?.value || todayISO();
+
+  if(modalType==='ca'){
+    const category=document.getElementById('f-cat').value;
+    if(modalEditId){Object.assign(state.currentAssets.find(r=>r.id===modalEditId),{name,category,amount,date});}
+    else{state.currentAssets.push({id:Date.now(),name,category,amount,date});}
+    renderCATable();
+  } else if(modalType==='ar'){
+    const status=document.getElementById('f-status').value;
+    if(modalEditId){Object.assign(state.ar.find(r=>r.id===modalEditId),{name,amount,date,status});}
+    else{state.ar.push({id:Date.now(),name,amount,date,status});}
+    renderARTable();
+  } else if(modalType==='inv-item'){
+    if(modalEditId){Object.assign(state.inventoryItems.find(r=>r.id===modalEditId),{name,amount,date});}
+    else{state.inventoryItems.push({id:Date.now(),name,amount,date});}
+    renderInventoryTable();
+  } else if(modalType==='ppe'){
+    if(modalEditId){Object.assign(state.ppe.find(r=>r.id===modalEditId),{name,amount,date});}
+    else{state.ppe.push({id:Date.now(),name,amount,date});}
+    renderPPETable();
+  } else if(modalType==='intangible'){
+    if(modalEditId){Object.assign(state.intangibles.find(r=>r.id===modalEditId),{name,amount,date});}
+    else{state.intangibles.push({id:Date.now(),name,amount,date});}
+    renderIntangibleTable();
+  } else if(modalType==='inv'){
+    const type=document.getElementById('f-type').value;
+    const gain=n(document.getElementById('f-gain')?.value);
+    if(modalEditId){Object.assign(state.investments.find(r=>r.id===modalEditId),{name,type,amount,gain});}
+    else{state.investments.push({id:Date.now(),name,type,amount,gain});}
+    renderInvTable();
+  }
+
+  recordSnapshot();
+  await persistState();
+  closeModal();
+  updateStats();
+  showToast('✅ Data berhasil disimpan!');
+}
+
+async function deleteRow(type,id){
+  if(!confirm('Hapus data ini?'))return;
+  if(type==='ca'){state.currentAssets=state.currentAssets.filter(r=>r.id!==id);renderCATable();}
+  else if(type==='ar'){state.ar=state.ar.filter(r=>r.id!==id);renderARTable();}
+  else if(type==='inv-item'){state.inventoryItems=state.inventoryItems.filter(r=>r.id!==id);renderInventoryTable();}
+  else if(type==='ppe'){state.ppe=state.ppe.filter(r=>r.id!==id);renderPPETable();}
+  else if(type==='intangible'){state.intangibles=state.intangibles.filter(r=>r.id!==id);renderIntangibleTable();}
+  else if(type==='inv'){state.investments=state.investments.filter(r=>r.id!==id);renderInvTable();}
+  recordSnapshot();
+  await persistState();
+  updateStats();
+  showToast('🗑️ Data berhasil dihapus!');
+}
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async ()=>{
+  const now = todayISO();
+  document.getElementById('dash-report-date').value = now;
+  document.getElementById('laporan-date').value = now;
+  if (localStorage.getItem('finance_dark_mode') === '1') document.body.classList.add('dark');
+
+  await loadState();
+  recordSnapshot();
+  renderCATable();
+  renderARTable();
+  renderInventoryTable();
+  renderPPETable();
+  renderIntangibleTable();
+  renderInvTable();
+
+  updateStats();
+  initGrowthChart();
+  updateAlokasiChart();
+  initReceivableChart();
+  updateInvestChart();
+  initGainChart();
+  await persistState();
+});
+
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+</script>
 </body>
 </html>
