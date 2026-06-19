@@ -4,8 +4,8 @@
   3) Isi URL dan ANON KEY di bawah ini
   4) Upload folder ini ke GitHub Pages
 */
-const SUPABASE_URL = '';
-const SUPABASE_ANON_KEY = '';
+const SUPABASE_URL = 'https://prybtaghmbajrahijrjt.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByeWJ0YWdobWJhanJhaGlqcmp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTc0NDMsImV4cCI6MjA5NzIzMzQ0M30.kALEkLvw4a4aQYEgnYvdajUP4YG1yvjKfhPqBaakAnM';
 const db = SUPABASE_URL && SUPABASE_ANON_KEY ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 const $ = id => document.getElementById(id);
