@@ -2,1157 +2,1366 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#2563eb">
+<meta name="description" content="Laporan Keuangan Pribadi">
 <title>Laporan Keuangan Pribadi</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+/* ══════════════════════════════════════════
+   RESET & VARIABLES
+══════════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
-  --bg:#f4f6fa;--sidebar-bg:#fff;--card-bg:#fff;--text:#1a1a2e;
-  --text-muted:#6b7280;--border:#e5e7eb;--primary:#2563eb;
-  --primary-light:#eff6ff;--success:#10b981;--danger:#ef4444;
-  --warning:#f59e0b;--sw:230px;--hh:56px;
+  --bg:#f1f5f9;--card:#fff;--sidebar:#fff;--text:#0f172a;--muted:#64748b;
+  --border:#e2e8f0;--primary:#2563eb;--primary-l:#eff6ff;--primary-d:#1d4ed8;
+  --success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+  --sw:240px;--hh:58px;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,.08);
 }
-body.dark{--bg:#0f172a;--sidebar-bg:#1e293b;--card-bg:#1e293b;--text:#f1f5f9;--text-muted:#94a3b8;--border:#334155;--primary-light:#1e3a5f;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
+body.dark{
+  --bg:#0f172a;--card:#1e293b;--sidebar:#1e293b;--text:#f1f5f9;--muted:#94a3b8;
+  --border:#334155;--primary-l:#1e3a5f;--shadow:0 1px 3px rgba(0,0,0,.3);
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s;font-size:14px;}
 
-/* ── HEADER ── */
-.header{background:var(--card-bg);border-bottom:1px solid var(--border);padding:0 14px;height:var(--hh);display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06);}
-.header-left{display:flex;align-items:center;gap:10px;}
-.btn-hamburger{background:none;border:none;cursor:pointer;color:var(--text);padding:7px;border-radius:8px;display:flex;align-items:center;transition:background .2s;}
-.btn-hamburger:hover{background:var(--bg);}
-.logo-text{font-weight:700;font-size:15px;white-space:nowrap;}
-.logo-text span{color:var(--primary);}
-.header-right{display:flex;align-items:center;gap:8px;}
-.btn-dark{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 11px;font-size:12px;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:5px;white-space:nowrap;}
-.user-email{font-size:12px;color:var(--text-muted);border:1px solid var(--border);border-radius:8px;padding:5px 10px;}
-.btn-logout{background:none;border:none;color:var(--primary);font-size:13px;cursor:pointer;font-weight:600;}
+/* ══════════════════════════════════════════
+   LOADING SCREEN
+══════════════════════════════════════════ */
+#loading-screen{position:fixed;inset:0;background:var(--primary);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s;}
+#loading-screen.hide{opacity:0;pointer-events:none;}
+.loader-logo{font-size:48px;margin-bottom:16px;animation:pulse 1.2s infinite;}
+.loader-text{color:#fff;font-size:18px;font-weight:700;margin-bottom:8px;}
+.loader-sub{color:rgba(255,255,255,.7);font-size:13px;}
+.loader-bar{width:200px;height:3px;background:rgba(255,255,255,.3);border-radius:2px;margin-top:24px;overflow:hidden;}
+.loader-fill{height:100%;background:#fff;border-radius:2px;animation:loading 1.5s ease-in-out infinite;}
+@keyframes loading{0%{width:0;margin-left:0;}50%{width:60%;margin-left:20%;}100%{width:0;margin-left:100%;};}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);};}
 
-/* ── LAYOUT ── */
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+.header{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;height:var(--hh);display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:200;box-shadow:var(--shadow);}
+.h-left{display:flex;align-items:center;gap:10px;}
+.btn-ham{background:none;border:none;cursor:pointer;color:var(--text);padding:8px;border-radius:8px;display:flex;transition:background .2s;}
+.btn-ham:hover{background:var(--bg);}
+.h-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;}
+.h-logo-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0;}
+.h-logo-text{display:flex;flex-direction:column;line-height:1.2;}
+.h-logo-text small{font-size:10px;font-weight:400;color:var(--muted);}
+.h-right{display:flex;align-items:center;gap:8px;}
+.btn-icon{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:5px;white-space:nowrap;transition:background .2s;}
+.btn-icon:hover{background:var(--border);}
+.h-avatar{width:34px;height:34px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;}
+
+/* ══════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════ */
 .layout{display:flex;margin-top:var(--hh);min-height:calc(100vh - var(--hh));}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;backdrop-filter:blur(2px);}
+.sb-overlay.show{display:block;}
 
-/* ── SIDEBAR ── */
-.sidebar{width:var(--sw);background:var(--sidebar-bg);border-right:1px solid var(--border);position:fixed;top:var(--hh);bottom:0;overflow-y:auto;overflow-x:hidden;transition:transform .26s ease,width .26s ease;z-index:150;}
-.sidebar.collapsed{transform:translateX(-100%);width:0;}
-.sidebar-inner{width:var(--sw);padding-bottom:20px;}
-.sb-section{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);padding:14px 18px 5px;text-transform:uppercase;white-space:nowrap;}
-.sb-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;color:var(--text-muted);transition:all .18s;white-space:nowrap;border-left:3px solid transparent;}
-.sb-item:hover{background:var(--primary-light);color:var(--primary);}
-.sb-item.active{background:var(--primary-light);color:var(--primary);border-left-color:var(--primary);font-weight:600;}
-.sb-item svg{width:15px;height:15px;flex-shrink:0;}
-.sb-divider{height:1px;background:var(--border);margin:6px 14px;}
-/* Mobile overlay */
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:140;}
-.sidebar-overlay.show{display:block;}
+/* ══════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════ */
+.sidebar{width:var(--sw);background:var(--sidebar);border-right:1px solid var(--border);position:fixed;top:var(--hh);bottom:0;overflow-y:auto;overflow-x:hidden;transition:transform .28s cubic-bezier(.4,0,.2,1),width .28s cubic-bezier(.4,0,.2,1);z-index:160;}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sb-inner{width:var(--sw);padding:12px 0 24px;}
+.sb-group{margin-bottom:4px;}
+.sb-label{font-size:9.5px;font-weight:800;letter-spacing:1.2px;color:var(--muted);padding:14px 18px 5px;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;color:var(--muted);transition:all .18s;border-left:3px solid transparent;user-select:none;}
+.sb-item:hover{background:var(--primary-l);color:var(--primary);}
+.sb-item.active{background:var(--primary-l);color:var(--primary);border-left-color:var(--primary);font-weight:600;}
+.sb-item svg{width:16px;height:16px;flex-shrink:0;}
+.sb-divider{height:1px;background:var(--border);margin:8px 16px;}
+.sb-user{padding:16px 18px;border-top:1px solid var(--border);margin-top:8px;}
+.sb-user-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sb-user-email{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-/* ── MAIN ── */
-.main{margin-left:var(--sw);flex:1;padding:18px;transition:margin-left .26s ease;min-width:0;max-width:100%;}
+/* ══════════════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════════════ */
+.main{margin-left:var(--sw);flex:1;padding:20px;transition:margin-left .28s cubic-bezier(.4,0,.2,1);min-width:0;max-width:100%;padding-bottom:40px;}
 .main.full{margin-left:0;}
 
-/* ── STAT CARDS ── */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
-.stat-card{background:var(--card-bg);border-radius:12px;padding:16px;display:flex;align-items:flex-start;justify-content:space-between;border:1px solid var(--border);}
-.stat-info{flex:1;min-width:0;}
-.stat-label{font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
-.stat-value{font-size:22px;font-weight:700;margin-bottom:4px;}
-.stat-change{font-size:10.5px;display:flex;align-items:center;gap:2px;font-weight:600;flex-wrap:wrap;}
-.stat-change.up{color:var(--success);}
-.stat-change.down{color:var(--danger);}
-.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;margin-left:8px;}
-.si-blue{background:#eff6ff;}.si-green{background:#ecfdf5;}.si-orange{background:#fff7ed;}.si-purple{background:#f5f3ff;}
-
-/* ── GRID ── */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
-
-/* ── CARD ── */
-.card{background:var(--card-bg);border-radius:12px;border:1px solid var(--border);padding:16px;margin-bottom:0;}
-.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
-.card-title{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text);}
-.card-subtitle{font-size:14px;font-weight:700;color:var(--primary);}
-.date-wrap{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);flex-wrap:wrap;}
-.date-wrap input[type=date]{border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;background:var(--bg);color:var(--text);}
-.sel-period{border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;}
-
-/* ── FINANCIAL TABLE ── */
-.fin-wrap{font-size:12.5px;}
-.fin-sec{font-weight:700;font-size:10.5px;letter-spacing:.6px;color:var(--text-muted);padding:10px 0 4px;text-transform:uppercase;}
-.fin-row{display:flex;align-items:flex-start;padding:3px 0;gap:4px;}
-.fin-row.i1{padding-left:12px;color:var(--text-muted);}
-.fin-row.i2{padding-left:24px;color:var(--text-muted);font-size:11.5px;}
-.fin-row.sub{font-weight:700;padding:6px 0;border-top:1px solid var(--border);margin-top:2px;}
-.fin-row.tot{font-weight:700;color:var(--primary);background:var(--primary-light);padding:8px 10px;border-radius:7px;margin-top:8px;}
-.fn{font-size:10px;color:var(--text-muted);min-width:18px;flex-shrink:0;padding-top:1px;}
-.fl{flex:1;}
-.fv{font-weight:600;white-space:nowrap;font-size:12.5px;}
-
-/* Detail sub-rows in laporan */
-.fin-detail-row{display:flex;padding:2px 0 2px 32px;font-size:11px;color:var(--text-muted);}
-.fin-detail-row .fdr-name{flex:1;}
-.fin-detail-row .fdr-val{font-weight:500;}
-
-/* ── BUTTONS ── */
-.btn-save{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;font-weight:600;margin-top:14px;}
-.btn-save:hover{opacity:.9;}
-.btn-pdf{background:#fff;color:var(--danger);border:1.5px solid var(--danger);border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-weight:600;margin-top:14px;margin-left:8px;display:inline-flex;align-items:center;gap:6px;}
-.btn-pdf:hover{background:#fef2f2;}
-.btn-add{background:var(--primary);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-weight:600;}
-.btn-edit{background:#eff6ff;color:var(--primary);border:none;border-radius:5px;padding:4px 9px;font-size:11px;cursor:pointer;font-weight:600;}
-.btn-del{background:#fef2f2;color:var(--danger);border:none;border-radius:5px;padding:4px 9px;font-size:11px;cursor:pointer;font-weight:600;margin-left:4px;}
-
-/* ── DONUT ── */
-.donut-wrap{display:flex;align-items:center;gap:14px;}
-.donut-canvas{width:110px!important;height:110px!important;flex-shrink:0;}
-.lg-row{display:flex;align-items:center;gap:6px;padding:2.5px 0;font-size:11px;}
-.lg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.lg-name{flex:1;}
-.lg-pct{color:var(--text-muted);min-width:34px;}
-.lg-val{font-weight:600;min-width:44px;text-align:right;}
-.lg-total{border-top:1px solid var(--border);margin-top:4px;padding-top:4px;display:flex;justify-content:space-between;font-weight:600;font-size:11.5px;}
-
-/* ── CRUD TABLE ── */
-.crud-table{width:100%;border-collapse:collapse;font-size:12px;}
-.crud-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text-muted);text-transform:uppercase;border-bottom:2px solid var(--border);background:var(--bg);white-space:nowrap;}
-.crud-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
-.crud-table tr:last-child td{border-bottom:none;}
-.crud-table tr:hover td{background:var(--primary-light);}
-/* Responsive table wrapper */
-.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-
-/* ── BADGE ── */
-.badge{display:inline-block;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;}
-.bg{background:#ecfdf5;color:#059669;}
-.br{background:#fef2f2;color:#dc2626;}
-.bb{background:#eff6ff;color:#2563eb;}
-.by{background:#fffbeb;color:#d97706;}
-
-/* ── PAGE ── */
-.page{display:none;}
+/* ══════════════════════════════════════════
+   PAGE
+══════════════════════════════════════════ */
+.page{display:none;animation:fadeIn .2s ease;}
 .page.active{display:block;}
-.page-heading{font-size:17px;font-weight:700;margin-bottom:14px;}
-.page-heading span{font-size:12px;font-weight:400;color:var(--text-muted);margin-left:8px;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;};}
+.page-title{font-size:20px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.page-title svg{width:22px;height:22px;color:var(--primary);}
 
-/* ── MODAL ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:flex-end;justify-content:center;}
+/* ══════════════════════════════════════════
+   STAT CARDS
+══════════════════════════════════════════ */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+.stat-card{background:var(--card);border-radius:var(--radius);padding:16px;border:1px solid var(--border);box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:flex-start;transition:transform .2s,box-shadow .2s;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.sc-info{flex:1;min-width:0;}
+.sc-label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.sc-value{font-size:22px;font-weight:800;color:var(--text);margin-bottom:5px;font-variant-numeric:tabular-nums;}
+.sc-change{font-size:10.5px;font-weight:600;display:flex;align-items:center;gap:3px;}
+.sc-change.up{color:var(--success);}
+.sc-change.down{color:var(--danger);}
+.sc-change.neutral{color:var(--muted);}
+.sc-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-left:12px;}
+.ic-blue{background:#dbeafe;}.ic-green{background:#d1fae5;}.ic-orange{background:#ffedd5;}.ic-purple{background:#ede9fe;}
+
+/* ══════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════ */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:18px;box-shadow:var(--shadow);}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.card-title{font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);}
+.card-month{font-size:15px;font-weight:700;color:var(--primary);margin-top:2px;}
+.date-wrap{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);}
+.date-wrap input[type=date]{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;background:var(--bg);color:var(--text);outline:none;cursor:pointer;}
+.date-wrap input[type=date]:focus{border-color:var(--primary);}
+.sel{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;outline:none;}
+.sel:focus{border-color:var(--primary);}
+
+/* ══════════════════════════════════════════
+   GRID LAYOUTS
+══════════════════════════════════════════ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.g2-auto{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.gap-b{margin-bottom:16px;}
+
+/* ══════════════════════════════════════════
+   FINANCIAL REPORT
+══════════════════════════════════════════ */
+.fin{font-size:12.5px;line-height:1.6;}
+.fin-sec{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:12px 0 5px;display:flex;align-items:center;gap:6px;}
+.fin-sec::after{content:'';flex:1;height:1px;background:var(--border);}
+.fin-row{display:flex;align-items:baseline;padding:3.5px 0;gap:6px;}
+.fin-row.i1{padding-left:14px;color:var(--muted);font-size:12px;}
+.fin-row.i2{padding-left:28px;color:var(--muted);font-size:11.5px;}
+.fin-row.sub{font-weight:700;padding:7px 0 5px;border-top:1px dashed var(--border);margin-top:3px;}
+.fin-row.tot{font-weight:800;color:var(--primary);background:var(--primary-l);padding:10px 14px;border-radius:10px;margin-top:10px;font-size:13.5px;}
+.f-num{font-size:10px;color:var(--muted);min-width:20px;flex-shrink:0;}
+.f-lbl{flex:1;}
+.f-val{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;}
+/* Detail sub rows in full report */
+.fin-detail{display:flex;align-items:baseline;padding:2px 28px 2px 28px;gap:6px;font-size:11.5px;color:var(--muted);}
+.fin-detail .f-lbl{flex:1;}
+.fin-detail .f-val{font-weight:500;}
+
+/* ══════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════ */
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+.btn{border:none;border-radius:9px;padding:10px 18px;font-size:13px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:all .2s;white-space:nowrap;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-d);}
+.btn-danger-outline{background:transparent;color:var(--danger);border:1.5px solid var(--danger);}
+.btn-danger-outline:hover{background:#fef2f2;}
+.btn-success-outline{background:transparent;color:var(--success);border:1.5px solid var(--success);}
+.btn-success-outline:hover{background:#ecfdf5;}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px;border:none;cursor:pointer;font-weight:600;}
+.bs-edit{background:#eff6ff;color:var(--primary);}
+.bs-del{background:#fef2f2;color:var(--danger);margin-left:4px;}
+.btn-add{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+
+/* ══════════════════════════════════════════
+   DONUT LEGEND
+══════════════════════════════════════════ */
+.donut-wrap{display:flex;align-items:center;gap:16px;}
+.donut-canvas{width:110px!important;height:110px!important;flex-shrink:0;}
+.lg-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px;}
+.lg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lg-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;}
+.lg-pct{color:var(--muted);min-width:34px;font-size:10.5px;}
+.lg-val{font-weight:700;min-width:44px;text-align:right;font-variant-numeric:tabular-nums;}
+.lg-total{border-top:1px solid var(--border);margin-top:5px;padding-top:5px;display:flex;justify-content:space-between;font-weight:700;font-size:11.5px;}
+
+/* ══════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════ */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:12px;border-radius:8px;border:1px solid var(--border);}
+.crud-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:500px;}
+.crud-table th{text-align:left;padding:10px 12px;font-size:10px;font-weight:800;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap;}
+.crud-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.crud-table tr:last-child td{border-bottom:none;}
+.crud-table tbody tr{transition:background .15s;}
+.crud-table tbody tr:hover td{background:var(--primary-l);}
+.empty-row{text-align:center;padding:32px!important;color:var(--muted);font-style:italic;}
+
+/* ══════════════════════════════════════════
+   BADGES
+══════════════════════════════════════════ */
+.badge{display:inline-flex;align-items:center;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap;}
+.b-blue{background:#dbeafe;color:#1d4ed8;}
+.b-green{background:#d1fae5;color:#059669;}
+.b-red{background:#fee2e2;color:#dc2626;}
+.b-yellow{background:#fef3c7;color:#d97706;}
+.b-purple{background:#ede9fe;color:#7c3aed;}
+.b-gray{background:#f1f5f9;color:#64748b;}
+
+/* ══════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--card-bg);border-radius:16px 16px 0 0;padding:24px 20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
-.modal h3{font-size:15px;font-weight:700;margin-bottom:14px;}
-.form-group{margin-bottom:11px;}
-.form-group label{display:block;font-size:10.5px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;}
-.form-group input,.form-group select{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:var(--bg);color:var(--text);outline:none;}
+.modal{background:var(--card);width:100%;max-width:480px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:24px 20px 32px;}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+.modal h3{font-size:17px;font-weight:700;margin-bottom:18px;color:var(--text);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-group{margin-bottom:13px;}
+.form-group label{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+.form-group input,.form-group select{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 13px;font-size:14px;background:var(--bg);color:var(--text);outline:none;transition:border-color .2s;}
 .form-group input:focus,.form-group select:focus{border-color:var(--primary);}
-.modal-btns{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
-.btn-cancel{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;color:var(--text);}
-.btn-primary{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;font-weight:600;}
+.modal-btns{display:flex;gap:10px;margin-top:20px;}
+.modal-btns button{flex:1;padding:12px;font-size:14px;border-radius:10px;border:none;cursor:pointer;font-weight:700;}
+.mb-cancel{background:var(--bg);color:var(--text);border:1.5px solid var(--border)!important;}
+.mb-save{background:var(--primary);color:#fff;}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;border-radius:10px;padding:11px 20px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
-.toast.show{opacity:1;}
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#0f172a;color:#fff;border-radius:12px;padding:12px 22px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s cubic-bezier(.4,0,.2,1);pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.25);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+body.dark .toast{background:#f1f5f9;color:#0f172a;}
 
-/* ── PRINT / PDF ── */
+/* ══════════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════════ */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state .es-icon{font-size:48px;margin-bottom:12px;}
+.empty-state p{font-size:14px;}
+
+/* ══════════════════════════════════════════
+   CHART LEGEND GAIN
+══════════════════════════════════════════ */
+.chart-legend{display:flex;gap:16px;margin-top:8px;font-size:11px;}
+.cl-item{display:flex;align-items:center;gap:5px;color:var(--muted);}
+.cl-box{width:10px;height:10px;border-radius:2px;}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media(max-width:1200px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .g3{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:900px){
+  .g2,.g3,.g2-auto{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  :root{--hh:52px;}
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.mob-open{transform:translateX(0);}
+  .main{margin-left:0!important;padding:12px;padding-bottom:32px;}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .sc-value{font-size:19px;}
+  .sc-icon{width:38px;height:38px;font-size:17px;}
+  .card{padding:14px;}
+  .modal{border-radius:20px 20px 0 0;}
+  .form-row{grid-template-columns:1fr;}
+  .h-logo-text{display:none;}
+  .h-logo-icon{display:flex;}
+  .g2{gap:12px;}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .sc-value{font-size:17px;}
+  .sc-label{font-size:9px;}
+  .sc-card{padding:12px;}
+  .main{padding:10px;padding-bottom:28px;}
+}
+
+/* ══════════════════════════════════════════
+   PRINT
+══════════════════════════════════════════ */
 @media print{
-  .header,.sidebar,.sidebar-overlay,.btn-pdf,.btn-save,.btn-add,footer,.modal-overlay{display:none!important;}
+  .header,.sidebar,.sb-overlay,.btn,.btn-add,.btn-row,footer,.modal-overlay,#loading-screen,.toast{display:none!important;}
   .main{margin-left:0!important;padding:0!important;}
   .page{display:block!important;}
   .card{border:none;box-shadow:none;padding:0;}
-  body{background:#fff;color:#000;}
-}
-
-/* ── RESPONSIVE ── */
-@media(max-width:1100px){
-  .stats-row{grid-template-columns:1fr 1fr;}
-  .g3{grid-template-columns:1fr;}
-  .stat-value{font-size:19px;}
-}
-@media(max-width:768px){
-  :root{--sw:260px;}
-  .sidebar{transform:translateX(-100%);width:var(--sw);}
-  .sidebar.mobile-open{transform:translateX(0);}
-  .main{margin-left:0!important;}
-  .footer-el{margin-left:0!important;}
-  .stats-row{grid-template-columns:1fr 1fr;gap:10px;}
-  .g2,.g3{grid-template-columns:1fr;}
-  .g2-mobile{grid-template-columns:1fr!important;}
-  .user-email{display:none;}
-  .modal{border-radius:16px 16px 0 0;}
-  .modal-overlay{align-items:flex-end;}
-  .crud-table{font-size:11px;}
-  .crud-table th,.crud-table td{padding:6px 8px;}
-  .logo-text{font-size:13px;}
-  .main{padding:12px;}
-  .stat-value{font-size:18px;}
-  .stat-label{font-size:9.5px;}
-}
-@media(max-width:480px){
-  .stats-row{grid-template-columns:1fr 1fr;gap:8px;}
-  .stat-card{padding:12px;}
-  .stat-value{font-size:16px;}
-  .stat-icon{width:34px;height:34px;font-size:14px;}
+  body{background:#fff!important;color:#000!important;}
 }
 </style>
 </head>
 <body>
 
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="loader-logo">📊</div>
+  <div class="loader-text">Laporan Keuangan Pribadi</div>
+  <div class="loader-sub">Memuat data dari Supabase…</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+</div>
+
 <!-- HEADER -->
 <header class="header">
-  <div class="header-left">
-    <button class="btn-hamburger" onclick="toggleSidebar()" title="Menu">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  <div class="h-left">
+    <button class="btn-ham" onclick="toggleSidebar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
     </button>
-    <div class="logo-text">
-      <span>📊</span> Laporan Keuangan Pribadi
+    <div class="h-logo">
+      <div class="h-logo-icon">📊</div>
+      <div class="h-logo-text">
+        Lap. Keuangan Pribadi
+        <small>Personal Finance Tracker</small>
+      </div>
     </div>
   </div>
-  <div class="header-right">
-    <button class="btn-dark" onclick="toggleDark()">🌙</button>
-    <span class="user-email">raihan.nor.falah@mhs.politala.ac.id</span>
-    <button class="btn-logout">Logout</button>
+  <div class="h-right">
+    <button class="btn-icon" onclick="toggleDark()">
+      <svg id="icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span id="dark-label">Dark</span>
+    </button>
+    <div class="h-avatar" title="raihan.nor.falah@mhs.politala.ac.id">R</div>
   </div>
 </header>
 
-<!-- Sidebar overlay (mobile) -->
-<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
 
 <div class="layout">
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-inner">
-      <div class="sb-item active" onclick="showPage('dashboard',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-        Dashboard
+    <div class="sb-inner">
+      <div class="sb-group">
+        <div class="sb-item active" onclick="nav('dashboard',this)" id="nav-dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+          Dashboard
+        </div>
       </div>
       <div class="sb-divider"></div>
-      <div class="sb-section">Laporan Keuangan</div>
-      <div class="sb-item" onclick="showPage('laporan',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Laporan Posisi Keuangan
+      <div class="sb-group">
+        <div class="sb-label">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          Laporan Keuangan
+        </div>
+        <div class="sb-item" onclick="nav('laporan',this)" id="nav-laporan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Laporan Posisi Keuangan
+        </div>
       </div>
       <div class="sb-divider"></div>
-      <div class="sb-section">Master Data</div>
-      <div class="sb-item" onclick="showPage('current-asset',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-        Current Asset
+      <div class="sb-group">
+        <div class="sb-label">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+          Master Data
+        </div>
+        <div class="sb-item" onclick="nav('current-asset',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Current Asset
+        </div>
+        <div class="sb-item" onclick="nav('cash-equiv',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Cash Equivalent
+        </div>
+        <div class="sb-item" onclick="nav('non-current',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Non Current Asset
+        </div>
+        <div class="sb-item" onclick="nav('investment',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Investment
+        </div>
       </div>
-      <div class="sb-item" onclick="showPage('cash-equiv',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        Cash Equivalent
-      </div>
-      <div class="sb-item" onclick="showPage('non-current',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-        Non Current Asset
-      </div>
-      <div class="sb-item" onclick="showPage('investment',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-        Investment
+      <div class="sb-divider"></div>
+      <div class="sb-user">
+        <div class="sb-user-name">Raihan Nor Falah</div>
+        <div class="sb-user-email">raihan.nor.falah@mhs.politala.ac.id</div>
       </div>
     </div>
   </aside>
 
   <!-- MAIN -->
-  <main class="main" id="main-content">
+  <main class="main" id="main">
 
-    <!-- ═══════════════ DASHBOARD ═══════════════ -->
-    <div id="page-dashboard" class="page active">
+    <!-- ══════════════ DASHBOARD ══════════════ -->
+    <div class="page active" id="page-dashboard">
       <!-- STAT CARDS -->
-      <div class="stats-row">
+      <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-info">
-            <div class="stat-label">Total Aset</div>
-            <div class="stat-value" id="stat-total">$0.00</div>
-            <div class="stat-change" id="change-total"><span id="cv-total">—</span></div>
+          <div class="sc-info">
+            <div class="sc-label">Total Aset</div>
+            <div class="sc-value" id="s-total">Rp 0</div>
+            <div class="sc-change neutral" id="sc-total">— dari bulan lalu</div>
           </div>
-          <div class="stat-icon si-blue">📈</div>
+          <div class="sc-icon ic-blue">📈</div>
         </div>
         <div class="stat-card">
-          <div class="stat-info">
-            <div class="stat-label">Total Current Asset</div>
-            <div class="stat-value" id="stat-current">$0.00</div>
-            <div class="stat-change" id="change-current"><span id="cv-current">—</span></div>
+          <div class="sc-info">
+            <div class="sc-label">Total Current Asset</div>
+            <div class="sc-value" id="s-current">Rp 0</div>
+            <div class="sc-change neutral" id="sc-current">— dari bulan lalu</div>
           </div>
-          <div class="stat-icon si-green">💼</div>
+          <div class="sc-icon ic-green">💼</div>
         </div>
         <div class="stat-card">
-          <div class="stat-info">
-            <div class="stat-label">Non Current Asset</div>
-            <div class="stat-value" id="stat-noncurrent">$0.00</div>
-            <div class="stat-change" id="change-noncurrent"><span id="cv-noncurrent">—</span></div>
+          <div class="sc-info">
+            <div class="sc-label">Non Current Asset</div>
+            <div class="sc-value" id="s-noncurrent">Rp 0</div>
+            <div class="sc-change neutral" id="sc-noncurrent">— dari bulan lalu</div>
           </div>
-          <div class="stat-icon si-orange">🏢</div>
+          <div class="sc-icon ic-orange">🏢</div>
         </div>
         <div class="stat-card">
-          <div class="stat-info">
-            <div class="stat-label">Total Asset Hari Ini</div>
-            <div class="stat-value" id="stat-today">$0.00</div>
-            <div class="stat-change" id="change-today"><span id="cv-today">—</span></div>
+          <div class="sc-info">
+            <div class="sc-label">Asset Hari Ini</div>
+            <div class="sc-value" id="s-today">Rp 0</div>
+            <div class="sc-change neutral" id="sc-today">Update terakhir: —</div>
           </div>
-          <div class="stat-icon si-purple">🗄️</div>
+          <div class="sc-icon ic-purple">🗄️</div>
         </div>
       </div>
 
-      <!-- Laporan + Growth chart -->
-      <div class="g2">
+      <!-- Row 2 -->
+      <div class="g2 gap-b">
+        <!-- Laporan mini -->
         <div class="card">
-          <div class="card-header">
+          <div class="card-hd">
             <div>
               <div class="card-title">Laporan Posisi Keuangan</div>
-              <div class="card-subtitle" id="dash-month" style="margin-top:3px;font-size:13px;">—</div>
+              <div class="card-month" id="dash-month">—</div>
             </div>
             <div class="date-wrap">
-              Bulan <input type="month" id="dash-date" value="2026-06" onchange="onDashDate(this.value)">
+              <input type="date" id="dash-date" onchange="onDashDate(this.value)">
             </div>
           </div>
-          <div id="fin-dash"></div>
-          <div>
-            <button class="btn-save" onclick="saveReport()">💾 Simpan</button>
-            <button class="btn-pdf" onclick="downloadPDF('dash')">📄 Download PDF</button>
+          <div id="fin-dash"><div class="empty-state"><div class="es-icon">📄</div><p>Pilih tanggal untuk melihat laporan</p></div></div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="saveSnapshot()">💾 Simpan Snapshot</button>
+            <button class="btn btn-danger-outline" onclick="downloadPDF()">📄 Download PDF</button>
           </div>
         </div>
 
+        <!-- Growth chart -->
         <div class="card">
-          <div class="card-header">
+          <div class="card-hd">
             <span class="card-title">History Growth Aset</span>
-            <select class="sel-period" onchange="updateGrowthChart(this.value)">
-              <option value="1">1 Hari Terakhir</option>
+            <select class="sel" onchange="loadGrowthChart(this.value)">
+              <option value="30">30 Hari Terakhir</option>
               <option value="7">7 Hari Terakhir</option>
-              <option value="30" selected>30 Hari Terakhir</option>
-              <option value="365">1 Tahun Terakhir</option>
-              <option value="all">All</option>
+              <option value="90">90 Hari Terakhir</option>
             </select>
           </div>
-          <canvas id="growthChart" height="160"></canvas>
-          <div style="margin-top:16px;">
-            <div class="card-title" style="margin-bottom:10px;">Alokasi Uang (Current Asset)</div>
+          <canvas id="chart-growth" height="160"></canvas>
+
+          <!-- Alokasi -->
+          <div style="margin-top:20px;">
+            <div class="card-title" style="margin-bottom:12px;">Alokasi Current Asset</div>
             <div class="donut-wrap">
-              <canvas id="alokasiChart" class="donut-canvas"></canvas>
-              <div style="flex:1">
+              <canvas id="chart-alokasi" class="donut-canvas"></canvas>
+              <div style="flex:1;min-width:0;">
                 <div id="alokasi-legend"></div>
-                <div class="lg-total"><span>Total</span><span>100%</span><span id="alokasi-total">—</span></div>
+                <div class="lg-total"><span>Total</span><span id="alokasi-total">Rp 0</span></div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Row 3 charts -->
+      <!-- Row 3 -->
       <div class="g3">
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">History Growth Receivable</span>
-            <select class="sel-period" onchange="updateReceivableChart(this.value)">
-              <option value="1">1 Hari Terakhir</option>
-              <option value="7">7 Hari Terakhir</option>
-              <option value="30" selected>30 Hari Terakhir</option>
-              <option value="365">1 Tahun Terakhir</option>
-              <option value="all">All</option>
+          <div class="card-hd">
+            <span class="card-title">Growth Receivable</span>
+            <select class="sel" onchange="loadReceivableChart(this.value)">
+              <option value="30">30 Hari</option>
+              <option value="7">7 Hari</option>
             </select>
           </div>
-          <canvas id="receivableChart" height="140"></canvas>
+          <canvas id="chart-receivable" height="140"></canvas>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">Investment Allocation</span></div>
+          <div class="card-hd"><span class="card-title">Investment Allocation</span></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-            <canvas id="investChart" style="width:110px;height:110px;"></canvas>
+            <canvas id="chart-invest" style="width:110px;height:110px;"></canvas>
             <div id="invest-legend" style="width:100%;"></div>
-            <div class="lg-total" style="width:100%;"><span>Total</span><span>100%</span><span id="invest-total">—</span></div>
+            <div class="lg-total" style="width:100%;"><span>Total</span><span id="invest-total">Rp 0</span></div>
           </div>
         </div>
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Investment Gain</span>
-            <select class="sel-period" onchange="updateGainChart(this.value)">
-              <option value="1">1 Hari Terakhir</option>
-              <option value="7">7 Hari Terakhir</option>
-              <option value="30" selected>30 Hari Terakhir</option>
-              <option value="365">1 Tahun Terakhir</option>
-              <option value="all">All</option>
+          <div class="card-hd">
+            <span class="card-title">Investment Gain / Loss</span>
+            <select class="sel" onchange="loadGainChart(+this.value)">
+              <option value="30">30 Hari</option>
+              <option value="7">7 Hari</option>
             </select>
           </div>
-          <canvas id="gainChart" height="140"></canvas>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:11px;">
-            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#22c55e;border-radius:2px;display:inline-block;"></span>Gain</span>
-            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#ef4444;border-radius:2px;display:inline-block;"></span>Loss</span>
+          <canvas id="chart-gain" height="140"></canvas>
+          <div class="chart-legend">
+            <div class="cl-item"><div class="cl-box" style="background:#22c55e;"></div>Gain</div>
+            <div class="cl-item"><div class="cl-box" style="background:#ef4444;"></div>Loss</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ═══════════════ LAPORAN POSISI KEUANGAN ═══════════════ -->
-    <div id="page-laporan" class="page">
+    <!-- ══════════════ LAPORAN ══════════════ -->
+    <div class="page" id="page-laporan">
+      <div class="page-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Laporan Posisi Keuangan
+      </div>
       <div class="card">
-        <div class="card-header">
+        <div class="card-hd">
           <div>
-            <div class="card-title">Laporan Posisi Keuangan</div>
-            <div class="card-subtitle" id="laporan-month" style="margin-top:3px;font-size:15px;">—</div>
+            <div class="card-title">Laporan Detail</div>
+            <div class="card-month" id="laporan-month">—</div>
           </div>
-          <div class="date-wrap">
-            Bulan <input type="month" id="laporan-date" value="2026-06" onchange="onLaporanDate(this.value)">
-          </div>
+          <div class="date-wrap">Tanggal <input type="date" id="laporan-date" onchange="onLaporanDate(this.value)"></div>
         </div>
         <div id="fin-laporan"></div>
-        <div>
-          <button class="btn-save" onclick="saveReport()">💾 Simpan Laporan</button>
-          <button class="btn-pdf" onclick="downloadPDF('laporan')">📄 Download PDF</button>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveSnapshot()">💾 Simpan Snapshot</button>
+          <button class="btn btn-danger-outline" onclick="downloadPDF()">📄 Download PDF</button>
         </div>
       </div>
     </div>
 
-    <!-- ═══════════════ CURRENT ASSET ═══════════════ -->
-    <div id="page-current-asset" class="page">
-      <div class="page-heading">Current Asset <span>Kas, Bank & Sumber Pendapatan</span></div>
+    <!-- ══════════════ CURRENT ASSET ══════════════ -->
+    <div class="page" id="page-current-asset">
+      <div class="page-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Current Asset
+      </div>
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">Daftar Current Asset</span>
+        <div class="card-hd">
+          <div><div class="card-title">Kas, Bank & Penghasilan Platform</div></div>
           <button class="btn-add" onclick="openModal('ca')">+ Tambah</button>
         </div>
-        <p style="font-size:11.5px;color:var(--text-muted);margin-bottom:6px;">Kelola kas, bank, penghasilan platform (TikTok, dll), dan sumber kas lainnya.</p>
-        <div class="table-wrap"><table class="crud-table" id="ca-table"></table></div>
+        <div class="table-wrap"><table class="crud-table" id="t-ca"><tbody><tr><td class="empty-row" colspan="6">Memuat data…</td></tr></tbody></table></div>
       </div>
     </div>
 
-    <!-- ═══════════════ CASH EQUIVALENT ═══════════════ -->
-    <div id="page-cash-equiv" class="page">
-      <div class="page-heading">Cash Equivalent <span>Accounts Receivable & Inventory</span></div>
-      <div class="g2" style="align-items:start;">
+    <!-- ══════════════ CASH EQUIVALENT ══════════════ -->
+    <div class="page" id="page-cash-equiv">
+      <div class="page-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+        Cash Equivalent
+      </div>
+      <div class="g2-auto gap-b">
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Accounts Receivable (Penghutang)</span>
+          <div class="card-hd">
+            <div class="card-title">Accounts Receivable (Penghutang)</div>
             <button class="btn-add" onclick="openModal('ar')">+ Tambah</button>
           </div>
-          <div class="table-wrap"><table class="crud-table" id="ar-table"></table></div>
+          <div class="table-wrap"><table class="crud-table" id="t-ar"><tbody><tr><td class="empty-row" colspan="7">Memuat data…</td></tr></tbody></table></div>
         </div>
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Inventory</span>
+          <div class="card-hd">
+            <div class="card-title">Inventory</div>
             <button class="btn-add" onclick="openModal('inv-item')">+ Tambah</button>
           </div>
-          <div class="table-wrap"><table class="crud-table" id="inventory-table"></table></div>
+          <div class="table-wrap"><table class="crud-table" id="t-inventory"><tbody><tr><td class="empty-row" colspan="5">Memuat data…</td></tr></tbody></table></div>
         </div>
       </div>
     </div>
 
-    <!-- ═══════════════ NON CURRENT ASSET ═══════════════ -->
-    <div id="page-non-current" class="page">
-      <div class="page-heading">Non Current Asset</div>
-      <div class="g2" style="align-items:start;">
+    <!-- ══════════════ NON CURRENT ══════════════ -->
+    <div class="page" id="page-non-current">
+      <div class="page-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/></svg>
+        Non Current Asset
+      </div>
+      <div class="g2-auto gap-b">
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Property, Plant & Equipment</span>
+          <div class="card-hd">
+            <div class="card-title">Property, Plant & Equipment</div>
             <button class="btn-add" onclick="openModal('ppe')">+ Tambah</button>
           </div>
-          <div class="table-wrap"><table class="crud-table" id="ppe-table"></table></div>
+          <div class="table-wrap"><table class="crud-table" id="t-ppe"><tbody><tr><td class="empty-row" colspan="5">Memuat data…</td></tr></tbody></table></div>
         </div>
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Intangible Assets</span>
+          <div class="card-hd">
+            <div class="card-title">Intangible Assets</div>
             <button class="btn-add" onclick="openModal('intangible')">+ Tambah</button>
           </div>
-          <div class="table-wrap"><table class="crud-table" id="intangible-table"></table></div>
+          <div class="table-wrap"><table class="crud-table" id="t-intangible"><tbody><tr><td class="empty-row" colspan="5">Memuat data…</td></tr></tbody></table></div>
         </div>
       </div>
     </div>
 
-    <!-- ═══════════════ INVESTMENT ═══════════════ -->
-    <div id="page-investment" class="page">
-      <div class="page-heading">Investment</div>
+    <!-- ══════════════ INVESTMENT ══════════════ -->
+    <div class="page" id="page-investment">
+      <div class="page-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+        Investment
+      </div>
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">Portofolio Investasi</span>
+        <div class="card-hd">
+          <div class="card-title">Portofolio Investasi</div>
           <button class="btn-add" onclick="openModal('inv')">+ Tambah</button>
         </div>
-        <div class="table-wrap"><table class="crud-table" id="inv-table"></table></div>
+        <div class="table-wrap"><table class="crud-table" id="t-inv"><tbody><tr><td class="empty-row" colspan="6">Memuat data…</td></tr></tbody></table></div>
       </div>
     </div>
 
   </main>
 </div>
 
-<footer class="footer-el" id="footer" style="text-align:center;padding:12px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);background:var(--card-bg);margin-left:var(--sw);transition:margin-left .26s;">
-  © 2026 Laporan Keuangan Pribadi. All rights reserved. &nbsp; Dibuat dengan ❤️ menggunakan <a href="#" style="color:var(--primary);">Supabase</a>
-</footer>
-
 <!-- MODAL -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal">
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-handle"></div>
     <h3 id="modal-title">Tambah Data</h3>
     <div id="modal-body"></div>
     <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal()">Batal</button>
-      <button class="btn-primary" onclick="saveModal()">Simpan</button>
+      <button class="mb-cancel" onclick="closeModal()">Batal</button>
+      <button class="mb-save" onclick="saveModal()">Simpan</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- Hidden PDF print area -->
-<div id="pdf-area" style="display:none;"></div>
-
 <script>
-// ══════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════
-const S = {
-  currentAssets:[],
-  ar:[],
-  inventoryItems:[],
-  ppe:[],
-  intangibles:[],
-  investments:[],
-  prev:{total:0,current:0,nonCurrent:0},
-  snapshots:[]
+// ╔══════════════════════════════════════════════════╗
+// ║  SUPABASE CONFIG                                  ║
+// ╚══════════════════════════════════════════════════╝
+const SUPA_URL = 'https://prybtaghmbajrahijrjt.supabase.co/rest/v1';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByeWJ0YWdobWJhanJhaGlqcmp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTc0NDMsImV4cCI6MjA5NzIzMzQ0M30.kALEkLvw4a4aQYEgnYvdajUP4YG1yvjKfhPqBaakAnM';
+const HEADERS = {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'};
+
+// ╔══════════════════════════════════════════════════╗
+// ║  SUPABASE API HELPERS                             ║
+// ╚══════════════════════════════════════════════════╝
+async function sbGet(table, query=''){
+  const r = await fetch(`${SUPA_URL}/${table}?order=created_at.asc${query}`, {headers:{...HEADERS,'Prefer':''}});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbInsert(table, data){
+  const r = await fetch(`${SUPA_URL}/${table}`, {method:'POST', headers:HEADERS, body:JSON.stringify(data)});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbUpdate(table, id, data){
+  const r = await fetch(`${SUPA_URL}/${table}?id=eq.${id}`, {method:'PATCH', headers:HEADERS, body:JSON.stringify(data)});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbDelete(table, id){
+  const r = await fetch(`${SUPA_URL}/${table}?id=eq.${id}`, {method:'DELETE', headers:{...HEADERS,'Prefer':''}});
+  if(!r.ok) throw new Error(await r.text());
+}
+async function sbUpsert(table, data, conflict){
+  const r = await fetch(`${SUPA_URL}/${table}?on_conflict=${conflict}`, {method:'POST', headers:{...HEADERS,'Prefer':'resolution=merge-duplicates'}, body:JSON.stringify(data)});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// ╔══════════════════════════════════════════════════╗
+// ║  STATE (cached from Supabase)                     ║
+// ╚══════════════════════════════════════════════════╝
+let DB = {
+  currentAssets: [],
+  ar: [],
+  inventory: [],
+  ppe: [],
+  intangibles: [],
+  investments: [],
+  snapshots: [],
 };
+let charts = {};
+let modalType = '', modalEditId = null;
+let sbOpen = window.innerWidth > 768;
 
-let modalType='',modalEditId=null,charts={},isMobile=window.innerWidth<=768,sbOpen=!isMobile;
+// ╔══════════════════════════════════════════════════╗
+// ║  COMPUTED TOTALS                                  ║
+// ╚══════════════════════════════════════════════════╝
+const totCA   = () => DB.currentAssets.reduce((a,x)=>a+(+x.amount),0);
+const totAR   = () => DB.ar.reduce((a,x)=>a+(+x.amount),0);
+const totINV  = () => DB.inventory.reduce((a,x)=>a+(+x.amount),0);
+const totPPE  = () => DB.ppe.reduce((a,x)=>a+(+x.amount),0);
+const totINT  = () => DB.intangibles.reduce((a,x)=>a+(+x.amount),0);
+const totINVS = () => DB.investments.reduce((a,x)=>a+(+x.amount),0);
+const totCurrent    = () => totCA() + totAR() + totINV();
+const totNonCurrent = () => totPPE() + totINT() + totINVS();
+const totAsset      = () => totCurrent() + totNonCurrent();
 
-// ══════════════════════════════════════════
-// SUPABASE + LOCAL STORAGE
-// Isi config ini kalau mau sinkron ke Supabase.
-// Kalau kosong, app tetap jalan di GitHub Pages pakai localStorage.
-// Tabel: finance_app_state(device_id text primary key, payload jsonb, updated_at timestamptz)
-// ══════════════════════════════════════════
-const SUPABASE_URL =  'https://prybtaghmbajrahijrjt.supabase.co/rest/v1/'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByeWJ0YWdobWJhanJhaGlqcmp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTc0NDMsImV4cCI6MjA5NzIzMzQ0M30.kALEkLvw4a4aQYEgnYvdajUP4YG1yvjKfhPqBaakAnM';
-const STORAGE_KEY = 'laporan_keuangan_state_v3';
-let sbClient = null;
+// Format currency
+const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const fmt  = v => 'Rp ' + Math.abs(+v).toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2});
+const fmtN = v => (+v >= 0 ? '+' : '-') + ' Rp ' + Math.abs(+v).toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2});
+const mLabel = d => { if(!d) return '—'; const dt = new Date(d+'T00:00:00'); return MONTHS[dt.getMonth()] + ' ' + dt.getFullYear(); };
+const today  = () => new Date().toISOString().slice(0,10);
 
-function getDeviceId(){
-  let id = localStorage.getItem('finance_device_id');
-  if(!id){
-    id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'dev_'+Date.now();
-    localStorage.setItem('finance_device_id', id);
-  }
-  return id;
-}
+// ╔══════════════════════════════════════════════════╗
+// ║  INIT — load all data                             ║
+// ╚══════════════════════════════════════════════════╝
+async function init() {
+  try {
+    const [ca, ar, inv, ppe, intg, invs, snaps] = await Promise.all([
+      sbGet('current_assets'),
+      sbGet('accounts_receivable'),
+      sbGet('inventory'),
+      sbGet('property_plant_equipment'),
+      sbGet('intangible_assets'),
+      sbGet('investments'),
+      sbGet('laporan_snapshots','&order=snapshot_date.asc'),
+    ]);
+    DB.currentAssets = ca;
+    DB.ar = ar;
+    DB.inventory = inv;
+    DB.ppe = ppe;
+    DB.intangibles = intg;
+    DB.investments = invs;
+    DB.snapshots = snaps;
 
-function cleanPayload(payload){
-  return {
-    currentAssets: payload.currentAssets || [],
-    ar: payload.ar || [],
-    inventoryItems: payload.inventoryItems || [],
-    ppe: payload.ppe || [],
-    intangibles: payload.intangibles || [],
-    investments: payload.investments || [],
-    prev: payload.prev || {total:0,current:0,nonCurrent:0},
-    snapshots: payload.snapshots || []
-  };
-}
+    const td = today();
+    document.getElementById('dash-date').value = td;
+    document.getElementById('laporan-date').value = td;
 
-async function initStorage(){
-  try{
-    if(window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY){
-      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      const { data, error } = await sbClient.from('finance_app_state').select('payload').eq('device_id', getDeviceId()).maybeSingle();
-      if(!error && data && data.payload){
-        Object.assign(S, cleanPayload(data.payload));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(S));
-        return;
-      }
-    }
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) Object.assign(S, cleanPayload(JSON.parse(raw)));
-  }catch(e){ console.warn('Storage load gagal:', e); }
-}
-
-async function persistState(){
-  try{
-    createSnapshot();
-    const payload = cleanPayload(S);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    if(sbClient){
-      await sbClient.from('finance_app_state').upsert({device_id:getDeviceId(), payload, updated_at:new Date().toISOString()});
-    }
-  }catch(e){ console.warn('Storage save gagal:', e); }
-}
-
-// ══════════════════════════════════════════
-// COMPUTED
-// ══════════════════════════════════════════
-const totCA=()=>S.currentAssets.reduce((a,x)=>a+x.amount,0);
-const totAR=()=>S.ar.reduce((a,x)=>a+x.amount,0);
-const totInv_item=()=>S.inventoryItems.reduce((a,x)=>a+x.amount,0);
-const totPPE=()=>S.ppe.reduce((a,x)=>a+x.amount,0);
-const totInt=()=>S.intangibles.reduce((a,x)=>a+x.amount,0);
-const totInv=()=>S.investments.reduce((a,x)=>a+x.amount,0);
-const totCurrent=()=>totCA()+totAR()+totInv_item();
-const totNonCurrent=()=>totPPE()+totInv()+totInt();
-const totAsset=()=>totCurrent()+totNonCurrent();
-const f=v=>'$'+Math.abs(Number(v)||0).toFixed(2);
-const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const normalizeDate=d=>{
-  if(!d) return new Date().toISOString().slice(0,10);
-  if(/^\d{4}-\d{2}$/.test(d)) return d+'-01';
-  return d;
-};
-const monthLabel=d=>{if(!d)return'—';const dt=new Date(normalizeDate(d));return MONTHS[dt.getMonth()]+' '+dt.getFullYear();};
-const todayStr=()=>new Date().toISOString().slice(0,10);
-const monthStr=()=>new Date().toISOString().slice(0,7);
-
-// ══════════════════════════════════════════
-// SIDEBAR
-// ══════════════════════════════════════════
-function toggleSidebar(){
-  isMobile=window.innerWidth<=768;
-  const sb=document.getElementById('sidebar');
-  const ov=document.getElementById('sb-overlay');
-  if(isMobile){
-    sb.classList.toggle('mobile-open');
-    ov.classList.toggle('show');
-  } else {
-    sbOpen=!sbOpen;
-    sb.classList.toggle('collapsed',!sbOpen);
-    document.getElementById('main-content').classList.toggle('full',!sbOpen);
-    document.getElementById('footer').style.marginLeft=sbOpen?'var(--sw)':'0';
+    updateAll();
+    initCharts();
+    hideLoading();
+  } catch(e) {
+    console.error('Supabase error:', e);
+    // still render empty state
+    updateAll();
+    initCharts();
+    hideLoading();
+    showToast('⚠️ Gagal memuat data. Cek koneksi & tabel Supabase.');
   }
 }
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('mobile-open');
-  document.getElementById('sb-overlay').classList.remove('show');
-}
-window.addEventListener('resize',()=>{
-  isMobile=window.innerWidth<=768;
-  if(!isMobile){
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sb-overlay').classList.remove('show');
-    if(sbOpen){document.getElementById('sidebar').classList.remove('collapsed');document.getElementById('main-content').classList.remove('full');}
-  }
-});
 
-// ══════════════════════════════════════════
-// DARK MODE
-// ══════════════════════════════════════════
-function toggleDark(){document.body.classList.toggle('dark');}
-
-// ══════════════════════════════════════════
-// PAGE NAV
-// ══════════════════════════════════════════
-function showPage(id,el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
-  if(el)el.classList.add('active');
-  if(isMobile)closeSidebar();
-  if(id==='current-asset')renderCATable();
-  if(id==='cash-equiv'){renderARTable();renderInventoryTable();}
-  if(id==='non-current'){renderPPETable();renderIntangibleTable();}
-  if(id==='investment')renderInvTable();
-  if(id==='laporan')renderFinLaporan();
-  window.scrollTo(0,0);
+function hideLoading() {
+  const ls = document.getElementById('loading-screen');
+  ls.classList.add('hide');
+  setTimeout(() => ls.style.display='none', 500);
 }
 
-// ══════════════════════════════════════════
-// DATE HANDLERS
-// ══════════════════════════════════════════
-function onDashDate(v){
-  document.getElementById('dash-month').textContent=monthLabel(v);
-  renderFinDash(v);
-}
-function onLaporanDate(v){
-  document.getElementById('laporan-month').textContent='Laporan Bulan '+monthLabel(v);
-  renderFinLaporan(v);
-}
-
-// ══════════════════════════════════════════
-// FINANCIAL REPORT — DASHBOARD (compact)
-// ══════════════════════════════════════════
-function renderFinDash(dateStr){
-  const el=document.getElementById('fin-dash');if(!el)return;
-  const lbl=monthLabel(dateStr||document.getElementById('dash-date').value);
-  el.innerHTML=`<div class="fin-wrap">
-    <div class="fin-sec">A. Current Asset</div>
-    <div class="fin-row"><span class="fn">1.</span><span class="fl">Cash and cash equivalents</span><span class="fv">${f(totCA())}</span></div>
-    <div class="fin-row sub"><span class="fn"><b>2.</b></span><span class="fl"><b>Total Cash & Equivalent</b></span><span class="fv"><b>${f(totCA())}</b></span></div>
-    <div class="fin-row"><span class="fn">3.</span><span class="fl">Accounts receivable</span><span class="fv">${f(totAR())}</span></div>
-    <div class="fin-row"><span class="fn">4.</span><span class="fl">Inventory</span><span class="fv">${f(totInv_item())}</span></div>
-    <div class="fin-row sub"><span class="fn"><b>5.</b></span><span class="fl"><b>Total Current Asset</b></span><span class="fv"><b>${f(totCurrent())}</b></span></div>
-    <div class="fin-sec" style="margin-top:6px;">B. Non Current Asset</div>
-    <div class="fin-row"><span class="fn">6.</span><span class="fl">Property, plant &amp; equipment</span><span class="fv">${f(totPPE())}</span></div>
-    <div class="fin-row"><span class="fn">7.</span><span class="fl">Investment</span><span class="fv">${f(totInv())}</span></div>
-    <div class="fin-row"><span class="fn">8.</span><span class="fl">Intangible assets</span><span class="fv">${f(totInt())}</span></div>
-    <div class="fin-row sub"><span class="fn"><b>9.</b></span><span class="fl"><b>Total Non-current Asset</b></span><span class="fv"><b>${f(totNonCurrent())}</b></span></div>
-    <div class="fin-row tot"><span class="fn"><b>10.</b></span><span class="fl"><b>TOTAL ASSET — ${lbl}</b></span><span class="fv"><b>${f(totAsset())}</b></span></div>
-  </div>`;
-}
-
-// ══════════════════════════════════════════
-// FINANCIAL REPORT — LAPORAN PAGE (detail with sub-rows)
-// ══════════════════════════════════════════
-function renderFinLaporan(dateStr){
-  const el=document.getElementById('fin-laporan');if(!el)return;
-  dateStr=dateStr||document.getElementById('laporan-date').value;
-  const lbl=monthLabel(dateStr);
-  document.getElementById('laporan-month').textContent='Laporan Bulan '+lbl;
-
-  const arRows=S.ar.map(r=>`<div class="fin-detail-row"><span class="fdr-name">${r.name} <span class="badge ${r.status==='Paid'?'bg':r.status==='Overdue'?'br':'bb'}" style="font-size:9px;">${r.status}</span></span><span class="fdr-val">${f(r.amount)}</span></div>`).join('');
-  const invRows=S.inventoryItems.map(r=>`<div class="fin-detail-row"><span class="fdr-name">${r.name} ${r.qty?'('+r.qty+' pcs)':''}</span><span class="fdr-val">${f(r.amount)}</span></div>`).join('');
-  const ppeRows=S.ppe.map(r=>`<div class="fin-detail-row"><span class="fdr-name">${r.name}</span><span class="fdr-val">${f(r.amount)}</span></div>`).join('');
-  const intRows=S.intangibles.map(r=>`<div class="fin-detail-row"><span class="fdr-name">${r.name}</span><span class="fdr-val">${f(r.amount)}</span></div>`).join('');
-  const invInvRows=S.investments.map(r=>`<div class="fin-detail-row"><span class="fdr-name">${r.name} <span class="badge bb" style="font-size:9px;">${r.type}</span></span><span class="fdr-val">${f(r.amount)}</span></div>`).join('');
-  const caRows=S.currentAssets.map(r=>`<div class="fin-detail-row"><span class="fdr-name">- ${r.name}</span><span class="fdr-val">${f(r.amount)}</span></div>`).join('');
-
-  el.innerHTML=`<div class="fin-wrap">
-    <div class="fin-sec">A. Current Asset</div>
-
-    <div class="fin-row"><span class="fn">1.</span><span class="fl">Cash and cash equivalents</span><span class="fv">${f(totCA())}</span></div>
-    ${caRows}
-    <div class="fin-row sub"><span class="fn"><b>2.</b></span><span class="fl"><b>Total Cash and Equivalent</b></span><span class="fv"><b>${f(totCA())}</b></span></div>
-
-    <div class="fin-row" style="margin-top:4px;"><span class="fn">3.</span><span class="fl">Accounts Receivable</span><span class="fv">${f(totAR())}</span></div>
-    ${arRows}
-
-    <div class="fin-row" style="margin-top:4px;"><span class="fn">4.</span><span class="fl">Inventory</span><span class="fv">${f(totInv_item())}</span></div>
-    ${invRows}
-
-    <div class="fin-row sub"><span class="fn"><b>5.</b></span><span class="fl"><b>Total Current Asset</b></span><span class="fv"><b>${f(totCurrent())}</b></span></div>
-
-    <div class="fin-sec" style="margin-top:8px;">B. Non Current Asset</div>
-
-    <div class="fin-row"><span class="fn">6.</span><span class="fl">Property, Plant and Equipment</span><span class="fv">${f(totPPE())}</span></div>
-    ${ppeRows}
-
-    <div class="fin-row" style="margin-top:4px;"><span class="fn">7.</span><span class="fl">Investment</span><span class="fv">${f(totInv())}</span></div>
-    ${invInvRows}
-
-    <div class="fin-row" style="margin-top:4px;"><span class="fn">8.</span><span class="fl">Intangible Assets</span><span class="fv">${f(totInt())}</span></div>
-    ${intRows}
-
-    <div class="fin-row sub"><span class="fn"><b>9.</b></span><span class="fl"><b>Total Non-current Asset</b></span><span class="fv"><b>${f(totNonCurrent())}</b></span></div>
-    <div class="fin-row tot"><span class="fn"><b>10.</b></span><span class="fl"><b>TOTAL ASSET — ${lbl}</b></span><span class="fv"><b>${f(totAsset())}</b></span></div>
-  </div>`;
-}
-
-// ══════════════════════════════════════════
-// STATS
-// ══════════════════════════════════════════
-function setBadge(elId,valId,cur,prev){
-  const diff=cur-prev;
-  const pct=prev ? (diff/prev*100) : 0;
-  const el=document.getElementById(elId);
-  const vEl=document.getElementById(valId);
-  if(!el||!vEl)return;
-  el.className='stat-change '+(diff>=0?'up':'down');
-  vEl.textContent=(diff>=0?'↑ +':'↓ -')+f(diff)+' ('+Math.abs(pct).toFixed(0)+'%) dari bulan lalu';
-}
-function updateStats(){
-  const ta=totAsset(),tc=totCurrent(),tnc=totNonCurrent();
-  document.getElementById('stat-total').textContent=f(ta);
-  document.getElementById('stat-current').textContent=f(tc);
-  document.getElementById('stat-noncurrent').textContent=f(tnc);
-  document.getElementById('stat-today').textContent=f(ta);
-  setBadge('change-total','cv-total',ta,S.prev.total);
-  setBadge('change-current','cv-current',tc,S.prev.current);
-  setBadge('change-noncurrent','cv-noncurrent',tnc,S.prev.nonCurrent);
-  setBadge('change-today','cv-today',ta,S.prev.total);
-  const dv=document.getElementById('dash-date').value;
-  document.getElementById('dash-month').textContent=monthLabel(dv);
-  renderFinDash(dv);
+// ╔══════════════════════════════════════════════════╗
+// ║  UPDATE ALL UI                                    ║
+// ╚══════════════════════════════════════════════════╝
+function updateAll() {
+  updateStats();
+  const d = document.getElementById('dash-date').value || today();
+  renderFinDash(d);
   updateAlokasiChart();
   updateInvestChart();
-  if(charts.growth) updateGrowthChart(document.querySelector('#growthChart')?.closest('.card')?.querySelector('select')?.value || '30');
-  if(charts.receivable) updateReceivableChart(document.querySelector('#receivableChart')?.closest('.card')?.querySelector('select')?.value || '30');
-  if(charts.gain) updateGainChart(document.querySelector('#gainChart')?.closest('.card')?.querySelector('select')?.value || '30');
+  updateGainChart();
 }
-function saveReport(){ persistState(); showToast('✅ Laporan berhasil disimpan!');}
 
-// ══════════════════════════════════════════
-// PDF DOWNLOAD
-// ══════════════════════════════════════════
-function downloadPDF(src){
-  let dateStr, monthLbl;
-  if(src==='laporan'){
-    dateStr=document.getElementById('laporan-date').value;
-    monthLbl=monthLabel(dateStr);
+// ╔══════════════════════════════════════════════════╗
+// ║  STATS                                            ║
+// ╚══════════════════════════════════════════════════╝
+function updateStats() {
+  const ta = totAsset(), tc = totCurrent(), tnc = totNonCurrent();
+  document.getElementById('s-total').textContent = fmt(ta);
+  document.getElementById('s-current').textContent = fmt(tc);
+  document.getElementById('s-noncurrent').textContent = fmt(tnc);
+  document.getElementById('s-today').textContent = fmt(ta);
+
+  // Compare with previous month snapshot
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString().slice(0,7);
+  const prevSnap = DB.snapshots.filter(s => s.snapshot_date.startsWith(prevMonth)).pop();
+
+  if (prevSnap) {
+    setChange('sc-total', ta - prevSnap.total_asset);
+    setChange('sc-current', tc - prevSnap.total_current);
+    setChange('sc-noncurrent', tnc - prevSnap.total_non_current);
+    setChange('sc-today', ta - prevSnap.total_asset);
   } else {
-    dateStr=document.getElementById('dash-date').value;
-    monthLbl=monthLabel(dateStr);
+    ['sc-total','sc-current','sc-noncurrent','sc-today'].forEach(id => {
+      document.getElementById(id).className = 'sc-change neutral';
+      document.getElementById(id).textContent = 'Belum ada data bulan lalu';
+    });
   }
+  document.getElementById('sc-today').textContent = 'Update: ' + new Date().toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
+}
 
-  const ta=totAsset(),tc=totCurrent(),tnc=totNonCurrent();
-  const caRows=S.currentAssets.map(r=>`<tr><td style="padding-left:28px;color:#555;">- ${r.name}</td><td style="text-align:right;">$${r.amount.toFixed(2)}</td></tr>`).join('');
-  const arRows=S.ar.map(r=>`<tr><td style="padding-left:28px;color:#555;">${r.name} (${r.status})</td><td style="text-align:right;">$${r.amount.toFixed(2)}</td></tr>`).join('');
-  const invItemRows=S.inventoryItems.map(r=>`<tr><td style="padding-left:28px;color:#555;">${r.name}</td><td style="text-align:right;">$${r.amount.toFixed(2)}</td></tr>`).join('');
-  const ppeRows=S.ppe.map(r=>`<tr><td style="padding-left:28px;color:#555;">${r.name}</td><td style="text-align:right;">$${r.amount.toFixed(2)}</td></tr>`).join('');
-  const intRows=S.intangibles.map(r=>`<tr><td style="padding-left:28px;color:#555;">${r.name}</td><td style="text-align:right;">$${r.amount.toFixed(2)}</td></tr>`).join('');
-  const invRows=S.investments.map(r=>`<tr><td style="padding-left:28px;color:#555;">${r.name} (${r.type})</td><td style="text-align:right;">$${r.amount.toFixed(2)}</td></tr>`).join('');
+function setChange(id, diff) {
+  const el = document.getElementById(id);
+  el.className = 'sc-change ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : 'neutral');
+  el.textContent = (diff >= 0 ? '↑ ' : '↓ ') + fmtN(diff) + ' dari bulan lalu';
+}
 
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>Laporan Keuangan ${monthLbl}</title>
-  <style>
-    body{font-family:Arial,sans-serif;color:#1a1a2e;padding:32px;font-size:13px;}
-    h1{font-size:20px;color:#2563eb;margin-bottom:4px;}
-    h2{font-size:14px;font-weight:normal;color:#555;margin-bottom:24px;}
-    table{width:100%;border-collapse:collapse;margin-bottom:10px;}
-    th{text-align:left;padding:6px 10px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#888;border-bottom:2px solid #e5e7eb;background:#f9fafb;}
-    td{padding:5px 10px;border-bottom:1px solid #f0f0f0;}
-    .section-label{font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;padding:12px 0 4px;}
-    .subtotal td{font-weight:700;border-top:1px solid #e5e7eb;padding-top:8px;}
-    .total-final{background:#eff6ff;}
-    .total-final td{font-weight:700;color:#2563eb;padding:10px;font-size:14px;}
-    .footer-line{margin-top:40px;font-size:11px;color:#999;border-top:1px solid #e5e7eb;padding-top:12px;}
-  </style></head><body>
-  <h1>Laporan Posisi Keuangan</h1>
-  <h2>Periode: ${monthLbl} &nbsp;|&nbsp; Dicetak: ${new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}</h2>
-  <table>
-    <tr class="section-label"><td colspan="2">A. CURRENT ASSET</td></tr>
-    <tr><td>1. Cash and cash equivalents</td><td style="text-align:right;font-weight:600;">$${totCA().toFixed(2)}</td></tr>
+// ╔══════════════════════════════════════════════════╗
+// ║  FINANCIAL REPORT                                 ║
+// ╚══════════════════════════════════════════════════╝
+function renderFinDash(dateStr) {
+  document.getElementById('dash-month').textContent = mLabel(dateStr);
+  const el = document.getElementById('fin-dash');
+  el.innerHTML = buildFinHTML(dateStr, false);
+}
+
+function renderFinLaporan(dateStr) {
+  document.getElementById('laporan-month').textContent = 'Laporan Bulan ' + mLabel(dateStr);
+  document.getElementById('fin-laporan').innerHTML = buildFinHTML(dateStr, true);
+}
+
+function buildFinHTML(dateStr, detailed) {
+  const lbl = mLabel(dateStr);
+  const caRows = detailed ? DB.currentAssets.map(r=>`<div class="fin-detail"><span class="f-lbl">- ${r.name} <span class="badge b-gray" style="font-size:9px;">${r.category}</span></span><span class="f-val">${fmt(r.amount)}</span></div>`).join('') : '';
+  const arRows = detailed ? DB.ar.map(r=>`<div class="fin-detail"><span class="f-lbl">${r.name} <span class="badge ${r.status==='Paid'?'b-green':r.status==='Overdue'?'b-red':'b-blue'}" style="font-size:9px;">${r.status}</span></span><span class="f-val">${fmt(r.amount)}</span></div>`).join('') : '';
+  const invRows = detailed ? DB.inventory.map(r=>`<div class="fin-detail"><span class="f-lbl">${r.name}${r.qty?' ('+r.qty+' unit)':''}</span><span class="f-val">${fmt(r.amount)}</span></div>`).join('') : '';
+  const ppeRows = detailed ? DB.ppe.map(r=>`<div class="fin-detail"><span class="f-lbl">${r.name}</span><span class="f-val">${fmt(r.amount)}</span></div>`).join('') : '';
+  const intRows = detailed ? DB.intangibles.map(r=>`<div class="fin-detail"><span class="f-lbl">${r.name}</span><span class="f-val">${fmt(r.amount)}</span></div>`).join('') : '';
+  const invsRows = detailed ? DB.investments.map(r=>`<div class="fin-detail"><span class="f-lbl">${r.name} <span class="badge b-blue" style="font-size:9px;">${r.type}</span></span><span class="f-val">${fmt(r.amount)}</span></div>`).join('') : '';
+
+  return `<div class="fin">
+    <div class="fin-sec">A. Current Asset</div>
+    <div class="fin-row"><span class="f-num">1.</span><span class="f-lbl">Cash and cash equivalents</span><span class="f-val">${fmt(totCA())}</span></div>
     ${caRows}
-    <tr class="subtotal"><td>2. Total Cash and Equivalent</td><td style="text-align:right;">$${totCA().toFixed(2)}</td></tr>
-    <tr><td>3. Accounts Receivable</td><td style="text-align:right;font-weight:600;">$${totAR().toFixed(2)}</td></tr>
+    <div class="fin-row sub"><span class="f-num"><b>2.</b></span><span class="f-lbl"><b>Total Cash & Equivalent</b></span><span class="f-val">${fmt(totCA())}</span></div>
+    <div class="fin-row"><span class="f-num">3.</span><span class="f-lbl">Accounts Receivable</span><span class="f-val">${fmt(totAR())}</span></div>
     ${arRows}
-    <tr><td>4. Inventory</td><td style="text-align:right;font-weight:600;">$${totInv_item().toFixed(2)}</td></tr>
-    ${invItemRows}
-    <tr class="subtotal"><td>5. Total Current Asset</td><td style="text-align:right;">$${tc.toFixed(2)}</td></tr>
-    <tr class="section-label"><td colspan="2" style="padding-top:16px;">B. NON CURRENT ASSET</td></tr>
-    <tr><td>6. Property, Plant and Equipment</td><td style="text-align:right;font-weight:600;">$${totPPE().toFixed(2)}</td></tr>
-    ${ppeRows}
-    <tr><td>7. Investment</td><td style="text-align:right;font-weight:600;">$${totInv().toFixed(2)}</td></tr>
+    <div class="fin-row"><span class="f-num">4.</span><span class="f-lbl">Inventory</span><span class="f-val">${fmt(totINV())}</span></div>
     ${invRows}
-    <tr><td>8. Intangible Assets</td><td style="text-align:right;font-weight:600;">$${totInt().toFixed(2)}</td></tr>
+    <div class="fin-row sub"><span class="f-num"><b>5.</b></span><span class="f-lbl"><b>Total Current Asset</b></span><span class="f-val">${fmt(totCurrent())}</span></div>
+    <div class="fin-sec">B. Non Current Asset</div>
+    <div class="fin-row"><span class="f-num">6.</span><span class="f-lbl">Property, Plant & Equipment</span><span class="f-val">${fmt(totPPE())}</span></div>
+    ${ppeRows}
+    <div class="fin-row"><span class="f-num">7.</span><span class="f-lbl">Investment</span><span class="f-val">${fmt(totINVS())}</span></div>
+    ${invsRows}
+    <div class="fin-row"><span class="f-num">8.</span><span class="f-lbl">Intangible Assets</span><span class="f-val">${fmt(totINT())}</span></div>
     ${intRows}
-    <tr class="subtotal"><td>9. Total Non-current Asset</td><td style="text-align:right;">$${tnc.toFixed(2)}</td></tr>
-    <tr class="total-final"><td>10. TOTAL ASSET — ${monthLbl}</td><td style="text-align:right;">$${ta.toFixed(2)}</td></tr>
-  </table>
-  <div class="footer-line">© 2026 Laporan Keuangan Pribadi — raihan.nor.falah@mhs.politala.ac.id</div>
-  <script>window.onload=()=>{window.print();}<\/script>
-  </body></html>`;
+    <div class="fin-row sub"><span class="f-num"><b>9.</b></span><span class="f-lbl"><b>Total Non-current Asset</b></span><span class="f-val">${fmt(totNonCurrent())}</span></div>
+    <div class="fin-row tot"><span class="f-num">10.</span><span class="f-lbl"><b>TOTAL ASSET — ${lbl}</b></span><span class="f-val"><b>${fmt(totAsset())}</b></span></div>
+  </div>`;
+}
 
-  const win=window.open('','_blank','width=700,height=900');
+// ╔══════════════════════════════════════════════════╗
+// ║  DATE HANDLERS                                    ║
+// ╚══════════════════════════════════════════════════╝
+function onDashDate(v)    { renderFinDash(v); }
+function onLaporanDate(v) { renderFinLaporan(v); }
+
+// ╔══════════════════════════════════════════════════╗
+// ║  SAVE SNAPSHOT                                    ║
+// ╚══════════════════════════════════════════════════╝
+async function saveSnapshot() {
+  try {
+    const data = {
+      snapshot_date: today(),
+      total_current: totCurrent(),
+      total_non_current: totNonCurrent(),
+      total_asset: totAsset(),
+      total_receivable: totAR(),
+    };
+    await sbUpsert('laporan_snapshots', data, 'snapshot_date');
+    DB.snapshots = await sbGet('laporan_snapshots','&order=snapshot_date.asc');
+    updateStats();
+    loadGrowthChart(30);
+    loadReceivableChart(30);
+    showToast('✅ Snapshot berhasil disimpan!');
+  } catch(e) {
+    showToast('❌ Gagal simpan: ' + e.message);
+  }
+}
+
+// ╔══════════════════════════════════════════════════╗
+// ║  PDF DOWNLOAD                                     ║
+// ╚══════════════════════════════════════════════════╝
+function downloadPDF() {
+  const dateEl = document.getElementById('laporan-date');
+  const dateStr = dateEl.value || today();
+  const lbl = mLabel(dateStr);
+  const html = buildPDFHTML(lbl);
+  const win = window.open('','_blank','width=760,height=960');
+  if (!win) { showToast('❌ Aktifkan popup browser'); return; }
   win.document.write(html);
   win.document.close();
 }
 
-// ══════════════════════════════════════════
-// CHARTS — dinamis dari input, bukan random
-// ══════════════════════════════════════════
-function parseDateSafe(d){
-  const x = new Date(normalizeDate(d));
-  if(isNaN(x)) return new Date();
-  x.setHours(0,0,0,0);
-  return x;
-}
-function dateKey(dt){ return dt.toISOString().slice(0,10); }
-function dateLabel(dt){ return dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}); }
+function buildPDFHTML(lbl) {
+  const ca=DB.currentAssets, ar=DB.ar, inv=DB.inventory, ppe=DB.ppe, intg=DB.intangibles, invs=DB.investments;
+  const row = (n,label,val,bold=false,indent=0) =>
+    `<tr style="${bold?'font-weight:700;':''}"><td style="padding:5px 10px 5px ${10+indent*14}px;">${n?n+'. ':''} ${label}</td><td style="text-align:right;padding:5px 10px;font-weight:${bold?700:500};">${fmt(val)}</td></tr>`;
+  const detailRow = (label,val) =>
+    `<tr><td style="padding:3px 10px 3px 28px;color:#555;font-size:12px;">— ${label}</td><td style="text-align:right;padding:3px 10px;font-size:12px;">Rp ${(+val).toLocaleString('id-ID')}</td></tr>`;
 
-function createSnapshot(){
-  const key=todayStr();
-  const existing=S.snapshots.find(x=>x.date===key);
-  const snap={date:key,totalAsset:totAsset(),receivable:totAR(),investmentGain:S.investments.reduce((a,x)=>a+(Number(x.gain)||0),0)};
-  if(existing) Object.assign(existing,snap); else S.snapshots.push(snap);
-}
-
-function allItemDates(){
-  return [
-    ...S.currentAssets.map(x=>x.date),
-    ...S.ar.map(x=>x.date),
-    ...S.inventoryItems.map(x=>x.date),
-    ...S.ppe.map(x=>x.date),
-    ...S.intangibles.map(x=>x.date),
-    ...S.investments.map(x=>x.date)
-  ].filter(Boolean).map(parseDateSafe);
-}
-
-function rangeDates(range){
-  const now = new Date(); now.setHours(0,0,0,0);
-  let start = new Date(now);
-  if(range === 'all'){
-    const dates = allItemDates();
-    start = dates.length ? new Date(Math.min(...dates.map(d=>d.getTime()))) : new Date(now);
-  } else {
-    const n = Math.max(1, parseInt(range || 30));
-    start.setDate(now.getDate() - (n-1));
-  }
-  const arr=[];
-  for(let d=new Date(start); d<=now; d.setDate(d.getDate()+1)) arr.push(new Date(d));
-  return arr;
-}
-
-function sumUntil(list, dt, getter=x=>x.amount){
-  return list.reduce((a,x)=> parseDateSafe(x.date) <= dt ? a + (Number(getter(x))||0) : a, 0);
-}
-function totalAssetOn(dt){
-  return sumUntil(S.currentAssets,dt)+sumUntil(S.ar,dt)+sumUntil(S.inventoryItems,dt)+sumUntil(S.ppe,dt)+sumUntil(S.intangibles,dt)+sumUntil(S.investments,dt);
-}
-function receivableOn(dt){ return sumUntil(S.ar,dt); }
-function investmentGainOnDay(dt){
-  const k=dateKey(dt);
-  return S.investments.reduce((a,x)=> dateKey(parseDateSafe(x.date||todayStr()))===k ? a+(Number(x.gain)||0) : a, 0);
-}
-function seriesFor(range, fn){
-  const dates=rangeDates(range);
-  return { labels:dates.map(dateLabel), data:dates.map(fn) };
-}
-function yMaxAbs(values){
-  const max=Math.max(1,...values.map(v=>Math.abs(Number(v)||0)));
-  return Math.ceil(max*1.25);
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Laporan Keuangan — ${lbl}</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#1a1a2e;padding:40px;font-size:13px;}
+    h1{font-size:22px;color:#2563eb;margin-bottom:4px;}
+    h2{font-size:13px;color:#64748b;font-weight:normal;margin-bottom:6px;}
+    .divider{border:none;border-top:2px solid #2563eb;margin:16px 0;}
+    table{width:100%;border-collapse:collapse;}
+    th{text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0;}
+    tr{border-bottom:1px solid #f1f5f9;}
+    .sec-hd td{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#64748b;padding:12px 10px 4px;border-bottom:none;}
+    .sub-row td{font-weight:700;border-top:1px solid #e2e8f0;background:#f8fafc;}
+    .total-row td{font-weight:800;color:#2563eb;background:#eff6ff;font-size:14px;padding:12px 10px;}
+    .footer{margin-top:40px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;text-align:center;}
+  </style></head><body>
+  <h1>📊 Laporan Posisi Keuangan</h1>
+  <h2>Periode: ${lbl}</h2>
+  <h2>Dicetak: ${new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</h2>
+  <hr class="divider">
+  <table>
+    <tr class="sec-hd"><td colspan="2">A. CURRENT ASSET</td></tr>
+    ${row('1','Cash and cash equivalents', totCA())}
+    ${ca.map(r=>detailRow(`${r.name} (${r.category})`, r.amount)).join('')}
+    ${row('2','Total Cash & Equivalent', totCA(), true)}
+    ${row('3','Accounts Receivable', totAR())}
+    ${ar.map(r=>detailRow(`${r.name} — ${r.status}`, r.amount)).join('')}
+    ${row('4','Inventory', totINV())}
+    ${inv.map(r=>detailRow(`${r.name}${r.qty?' ('+r.qty+' unit)':''}`, r.amount)).join('')}
+    <tr class="sub-row">${row('5','Total Current Asset', totCurrent(), true)}</tr>
+    <tr class="sec-hd"><td colspan="2">B. NON CURRENT ASSET</td></tr>
+    ${row('6','Property, Plant & Equipment', totPPE())}
+    ${ppe.map(r=>detailRow(r.name, r.amount)).join('')}
+    ${row('7','Investment', totINVS())}
+    ${invs.map(r=>detailRow(`${r.name} (${r.type})`, r.amount)).join('')}
+    ${row('8','Intangible Assets', totINT())}
+    ${intg.map(r=>detailRow(r.name, r.amount)).join('')}
+    <tr class="sub-row">${row('9','Total Non-current Asset', totNonCurrent(), true)}</tr>
+    <tr class="total-row"><td>10. TOTAL ASSET — ${lbl}</td><td style="text-align:right;font-weight:800;">${fmt(totAsset())}</td></tr>
+  </table>
+  <div class="footer">© 2026 Laporan Keuangan Pribadi — raihan.nor.falah@mhs.politala.ac.id | Powered by Supabase</div>
+  <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>
+  </body></html>`;
 }
 
-const CHART_OPTS={
-  responsive:true,
-  maintainAspectRatio:false,
-  plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:10},boxWidth:8}}},
-  scales:{x:{ticks:{maxTicksLimit:6,font:{size:9}}},y:{ticks:{font:{size:9}}}}
+// ╔══════════════════════════════════════════════════╗
+// ║  CHARTS                                           ║
+// ╚══════════════════════════════════════════════════╝
+const CHART_BASE = {
+  responsive:true, maintainAspectRatio:true,
+  plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'rgba(15,23,42,.9)', titleFont:{size:11}, bodyFont:{size:11}, padding:10, cornerRadius:8 }},
+  scales:{ x:{ticks:{maxTicksLimit:7,font:{size:9}},grid:{display:false}}, y:{ticks:{font:{size:9}},grid:{color:'rgba(0,0,0,.04)'}} }
 };
 
-function initGrowthChart(){
-  const ctx=document.getElementById('growthChart').getContext('2d');
-  const s=seriesFor('30', totalAssetOn);
-  charts.growth=new Chart(ctx,{
+function initCharts() {
+  // Growth chart — from snapshots
+  const ctxG = document.getElementById('chart-growth').getContext('2d');
+  charts.growth = new Chart(ctxG, {
     type:'line',
-    data:{labels:s.labels,datasets:[{label:'Total Asset',data:s.data,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.07)',tension:.35,pointRadius:2,fill:true}]},
-    options:{...CHART_OPTS,scales:{x:{ticks:{maxTicksLimit:6,font:{size:9}}},y:{beginAtZero:true,ticks:{callback:v=>'$'+v,font:{size:9}}}}}
+    data:{labels:[],datasets:[{label:'Total Asset',data:[],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.07)',tension:.4,pointRadius:3,pointHoverRadius:5,fill:true}]},
+    options:{...CHART_BASE,plugins:{...CHART_BASE.plugins,legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:10},boxWidth:8}}},
+      scales:{...CHART_BASE.scales,y:{ticks:{callback:v=>'Rp '+Number(v).toLocaleString('id-ID'),font:{size:9}},grid:{color:'rgba(0,0,0,.04)'}}}}
   });
-}
-function updateGrowthChart(range='30'){
-  const s=seriesFor(range,totalAssetOn);
-  charts.growth.data.labels=s.labels;
-  charts.growth.data.datasets[0].data=s.data;
-  charts.growth.update();
-}
 
-function updateAlokasiChart(){
-  const COLORS=['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316'];
-  let items=[
-    ...S.currentAssets.map((c,i)=>({label:c.name||'Tanpa nama',value:Number(c.amount)||0,color:COLORS[i%COLORS.length]})),
-    {label:'Accounts Receivable',value:totAR(),color:COLORS[S.currentAssets.length%COLORS.length]},
-    {label:'Inventory',value:totInv_item(),color:COLORS[(S.currentAssets.length+1)%COLORS.length]},
-  ].filter(x=>x.value>0);
-  if(!items.length) items=[{label:'Belum ada data',value:1,color:'#e5e7eb',empty:true}];
-  const total=totCurrent();
-  document.getElementById('alokasi-total').textContent=f(total);
-  document.getElementById('alokasi-legend').innerHTML=items.map(d=>`<div class="lg-row"><div class="lg-dot" style="background:${d.color}"></div><span class="lg-name">${d.label.length>18?d.label.substring(0,18)+'…':d.label}</span><span class="lg-pct">${d.empty?'0':(total?((d.value/total)*100).toFixed(1):'0')}%</span><span class="lg-val">${d.empty?'$0.00':f(d.value)}</span></div>`).join('');
-  if(charts.alokasi){charts.alokasi.data.labels=items.map(d=>d.label);charts.alokasi.data.datasets[0].data=items.map(d=>d.value);charts.alokasi.data.datasets[0].backgroundColor=items.map(d=>d.color);charts.alokasi.update();}
-  else{const ctx=document.getElementById('alokasiChart').getContext('2d');charts.alokasi=new Chart(ctx,{type:'doughnut',data:{labels:items.map(d=>d.label),datasets:[{data:items.map(d=>d.value),backgroundColor:items.map(d=>d.color),borderWidth:2}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{enabled:!items[0].empty}}}});}
-}
-
-function updateInvestChart(){
-  const COLORS=['#3b82f6','#22c55e','#f59e0b','#f97316','#8b5cf6','#06b6d4'];
-  let items=S.investments.filter(x=>(Number(x.amount)||0)>0);
-  const total=totInv();
-  if(!items.length) items=[{name:'Belum ada data',type:'Kosong',amount:1,empty:true}];
-  document.getElementById('invest-total').textContent=f(total);
-  document.getElementById('invest-legend').innerHTML=items.map((d,i)=>`<div class="lg-row"><div class="lg-dot" style="background:${COLORS[i%COLORS.length]}"></div><span class="lg-name">${d.type||d.name}</span><span class="lg-pct">${d.empty?'0':(total?((d.amount/total)*100).toFixed(1):'0')}%</span><span class="lg-val">${d.empty?'$0.00':f(d.amount)}</span></div>`).join('');
-  if(charts.invest){charts.invest.data.labels=items.map(d=>d.type||d.name);charts.invest.data.datasets[0].data=items.map(d=>d.amount);charts.invest.data.datasets[0].backgroundColor=items.map((_,i)=>COLORS[i%COLORS.length]);charts.invest.update();}
-  else{const ctx=document.getElementById('investChart').getContext('2d');charts.invest=new Chart(ctx,{type:'doughnut',data:{labels:items.map(d=>d.type||d.name),datasets:[{data:items.map(d=>d.amount),backgroundColor:items.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:2}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{enabled:!items[0].empty}}}});}
-}
-
-function initReceivableChart(){
-  const ctx=document.getElementById('receivableChart').getContext('2d');
-  const s=seriesFor('30',receivableOn);
-  charts.receivable=new Chart(ctx,{
+  // Receivable chart
+  const ctxR = document.getElementById('chart-receivable').getContext('2d');
+  charts.receivable = new Chart(ctxR, {
     type:'line',
-    data:{labels:s.labels,datasets:[{label:'Total Receivable',data:s.data,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.07)',tension:.35,pointRadius:2,fill:true}]},
-    options:{...CHART_OPTS,scales:{x:{ticks:{maxTicksLimit:6,font:{size:9}}},y:{beginAtZero:true,ticks:{callback:v=>'$'+v,font:{size:9}}}}}
+    data:{labels:[],datasets:[{label:'Total Receivable',data:[],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.07)',tension:.4,pointRadius:3,fill:true}]},
+    options:{...CHART_BASE,plugins:{...CHART_BASE.plugins,legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:10},boxWidth:8}}},
+      scales:{...CHART_BASE.scales,y:{ticks:{callback:v=>'Rp '+Number(v).toLocaleString('id-ID'),font:{size:9}},grid:{color:'rgba(0,0,0,.04)'}}}}
   });
-}
-function updateReceivableChart(range='30'){
-  const s=seriesFor(range,receivableOn);
-  charts.receivable.data.labels=s.labels;
-  charts.receivable.data.datasets[0].data=s.data;
-  charts.receivable.update();
-}
 
-function initGainChart(){
-  const ctx=document.getElementById('gainChart').getContext('2d');
-  const s=seriesFor('30', investmentGainOnDay);
-  const m=yMaxAbs(s.data);
-  charts.gain=new Chart(ctx,{
+  // Gain chart
+  const ctxGain = document.getElementById('chart-gain').getContext('2d');
+  charts.gain = new Chart(ctxGain, {
     type:'bar',
-    data:{labels:s.labels,datasets:[{
-      label:'Gain / Loss',
-      data:s.data,
-      backgroundColor:s.data.map(v=>v>=0?'rgba(34,197,94,0.85)':'rgba(239,68,68,0.85)'),
-      borderColor:s.data.map(v=>v>=0?'#16a34a':'#dc2626'),
-      borderWidth:1,
-      borderRadius:3,
-      borderSkipped:false
-    }]},
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:ctx=>(ctx.parsed.y>=0?'Gain: +':'Loss: -')+'$'+Math.abs(ctx.parsed.y).toFixed(2)}}
-      },
-      scales:{
-        x:{ticks:{maxTicksLimit:6,font:{size:9}},grid:{display:false}},
-        y:{min:-m,max:m,ticks:{callback:v=>'$'+v,font:{size:9}},grid:{color:ctx=>ctx.tick.value===0?'rgba(0,0,0,.25)':'rgba(0,0,0,.06)'}}
-      }
-    }
+    data:{labels:[],datasets:[{label:'Gain/Loss',data:[],backgroundColor:[],borderColor:[],borderWidth:1,borderRadius:3,borderSkipped:false}]},
+    options:{...CHART_BASE,
+      plugins:{...CHART_BASE.plugins,tooltip:{...CHART_BASE.plugins.tooltip,callbacks:{label:ctx=>(ctx.parsed.y>=0?'Gain: +':'Loss: ')+'Rp '+Math.abs(ctx.parsed.y).toLocaleString('id-ID')}}},
+      scales:{...CHART_BASE.scales,y:{ticks:{callback:v=>'Rp '+Number(v).toLocaleString('id-ID'),font:{size:9}},grid:{color:'rgba(0,0,0,.04)'}}}}
   });
-}
-function updateGainChart(range='30'){
-  const s=seriesFor(range, investmentGainOnDay);
-  const m=yMaxAbs(s.data);
-  charts.gain.data.labels=s.labels;
-  charts.gain.data.datasets[0].data=s.data;
-  charts.gain.data.datasets[0].backgroundColor=s.data.map(v=>v>=0?'rgba(34,197,94,0.85)':'rgba(239,68,68,0.85)');
-  charts.gain.data.datasets[0].borderColor=s.data.map(v=>v>=0?'#16a34a':'#dc2626');
-  charts.gain.options.scales.y.min=-m;
-  charts.gain.options.scales.y.max=m;
-  charts.gain.update();
+
+  loadGrowthChart(30);
+  loadReceivableChart(30);
 }
 
-// ══════════════════════════════════════════
-// CRUD TABLES
-// ══════════════════════════════════════════
-function renderCATable(){
-  document.getElementById('ca-table').innerHTML=
-    `<tr><th>No</th><th>Nama</th><th>Kategori</th><th>Jumlah</th><th>Tanggal</th><th>Aksi</th></tr>`+
-    S.currentAssets.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bb">${r.category}</span></td><td>${f(r.amount)}</td><td>${r.date}</td><td><button class="btn-edit" onclick="openEdit('ca',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('ca',${r.id})">Hapus</button></td></tr>`).join('');
-}
-function renderARTable(){
-  document.getElementById('ar-table').innerHTML=
-    `<tr><th>No</th><th>Nama Penghutang</th><th>Jumlah</th><th>Tgl</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr>`+
-    S.ar.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${f(r.amount)}</td><td>${r.date}</td><td>${r.due||'-'}</td><td><span class="badge ${r.status==='Paid'?'bg':r.status==='Overdue'?'br':'bb'}">${r.status}</span></td><td><button class="btn-edit" onclick="openEdit('ar',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('ar',${r.id})">Hapus</button></td></tr>`).join('');
-}
-function renderInventoryTable(){
-  document.getElementById('inventory-table').innerHTML=
-    `<tr><th>No</th><th>Nama Item</th><th>Qty</th><th>Nilai</th><th>Tanggal</th><th>Aksi</th></tr>`+
-    S.inventoryItems.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${r.qty||'-'}</td><td>${f(r.amount)}</td><td>${r.date}</td><td><button class="btn-edit" onclick="openEdit('inv-item',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('inv-item',${r.id})">Hapus</button></td></tr>`).join('');
-}
-function renderPPETable(){
-  document.getElementById('ppe-table').innerHTML=
-    `<tr><th>No</th><th>Nama Aset</th><th>Nilai</th><th>Tgl Beli</th><th>Aksi</th></tr>`+
-    S.ppe.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${f(r.amount)}</td><td>${r.date}</td><td><button class="btn-edit" onclick="openEdit('ppe',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('ppe',${r.id})">Hapus</button></td></tr>`).join('');
-}
-function renderIntangibleTable(){
-  document.getElementById('intangible-table').innerHTML=
-    `<tr><th>No</th><th>Nama Aset</th><th>Nilai</th><th>Tanggal</th><th>Aksi</th></tr>`+
-    S.intangibles.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${f(r.amount)}</td><td>${r.date}</td><td><button class="btn-edit" onclick="openEdit('intangible',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('intangible',${r.id})">Hapus</button></td></tr>`).join('');
-}
-function renderInvTable(){
-  document.getElementById('inv-table').innerHTML=
-    `<tr><th>No</th><th>Nama</th><th>Tipe</th><th>Nilai</th><th>Gain/Loss</th><th>Aksi</th></tr>`+
-    S.investments.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bb">${r.type}</span></td><td>${f(r.amount)}</td><td style="color:${r.gain>=0?'#059669':'#dc2626'};font-weight:600;">${r.gain>=0?'+':'-'}${f(r.gain)}</td><td><button class="btn-edit" onclick="openEdit('inv',${r.id})">Edit</button><button class="btn-del" onclick="deleteRow('inv',${r.id})">Hapus</button></td></tr>`).join('');
+function loadGrowthChart(days) {
+  const snaps = DB.snapshots.slice(-+days);
+  const labels = snaps.map(s => {
+    const d = new Date(s.snapshot_date+'T00:00:00');
+    return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'});
+  });
+  const data = snaps.map(s => +s.total_asset);
+
+  if (charts.growth) {
+    charts.growth.data.labels = labels;
+    charts.growth.data.datasets[0].data = data;
+    charts.growth.update();
+  }
 }
 
-// ══════════════════════════════════════════
-// MODAL FORMS
-// ══════════════════════════════════════════
-const FORMS={
-  ca:r=>`
+function loadReceivableChart(days) {
+  const snaps = DB.snapshots.slice(-+days);
+  const labels = snaps.map(s => {
+    const d = new Date(s.snapshot_date+'T00:00:00');
+    return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'});
+  });
+  const data = snaps.map(s => +s.total_receivable);
+  if (charts.receivable) {
+    charts.receivable.data.labels = labels;
+    charts.receivable.data.datasets[0].data = data;
+    charts.receivable.update();
+  }
+}
+
+// Gain chart — from investment gain field, bar per investment
+function updateGainChart() {
+  const labels = DB.investments.map(i => i.name.length > 12 ? i.name.substring(0,12)+'…' : i.name);
+  const data   = DB.investments.map(i => +i.gain);
+  const colors = data.map(v => v >= 0 ? 'rgba(34,197,94,.85)' : 'rgba(239,68,68,.85)');
+  const borders = data.map(v => v >= 0 ? '#16a34a' : '#dc2626');
+  if (charts.gain) {
+    charts.gain.data.labels = labels;
+    charts.gain.data.datasets[0].data = data;
+    charts.gain.data.datasets[0].backgroundColor = colors;
+    charts.gain.data.datasets[0].borderColor = borders;
+    charts.gain.update();
+  }
+}
+function loadGainChart(days) { updateGainChart(); } // days param for future use
+
+function updateAlokasiChart() {
+  const COLORS = ['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316','#ec4899'];
+  const items = [
+    ...DB.currentAssets.map((c,i) => ({label:c.name, value:+c.amount, color:COLORS[i%COLORS.length]})),
+    {label:'Accounts Receivable', value:totAR(), color:COLORS[(DB.currentAssets.length)%COLORS.length]},
+    {label:'Inventory', value:totINV(), color:COLORS[(DB.currentAssets.length+1)%COLORS.length]},
+  ].filter(x => x.value > 0);
+  const total = totCurrent();
+  document.getElementById('alokasi-total').textContent = fmt(total);
+  document.getElementById('alokasi-legend').innerHTML = items.map(d =>
+    `<div class="lg-row"><div class="lg-dot" style="background:${d.color}"></div>
+     <span class="lg-name">${d.label}</span>
+     <span class="lg-pct">${total ? ((d.value/total)*100).toFixed(1) : 0}%</span>
+     <span class="lg-val">${fmt(d.value)}</span></div>`
+  ).join('');
+
+  if (charts.alokasi) {
+    charts.alokasi.data.labels = items.map(d=>d.label);
+    charts.alokasi.data.datasets[0].data = items.map(d=>d.value);
+    charts.alokasi.data.datasets[0].backgroundColor = items.map(d=>d.color);
+    charts.alokasi.update();
+  } else {
+    const ctx = document.getElementById('chart-alokasi').getContext('2d');
+    charts.alokasi = new Chart(ctx, {
+      type:'doughnut',
+      data:{labels:items.map(d=>d.label),datasets:[{data:items.map(d=>d.value),backgroundColor:items.map(d=>d.color),borderWidth:2,hoverOffset:4}]},
+      options:{responsive:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.parsed)}`}}}}
+    });
+  }
+}
+
+function updateInvestChart() {
+  const COLORS = ['#3b82f6','#22c55e','#f59e0b','#f97316','#8b5cf6','#ec4899'];
+  const total = totINVS();
+  document.getElementById('invest-total').textContent = fmt(total);
+  document.getElementById('invest-legend').innerHTML = DB.investments.map((d,i) =>
+    `<div class="lg-row"><div class="lg-dot" style="background:${COLORS[i%COLORS.length]}"></div>
+     <span class="lg-name">${d.type}</span>
+     <span class="lg-pct">${total ? ((+d.amount/total)*100).toFixed(1) : 0}%</span>
+     <span class="lg-val">${fmt(d.amount)}</span></div>`
+  ).join('');
+
+  if (charts.invest) {
+    charts.invest.data.labels = DB.investments.map(d=>d.type);
+    charts.invest.data.datasets[0].data = DB.investments.map(d=>+d.amount);
+    charts.invest.update();
+  } else {
+    const ctx = document.getElementById('chart-invest').getContext('2d');
+    charts.invest = new Chart(ctx, {
+      type:'doughnut',
+      data:{labels:DB.investments.map(d=>d.type),datasets:[{data:DB.investments.map(d=>+d.amount),backgroundColor:COLORS,borderWidth:2,hoverOffset:4}]},
+      options:{responsive:false,cutout:'68%',plugins:{legend:{display:false}}}
+    });
+  }
+}
+
+// ╔══════════════════════════════════════════════════╗
+// ║  CRUD TABLE RENDERS                               ║
+// ╚══════════════════════════════════════════════════╝
+const noData = cols => `<tbody><tr><td class="empty-row" colspan="${cols}">📭 Belum ada data. Klik "+ Tambah" untuk menambahkan.</td></tr></tbody>`;
+
+function renderCATable() {
+  const tb = document.getElementById('t-ca');
+  if (!DB.currentAssets.length) { tb.innerHTML = `<thead><tr><th>No</th><th>Nama</th><th>Kategori</th><th>Jumlah</th><th>Tanggal</th><th>Aksi</th></tr></thead>${noData(6)}`; return; }
+  tb.innerHTML = `<thead><tr><th>No</th><th>Nama</th><th>Kategori</th><th>Jumlah</th><th>Tanggal</th><th>Aksi</th></tr></thead><tbody>`
+    + DB.currentAssets.map((r,i) => `<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge b-blue">${r.category}</span></td><td><b>${fmt(r.amount)}</b></td><td>${r.date}</td>
+      <td><button class="btn-sm bs-edit" onclick="openEdit('ca','${r.id}')">Edit</button><button class="btn-sm bs-del" onclick="delRow('ca','${r.id}')">Hapus</button></td></tr>`).join('') + '</tbody>';
+}
+
+function renderARTable() {
+  const tb = document.getElementById('t-ar');
+  if (!DB.ar.length) { tb.innerHTML = `<thead><tr><th>No</th><th>Nama Penghutang</th><th>Jumlah</th><th>Tgl</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>${noData(7)}`; return; }
+  tb.innerHTML = `<thead><tr><th>No</th><th>Nama Penghutang</th><th>Jumlah</th><th>Tgl</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead><tbody>`
+    + DB.ar.map((r,i) => `<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fmt(r.amount)}</b></td><td>${r.date}</td><td>${r.due_date||'-'}</td>
+      <td><span class="badge ${r.status==='Paid'?'b-green':r.status==='Overdue'?'b-red':'b-blue'}">${r.status}</span></td>
+      <td><button class="btn-sm bs-edit" onclick="openEdit('ar','${r.id}')">Edit</button><button class="btn-sm bs-del" onclick="delRow('ar','${r.id}')">Hapus</button></td></tr>`).join('') + '</tbody>';
+}
+
+function renderInventoryTable() {
+  const tb = document.getElementById('t-inventory');
+  if (!DB.inventory.length) { tb.innerHTML = `<thead><tr><th>No</th><th>Nama</th><th>Qty</th><th>Nilai</th><th>Tgl</th><th>Aksi</th></tr></thead>${noData(6)}`; return; }
+  tb.innerHTML = `<thead><tr><th>No</th><th>Nama</th><th>Qty</th><th>Nilai</th><th>Tgl</th><th>Aksi</th></tr></thead><tbody>`
+    + DB.inventory.map((r,i) => `<tr><td>${i+1}</td><td>${r.name}</td><td>${r.qty||'-'}</td><td><b>${fmt(r.amount)}</b></td><td>${r.date}</td>
+      <td><button class="btn-sm bs-edit" onclick="openEdit('inv-item','${r.id}')">Edit</button><button class="btn-sm bs-del" onclick="delRow('inv-item','${r.id}')">Hapus</button></td></tr>`).join('') + '</tbody>';
+}
+
+function renderPPETable() {
+  const tb = document.getElementById('t-ppe');
+  if (!DB.ppe.length) { tb.innerHTML = `<thead><tr><th>No</th><th>Nama Aset</th><th>Nilai</th><th>Tgl Beli</th><th>Aksi</th></tr></thead>${noData(5)}`; return; }
+  tb.innerHTML = `<thead><tr><th>No</th><th>Nama Aset</th><th>Nilai</th><th>Tgl Beli</th><th>Aksi</th></tr></thead><tbody>`
+    + DB.ppe.map((r,i) => `<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fmt(r.amount)}</b></td><td>${r.date}</td>
+      <td><button class="btn-sm bs-edit" onclick="openEdit('ppe','${r.id}')">Edit</button><button class="btn-sm bs-del" onclick="delRow('ppe','${r.id}')">Hapus</button></td></tr>`).join('') + '</tbody>';
+}
+
+function renderIntangibleTable() {
+  const tb = document.getElementById('t-intangible');
+  if (!DB.intangibles.length) { tb.innerHTML = `<thead><tr><th>No</th><th>Nama Aset</th><th>Nilai</th><th>Tanggal</th><th>Aksi</th></tr></thead>${noData(5)}`; return; }
+  tb.innerHTML = `<thead><tr><th>No</th><th>Nama Aset</th><th>Nilai</th><th>Tanggal</th><th>Aksi</th></tr></thead><tbody>`
+    + DB.intangibles.map((r,i) => `<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fmt(r.amount)}</b></td><td>${r.date}</td>
+      <td><button class="btn-sm bs-edit" onclick="openEdit('intangible','${r.id}')">Edit</button><button class="btn-sm bs-del" onclick="delRow('intangible','${r.id}')">Hapus</button></td></tr>`).join('') + '</tbody>';
+}
+
+function renderInvTable() {
+  const tb = document.getElementById('t-inv');
+  if (!DB.investments.length) { tb.innerHTML = `<thead><tr><th>No</th><th>Nama</th><th>Tipe</th><th>Nilai</th><th>Gain/Loss</th><th>Aksi</th></tr></thead>${noData(6)}`; return; }
+  tb.innerHTML = `<thead><tr><th>No</th><th>Nama</th><th>Tipe</th><th>Nilai</th><th>Gain/Loss</th><th>Aksi</th></tr></thead><tbody>`
+    + DB.investments.map((r,i) => `<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge b-purple">${r.type}</span></td><td><b>${fmt(r.amount)}</b></td>
+      <td style="color:${+r.gain>=0?'#059669':'#dc2626'};font-weight:700;">${+r.gain>=0?'+':'-'}${fmt(r.gain)}</td>
+      <td><button class="btn-sm bs-edit" onclick="openEdit('inv','${r.id}')">Edit</button><button class="btn-sm bs-del" onclick="delRow('inv','${r.id}')">Hapus</button></td></tr>`).join('') + '</tbody>';
+}
+
+// ╔══════════════════════════════════════════════════╗
+// ║  MODAL FORMS                                      ║
+// ╚══════════════════════════════════════════════════╝
+const MODAL_FORMS = {
+  ca: r => `
     <div class="form-group"><label>Nama (Cash / Bank BRI / Penghasilan TikTok)</label><input id="f-name" value="${r?r.name:''}"></div>
-    <div class="form-group"><label>Kategori</label><select id="f-cat">${['Kas','Bank','Platform','Lainnya'].map(c=>`<option ${r&&r.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
-    <div class="form-group"><label>Jumlah ($)</label><input id="f-amount" type="number" step="0.01" value="${r?r.amount:''}"></div>
-    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${r?r.date:todayStr()}"></div>`,
-  ar:r=>`
+    <div class="form-row">
+      <div class="form-group"><label>Kategori</label><select id="f-cat">${['Kas','Bank','Platform','Lainnya'].map(c=>`<option ${r&&r.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Jumlah (Rp)</label><input id="f-amount" type="number" step="1" min="0" value="${r?r.amount:0}"></div>
+    </div>
+    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${r?r.date:today()}"></div>`,
+
+  ar: r => `
     <div class="form-group"><label>Nama Penghutang</label><input id="f-name" value="${r?r.name:''}"></div>
-    <div class="form-group"><label>Jumlah ($)</label><input id="f-amount" type="number" step="0.01" value="${r?r.amount:''}"></div>
-    <div class="form-group"><label>Tanggal Transaksi</label><input id="f-date" type="date" value="${r?r.date:todayStr()}"></div>
-    <div class="form-group"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r?r.due||'':''}"></div>
-    <div class="form-group"><label>Status</label><select id="f-status">${['Outstanding','Paid','Overdue'].map(s=>`<option ${r&&r.status===s?'selected':''}>${s}</option>`).join('')}</select></div>`,
-  'inv-item':r=>`
-    <div class="form-group"><label>Nama Item</label><input id="f-name" value="${r?r.name:''}"></div>
-    <div class="form-group"><label>Qty / Jumlah Unit</label><input id="f-qty" type="number" value="${r?r.qty||'':''}"></div>
-    <div class="form-group"><label>Nilai Total ($)</label><input id="f-amount" type="number" step="0.01" value="${r?r.amount:''}"></div>
-    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${r?r.date:todayStr()}"></div>`,
-  ppe:r=>`
-    <div class="form-group"><label>Nama Aset</label><input id="f-name" value="${r?r.name:''}"></div>
-    <div class="form-group"><label>Nilai ($)</label><input id="f-amount" type="number" step="0.01" value="${r?r.amount:''}"></div>
-    <div class="form-group"><label>Tanggal Beli</label><input id="f-date" type="date" value="${r?r.date:todayStr()}"></div>`,
-  intangible:r=>`
+    <div class="form-row">
+      <div class="form-group"><label>Jumlah (Rp)</label><input id="f-amount" type="number" step="1" min="0" value="${r?r.amount:0}"></div>
+      <div class="form-group"><label>Status</label><select id="f-status">${['Outstanding','Paid','Overdue'].map(s=>`<option ${r&&r.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Tanggal Transaksi</label><input id="f-date" type="date" value="${r?r.date:today()}"></div>
+      <div class="form-group"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r?r.due_date||'':''}"></div>
+    </div>`,
+
+  'inv-item': r => `
+    <div class="form-group"><label>Nama Item Inventory</label><input id="f-name" value="${r?r.name:''}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Qty / Jumlah Unit</label><input id="f-qty" type="number" min="0" value="${r?r.qty||0:0}"></div>
+      <div class="form-group"><label>Nilai Total (Rp)</label><input id="f-amount" type="number" step="1" min="0" value="${r?r.amount:0}"></div>
+    </div>
+    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${r?r.date:today()}"></div>`,
+
+  ppe: r => `
+    <div class="form-group"><label>Nama Aset (Laptop, Kendaraan, dll)</label><input id="f-name" value="${r?r.name:''}"></div>
+    <div class="form-group"><label>Nilai (Rp)</label><input id="f-amount" type="number" step="1" min="0" value="${r?r.amount:0}"></div>
+    <div class="form-group"><label>Tanggal Beli</label><input id="f-date" type="date" value="${r?r.date:today()}"></div>`,
+
+  intangible: r => `
     <div class="form-group"><label>Nama Aset Tak Berwujud</label><input id="f-name" value="${r?r.name:''}"></div>
-    <div class="form-group"><label>Nilai ($)</label><input id="f-amount" type="number" step="0.01" value="${r?r.amount:''}"></div>
-    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${r?r.date:todayStr()}"></div>`,
-  inv:r=>`
+    <div class="form-group"><label>Nilai (Rp)</label><input id="f-amount" type="number" step="1" min="0" value="${r?r.amount:0}"></div>
+    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${r?r.date:today()}"></div>`,
+
+  inv: r => `
     <div class="form-group"><label>Nama Investasi</label><input id="f-name" value="${r?r.name:''}"></div>
-    <div class="form-group"><label>Tipe</label><select id="f-type">${['Saham','Reksa Dana','Crypto','Emas','Obligasi','Lainnya'].map(t=>`<option ${r&&r.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
-    <div class="form-group"><label>Nilai ($)</label><input id="f-amount" type="number" step="0.01" value="${r?r.amount:''}"></div>
-    <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${r?r.date:todayStr()}"></div>
-    <div class="form-group"><label>Gain/Loss ($) — positif = gain, negatif = loss</label><input id="f-gain" type="number" step="0.01" value="${r?r.gain:'0'}"></div>`,
+    <div class="form-row">
+      <div class="form-group"><label>Tipe</label><select id="f-type">${['Saham','Reksa Dana','Crypto','Emas','Obligasi','Lainnya'].map(t=>`<option ${r&&r.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Nilai (Rp)</label><input id="f-amount" type="number" step="1" min="0" value="${r?r.amount:0}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Gain (positif)</label><input id="f-gain" type="number" step="1" value="${r?r.gain:0}"></div>
+      <div class="form-group"><label>Tanggal</label><input id="f-date" type="date" value="${r?r.date:today()}"></div>
+    </div>`,
 };
-const LABELS={ca:'Current Asset',ar:'Accounts Receivable','inv-item':'Inventory',ppe:'Property/Plant/Equipment',intangible:'Intangible Asset',inv:'Investment'};
 
-function getRow(type,id){
-  if(type==='ca')return S.currentAssets.find(r=>r.id===id);
-  if(type==='ar')return S.ar.find(r=>r.id===id);
-  if(type==='inv-item')return S.inventoryItems.find(r=>r.id===id);
-  if(type==='ppe')return S.ppe.find(r=>r.id===id);
-  if(type==='intangible')return S.intangibles.find(r=>r.id===id);
-  if(type==='inv')return S.investments.find(r=>r.id===id);
+const LABELS = {ca:'Current Asset',ar:'Piutang',inv_item:'Inventory',ppe:'PPE',intangible:'Intangible Asset',inv:'Investasi'};
+const TABLE_MAP = {ca:'current_assets',ar:'accounts_receivable','inv-item':'inventory',ppe:'property_plant_equipment',intangible:'intangible_assets',inv:'investments'};
+
+function openModal(type) {
+  modalType = type; modalEditId = null;
+  document.getElementById('modal-title').textContent = '+ Tambah ' + (LABELS[type.replace('-','_')]||type);
+  document.getElementById('modal-body').innerHTML = MODAL_FORMS[type](null);
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.querySelector('#modal-body input')?.focus(), 200);
 }
-function openModal(type){modalType=type;modalEditId=null;document.getElementById('modal-title').textContent='Tambah '+LABELS[type];document.getElementById('modal-body').innerHTML=FORMS[type](null);document.getElementById('modal-overlay').classList.add('open');}
-function openEdit(type,id){modalType=type;modalEditId=id;const row=getRow(type,id);document.getElementById('modal-title').textContent='Edit '+LABELS[type];document.getElementById('modal-body').innerHTML=FORMS[type](row);document.getElementById('modal-overlay').classList.add('open');}
-function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
 
-function saveModal(){
-  const name=document.getElementById('f-name')?.value.trim()||'';
-  const amount=parseFloat(document.getElementById('f-amount')?.value)||0;
-  const date=document.getElementById('f-date')?.value||todayStr();
-  if(modalType==='ca'){
-    const cat=document.getElementById('f-cat').value;
-    if(modalEditId)Object.assign(S.currentAssets.find(r=>r.id===modalEditId),{name,category:cat,amount,date});
-    else S.currentAssets.push({id:Date.now(),name,category:cat,amount,date});
-    renderCATable();
-  }else if(modalType==='ar'){
-    const status=document.getElementById('f-status').value;
-    const due=document.getElementById('f-due').value;
-    if(modalEditId)Object.assign(S.ar.find(r=>r.id===modalEditId),{name,amount,date,due,status});
-    else S.ar.push({id:Date.now(),name,amount,date,due,status});
-    renderARTable();
-  }else if(modalType==='inv-item'){
-    const qty=parseInt(document.getElementById('f-qty')?.value)||0;
-    if(modalEditId)Object.assign(S.inventoryItems.find(r=>r.id===modalEditId),{name,qty,amount,date});
-    else S.inventoryItems.push({id:Date.now(),name,qty,amount,date});
-    renderInventoryTable();
-  }else if(modalType==='ppe'){
-    if(modalEditId)Object.assign(S.ppe.find(r=>r.id===modalEditId),{name,amount,date});
-    else S.ppe.push({id:Date.now(),name,amount,date});
-    renderPPETable();
-  }else if(modalType==='intangible'){
-    if(modalEditId)Object.assign(S.intangibles.find(r=>r.id===modalEditId),{name,amount,date});
-    else S.intangibles.push({id:Date.now(),name,amount,date});
-    renderIntangibleTable();
-  }else if(modalType==='inv'){
-    const type=document.getElementById('f-type').value;
-    const gain=parseFloat(document.getElementById('f-gain')?.value)||0;
-    if(modalEditId)Object.assign(S.investments.find(r=>r.id===modalEditId),{name,type,amount,date,gain});
-    else S.investments.push({id:Date.now(),name,type,amount,date,gain});
-    renderInvTable();
+function openEdit(type, id) {
+  modalType = type; modalEditId = id;
+  const arr = getArr(type);
+  const row = arr.find(r => r.id === id);
+  if (!row) return;
+  document.getElementById('modal-title').textContent = '✏️ Edit ' + (LABELS[type.replace('-','_')]||type);
+  document.getElementById('modal-body').innerHTML = MODAL_FORMS[type](row);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function getArr(type) {
+  return {ca:DB.currentAssets,ar:DB.ar,'inv-item':DB.inventory,ppe:DB.ppe,intangible:DB.intangibles,inv:DB.investments}[type]||[];
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function handleOverlayClick(e) { if(e.target===e.currentTarget) closeModal(); }
+
+async function saveModal() {
+  const name   = document.getElementById('f-name')?.value.trim()||'';
+  const amount = parseFloat(document.getElementById('f-amount')?.value)||0;
+  const date   = document.getElementById('f-date')?.value||today();
+  if (!name) { showToast('⚠️ Nama tidak boleh kosong'); return; }
+
+  let payload = {};
+  if (modalType==='ca') {
+    payload = {name, category:document.getElementById('f-cat').value, amount, date};
+  } else if (modalType==='ar') {
+    payload = {name, amount, date, due_date:document.getElementById('f-due').value||null, status:document.getElementById('f-status').value};
+  } else if (modalType==='inv-item') {
+    payload = {name, qty:parseInt(document.getElementById('f-qty')?.value)||0, amount, date};
+  } else if (modalType==='ppe') {
+    payload = {name, amount, date};
+  } else if (modalType==='intangible') {
+    payload = {name, amount, date};
+  } else if (modalType==='inv') {
+    payload = {name, type:document.getElementById('f-type').value, amount, gain:parseFloat(document.getElementById('f-gain')?.value)||0, date};
   }
-  closeModal();updateStats(); persistState();
-  showToast('✅ Data berhasil disimpan!');
-}
 
-function deleteRow(type,id){
-  if(!confirm('Hapus data ini?'))return;
-  if(type==='ca'){S.currentAssets=S.currentAssets.filter(r=>r.id!==id);renderCATable();}
-  else if(type==='ar'){S.ar=S.ar.filter(r=>r.id!==id);renderARTable();}
-  else if(type==='inv-item'){S.inventoryItems=S.inventoryItems.filter(r=>r.id!==id);renderInventoryTable();}
-  else if(type==='ppe'){S.ppe=S.ppe.filter(r=>r.id!==id);renderPPETable();}
-  else if(type==='intangible'){S.intangibles=S.intangibles.filter(r=>r.id!==id);renderIntangibleTable();}
-  else if(type==='inv'){S.investments=S.investments.filter(r=>r.id!==id);renderInvTable();}
-  updateStats(); persistState(); showToast('🗑️ Data berhasil dihapus!');
-}
-
-// ══════════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════════
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
-
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', async ()=>{
-  // Set initial sidebar state based on screen
-  if(window.innerWidth<=768){
-    document.getElementById('main-content').classList.add('full');
-    document.getElementById('footer').style.marginLeft='0';
+  const table = TABLE_MAP[modalType];
+  try {
+    if (modalEditId) {
+      await sbUpdate(table, modalEditId, payload);
+    } else {
+      await sbInsert(table, payload);
+    }
+    // Reload affected table
+    await reloadTable(modalType);
+    closeModal();
+    updateAll();
+    rerenderCurrentPage();
+    showToast(modalEditId ? '✅ Data berhasil diupdate!' : '✅ Data berhasil ditambahkan!');
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
   }
-  document.getElementById('dash-date').value = monthStr();
-  document.getElementById('laporan-date').value = monthStr();
-  await initStorage();
-  updateStats();
-  initGrowthChart();
-  initReceivableChart();
-  initGainChart();
-  updateAlokasiChart();
-  updateInvestChart();
-  renderFinLaporan();
-  document.getElementById('laporan-month').textContent='Laporan Bulan '+monthLabel(monthStr());
+}
+
+async function reloadTable(type) {
+  if (type==='ca')          DB.currentAssets = await sbGet('current_assets');
+  else if (type==='ar')     DB.ar            = await sbGet('accounts_receivable');
+  else if (type==='inv-item') DB.inventory   = await sbGet('inventory');
+  else if (type==='ppe')    DB.ppe           = await sbGet('property_plant_equipment');
+  else if (type==='intangible') DB.intangibles = await sbGet('intangible_assets');
+  else if (type==='inv')    DB.investments   = await sbGet('investments');
+}
+
+async function delRow(type, id) {
+  if (!confirm('Hapus data ini secara permanen?')) return;
+  const table = TABLE_MAP[type];
+  try {
+    await sbDelete(table, id);
+    await reloadTable(type);
+    updateAll();
+    rerenderCurrentPage();
+    showToast('🗑️ Data berhasil dihapus!');
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+  }
+}
+
+function rerenderCurrentPage() {
+  const active = document.querySelector('.page.active');
+  if (!active) return;
+  const id = active.id;
+  if (id==='page-current-asset')  renderCATable();
+  if (id==='page-cash-equiv')     { renderARTable(); renderInventoryTable(); }
+  if (id==='page-non-current')    { renderPPETable(); renderIntangibleTable(); }
+  if (id==='page-investment')     renderInvTable();
+}
+
+// ╔══════════════════════════════════════════════════╗
+// ║  NAVIGATION                                       ║
+// ╚══════════════════════════════════════════════════╝
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (window.innerWidth <= 768) closeSidebar();
+  // Lazy render tables
+  if (id==='current-asset')  renderCATable();
+  if (id==='cash-equiv')     { renderARTable(); renderInventoryTable(); }
+  if (id==='non-current')    { renderPPETable(); renderIntangibleTable(); }
+  if (id==='investment')     renderInvTable();
+  if (id==='laporan')        renderFinLaporan(document.getElementById('laporan-date').value || today());
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ╔══════════════════════════════════════════════════╗
+// ║  SIDEBAR                                          ║
+// ╚══════════════════════════════════════════════════╝
+function toggleSidebar() {
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.toggle('mob-open');
+    document.getElementById('sb-overlay').classList.toggle('show');
+  } else {
+    sbOpen = !sbOpen;
+    const sb = document.getElementById('sidebar');
+    const mn = document.getElementById('main');
+    sb.style.transform = sbOpen ? '' : 'translateX(-100%)';
+    sb.style.width = sbOpen ? '' : '0';
+    mn.style.marginLeft = sbOpen ? 'var(--sw)' : '0';
+  }
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('mob-open');
+  document.getElementById('sb-overlay').classList.remove('show');
+}
+
+// ╔══════════════════════════════════════════════════╗
+// ║  DARK MODE                                        ║
+// ╚══════════════════════════════════════════════════╝
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  document.getElementById('dark-label').textContent = isDark ? 'Light' : 'Dark';
+  localStorage.setItem('dark', isDark ? '1' : '0');
+}
+if (localStorage.getItem('dark') === '1') {
+  document.body.classList.add('dark');
+  document.getElementById('dark-label').textContent = 'Light';
+}
+
+// ╔══════════════════════════════════════════════════╗
+// ║  TOAST                                            ║
+// ╚══════════════════════════════════════════════════╝
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ╔══════════════════════════════════════════════════╗
+// ║  RESPONSIVE LISTENER                              ║
+// ╚══════════════════════════════════════════════════╝
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    document.getElementById('sidebar').classList.remove('mob-open');
+    document.getElementById('sb-overlay').classList.remove('show');
+  }
 });
-document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ╔══════════════════════════════════════════════════╗
+// ║  BOOT                                             ║
+// ╚══════════════════════════════════════════════════╝
+document.addEventListener('DOMContentLoaded', () => {
+  // Set today as default dates
+  const td = today();
+  document.getElementById('dash-date').value = td;
+  document.getElementById('laporan-date').value = td;
+  document.getElementById('dash-month').textContent = mLabel(td);
+  document.getElementById('laporan-month').textContent = 'Laporan Bulan ' + mLabel(td);
+  // Set margin for main based on screen
+  if (window.innerWidth <= 768) {
+    document.getElementById('main').classList.add('full');
+  }
+  init();
+});
 </script>
 </body>
 </html>
