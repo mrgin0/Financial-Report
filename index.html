@@ -174,21 +174,40 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .badge{display:inline-flex;align-items:center;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap;}
 .bb{background:#dbeafe;color:#1d4ed8}.bg_{background:#d1fae5;color:#059669}.br{background:#fee2e2;color:#dc2626}.by{background:#fef3c7;color:#d97706}.bp{background:#ede9fe;color:#7c3aed}.bk{background:#f1f5f9;color:#64748b}
 
-/* MODAL */
-.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+/* MODAL — CENTER (bukan bottom sheet) */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px;}
 .mo.open{display:flex;}
-.modal{background:var(--card);width:100%;max-width:480px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 18px 30px;}
-.mh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;}
-.modal h3{font-size:15px;font-weight:700;margin-bottom:16px;}
+.modal{background:var(--card);width:100%;max-width:500px;max-height:90vh;overflow-y:auto;border-radius:20px;padding:28px 24px 24px;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:modalIn .25s cubic-bezier(.4,0,.2,1);}
+@keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:none}}
+.mh{display:none;}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
 .fg{margin-bottom:11px;}
-.fg label{display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
-.fg input,.fg select{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:var(--bg);color:var(--text);outline:none;transition:border-color .18s;}
+.fg label{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+.fg input,.fg select{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 13px;font-size:14px;background:var(--bg);color:var(--text);outline:none;transition:border-color .18s;}
 .fg input:focus,.fg select:focus{border-color:var(--primary);}
-.mbtns{display:flex;gap:9px;margin-top:18px;}
-.mbtns button{flex:1;padding:11px;font-size:14px;border-radius:10px;border:none;cursor:pointer;font-weight:700;}
+.mbtns{display:flex;gap:10px;margin-top:20px;}
+.mbtns button{flex:1;padding:12px;font-size:14px;border-radius:11px;border:none;cursor:pointer;font-weight:700;transition:all .18s;}
 .mb-c{background:var(--bg);color:var(--text);border:1.5px solid var(--border)!important;}
+.mb-c:hover{background:var(--border);}
 .mb-s{background:var(--primary);color:#fff;}
+.mb-s:hover{background:var(--pd);}
+
+/* CONFIRM MODAL */
+.cfm-mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px;}
+.cfm-mo.open{display:flex;}
+.cfm-box{background:var(--card);border-radius:20px;padding:28px 24px 22px;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:modalIn .22s cubic-bezier(.4,0,.2,1);}
+.cfm-icon{font-size:42px;text-align:center;margin-bottom:12px;}
+.cfm-title{font-size:17px;font-weight:800;text-align:center;margin-bottom:6px;}
+.cfm-msg{font-size:13px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:22px;}
+.cfm-btns{display:flex;gap:10px;}
+.cfm-btns button{flex:1;padding:12px;font-size:14px;border-radius:11px;border:none;cursor:pointer;font-weight:700;transition:all .18s;}
+.cfm-cancel{background:var(--bg);color:var(--text);border:1.5px solid var(--border)!important;}
+.cfm-cancel:hover{background:var(--border);}
+.cfm-confirm{background:var(--danger);color:#fff;}
+.cfm-confirm:hover{background:#dc2626;}
+.cfm-confirm.cfm-ok{background:var(--primary);}
+.cfm-confirm.cfm-ok:hover{background:var(--pd);}
 
 /* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:#0f172a;color:#fff;border-radius:12px;padding:11px 20px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s cubic-bezier(.4,0,.2,1);pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.25);}
@@ -426,7 +445,16 @@ body.dark .toast{background:#f1f5f9;color:#0f172a;}
   <div class="card">
     <div class="chd">
       <div><div class="ctitle">Laporan Detail</div><div class="cmonth" id="lap-month">—</div></div>
-      <div class="dwrap"><span>Bulan</span><input type="month" id="lap-month-pick" class="mpick" onchange="onLapMonth(this.value)"></div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="dwrap"><span>Bulan</span><input type="month" id="lap-month-pick" class="mpick" onchange="onLapMonth(this.value,'month')"></div>
+        <div class="period-btns" id="pb-lap">
+          <button class="pb" onclick="setLapRange('30d',this)">30H</button>
+          <button class="pb" onclick="setLapRange('60d',this)">60H</button>
+          <button class="pb" onclick="setLapRange('1y',this)">1T</button>
+          <button class="pb" onclick="setLapRange('5y',this)">5T</button>
+          <button class="pb" onclick="setLapRange('all',this)">All</button>
+        </div>
+      </div>
     </div>
     <div id="fin-lap"></div>
     <div class="btn-row"><button class="btn btn-do" onclick="downloadPDF()">📄 Download PDF</button></div>
@@ -486,6 +514,19 @@ body.dark .toast{background:#f1f5f9;color:#0f172a;}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- CONFIRM MODAL -->
+<div class="cfm-mo" id="cfm-mo">
+  <div class="cfm-box">
+    <div class="cfm-icon" id="cfm-icon">🗑️</div>
+    <div class="cfm-title" id="cfm-title">Hapus Data?</div>
+    <div class="cfm-msg" id="cfm-msg">Data ini akan dihapus secara permanen dan tidak bisa dikembalikan.</div>
+    <div class="cfm-btns">
+      <button class="cfm-cancel" onclick="closeCfm()">Batal</button>
+      <button class="cfm-confirm" id="cfm-ok-btn" onclick="execCfm()">Hapus</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ════════════════════════════════════
@@ -601,7 +642,9 @@ async function autoSnapshot(){
 }
 
 // ════════════════════════════════════
-// STATS
+// STATS — compare current vs prev month
+// Uses master tables directly: sum items whose date <= end of prev month
+// This is 100% reliable regardless of whether snapshots exist
 // ════════════════════════════════════
 function updateStats(){
   const ta=totAst(),tc=totCur(),tnc=totNC();
@@ -610,61 +653,74 @@ function updateStats(){
   document.getElementById('sv-nc').textContent=fmtRp(tnc);
   document.getElementById('sv-td').textContent=fmtRp(ta);
 
+  // Determine prev month string e.g. "2026-05"
   const now=new Date();
   const curYM=now.toISOString().slice(0,7);
+  // Go back 1 month
+  const prevD=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const prevYM=prevD.getFullYear()+'-'+(String(prevD.getMonth()+1).padStart(2,'0'));
+  const prevLabel=mLbl(prevYM+'-01');
 
-  // 1st: try real snapshots from previous months
-  const sortedSnaps=[...DB.snaps].sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
-  const prevRealSnaps=sortedSnaps.filter(s=>s.snapshot_date.slice(0,7)<curYM);
-  let prev=prevRealSnaps.length?prevRealSnaps[prevRealSnaps.length-1]:null;
+  // Compute totals for items that have date starting with prevYM or earlier
+  // (cumulative up to end of prev month = all items with date <= prevYM-31)
+  const sumUpToPrevMonth=(arr)=>arr.filter(x=>x.date&&x.date.slice(0,7)<=prevYM).reduce((a,x)=>a+(+x.amount),0);
 
-  // 2nd fallback: build monthly points from master data
-  if(!prev){
-    const allPts=buildMonthlyPoints();
-    const prevPts=allPts.filter(p=>p.ym&&p.ym<curYM).sort((a,b)=>a.ym.localeCompare(b.ym));
-    if(prevPts.length) prev=prevPts[prevPts.length-1];
-  }
+  const prevCA  = sumUpToPrevMonth(DB.ca);
+  const prevAR  = sumUpToPrevMonth(DB.ar);
+  const prevII  = sumUpToPrevMonth(DB.ii);
+  const prevPPE = sumUpToPrevMonth(DB.ppe);
+  const prevINT = sumUpToPrevMonth(DB.intg);
+  const prevINV = sumUpToPrevMonth(DB.inv);
+  const prevCur = prevCA + prevAR + prevII;
+  const prevNC  = prevPPE + prevINT + prevINV;
+  const prevTa  = prevCur + prevNC;
 
-  if(prev){
-    const prevTa  = +(prev.total_asset||0);
-    const prevCur = +(prev.total_current||0);
-    const prevNC  = +(prev.total_non_current||0);
+  const hasPrevData = prevTa > 0 || prevCur > 0;
 
+  if(hasPrevData){
     const diffTot = ta  - prevTa;
     const diffCur = tc  - prevCur;
     const diffNC  = tnc - prevNC;
-
     const pct=(d,b)=>b>0?((d/b)*100).toFixed(1)+'%':'—';
-    const pMonth=prev.ym||prev.snapshot_date.slice(0,7);
-
-    setChgFull('sc-tot', diffTot, pct(diffTot,prevTa),  pMonth);
-    setChgFull('sc-cur', diffCur, pct(diffCur,prevCur), pMonth);
-    setChgFull('sc-nc',  diffNC,  pct(diffNC, prevNC),  pMonth);
+    setChgFull('sc-tot', diffTot, pct(diffTot,prevTa),  prevLabel);
+    setChgFull('sc-cur', diffCur, pct(diffCur,prevCur), prevLabel);
+    setChgFull('sc-nc',  diffNC,  pct(diffNC, prevNC),  prevLabel);
   } else {
-    ['sc-tot','sc-cur','sc-nc'].forEach(id=>{
-      const el=document.getElementById(id);
-      el.className='sc-chg neu';
-      el.textContent='Belum ada data bulan sebelumnya';
-    });
+    // No prev month data at all — check if any data exists at any past month
+    const allPastItems=[...DB.ca,...DB.ar,...DB.ii,...DB.ppe,...DB.intg,...DB.inv]
+      .filter(x=>x.date&&x.date.slice(0,7)<curYM);
+    if(allPastItems.length===0){
+      ['sc-tot','sc-cur','sc-nc'].forEach(id=>{
+        const el=document.getElementById(id);el.className='sc-chg neu';
+        el.textContent='Belum ada data bulan sebelumnya';
+      });
+    } else {
+      // Has past data but not in prevYM — find the latest month with data
+      const months=[...new Set(allPastItems.map(x=>x.date.slice(0,7)))].sort();
+      const latestPastYM=months[months.length-1];
+      const latestLabel=mLbl(latestPastYM+'-01');
+      const su=(arr)=>arr.filter(x=>x.date&&x.date.slice(0,7)<=latestPastYM).reduce((a,x)=>a+(+x.amount),0);
+      const lCur=su(DB.ca)+su(DB.ar)+su(DB.ii);
+      const lNC=su(DB.ppe)+su(DB.intg)+su(DB.inv);
+      const lTa=lCur+lNC;
+      setChgFull('sc-tot', ta-lTa,  ta-lTa>0?((ta-lTa)/lTa*100).toFixed(1)+'%':'—',  latestLabel);
+      setChgFull('sc-cur', tc-lCur, tc-lCur>0?((tc-lCur)/lCur*100).toFixed(1)+'%':'—', latestLabel);
+      setChgFull('sc-nc',  tnc-lNC, tnc-lNC>0?((tnc-lNC)/lNC*100).toFixed(1)+'%':'—',  latestLabel);
+    }
   }
 
   // Asset Hari Ini — full datetime WITA
-  const el=document.getElementById('sc-td');
-  el.className='sc-chg neu';
-  const fullDT=now.toLocaleString('id-ID',{
-    timeZone:'Asia/Makassar',
-    weekday:'short',day:'2-digit',month:'short',year:'numeric',
-    hour:'2-digit',minute:'2-digit',second:'2-digit'
-  });
-  el.textContent='Update: '+fullDT+' WITA';
+  const elTd=document.getElementById('sc-td');
+  elTd.className='sc-chg neu';
+  const fullDT=now.toLocaleString('id-ID',{timeZone:'Asia/Makassar',weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  elTd.textContent='Update: '+fullDT+' WITA';
 }
 
-function setChgFull(id,diff,pct,prevMonth){
+function setChgFull(id,diff,pct,prevLabel){
   const el=document.getElementById(id);
   const isUp=diff>=0;
   el.className='sc-chg '+(isUp?'up':'dn');
-  const arrow=isUp?'↑ +':'↓ -';
-  el.textContent=arrow+fmtRp(Math.abs(diff))+' ('+pct+') vs '+mLbl(prevMonth+'-01');
+  el.textContent=(isUp?'↑ +':'↓ -')+fmtRp(Math.abs(diff))+' ('+pct+') vs '+prevLabel;
 }
 
 // ════════════════════════════════════
@@ -687,21 +743,39 @@ function calcTotals(ym_){
   return{ca,ar,ii,ppe,intg,inv,cur:ca+ar+ii,nc:ppe+intg+inv,total:ca+ar+ii+ppe+intg+inv};
 }
 
-function buildFin(ym_,detailed){
+// calcTotals for a date range [fromYM, toYM]
+function calcTotalsRange(fromYM,toYM){
+  const inRange=(arr)=>arr.filter(x=>{
+    if(!x.date)return false;
+    const ym=x.date.slice(0,7);
+    return(!fromYM||ym>=fromYM)&&(!toYM||ym<=toYM);
+  });
+  const ca=inRange(DB.ca).reduce((a,x)=>a+(+x.amount),0);
+  const ar=inRange(DB.ar).reduce((a,x)=>a+(+x.amount),0);
+  const ii=inRange(DB.ii).reduce((a,x)=>a+(+x.amount),0);
+  const ppe=inRange(DB.ppe).reduce((a,x)=>a+(+x.amount),0);
+  const intg=inRange(DB.intg).reduce((a,x)=>a+(+x.amount),0);
+  const inv=inRange(DB.inv).reduce((a,x)=>a+(+x.amount),0);
+  return{ca,ar,ii,ppe,intg,inv,cur:ca+ar+ii,nc:ppe+intg+inv,total:ca+ar+ii+ppe+intg+inv,
+    caItems:inRange(DB.ca),arItems:inRange(DB.ar),iiItems:inRange(DB.ii),
+    ppeItems:inRange(DB.ppe),intgItems:inRange(DB.intg),invItems:inRange(DB.inv)};
+}
+
+function buildFin(ym_,detailed,_unused){
   const T=calcTotals(ym_);
   const lbl=mLbl(ym_?ym_+'-01':today());
-
   const filterItems=(arr)=>ym_?arr.filter(x=>x.date&&x.date.startsWith(ym_)):arr;
+  return buildFinHTML(T,filterItems(DB.ca),filterItems(DB.ar),filterItems(DB.ii),filterItems(DB.ppe),filterItems(DB.intg),filterItems(DB.inv),lbl,detailed);
+}
 
-  const caItems=filterItems(DB.ca);
-  const arItems=filterItems(DB.ar);
-  const iiItems=filterItems(DB.ii);
-  const ppeItems=filterItems(DB.ppe);
-  const intgItems=filterItems(DB.intg);
-  const invItems=filterItems(DB.inv);
+function buildFinRange(fromYM,toYM,detailed){
+  const R=calcTotalsRange(fromYM,toYM);
+  const lbl=fromYM?mLbl(fromYM+'-01')+' — '+mLbl(toYM+'-01'):'Semua Periode';
+  return buildFinHTML(R,R.caItems,R.arItems,R.iiItems,R.ppeItems,R.intgItems,R.invItems,lbl,detailed);
+}
 
+function buildFinHTML(T,caItems,arItems,iiItems,ppeItems,intgItems,invItems,lbl,detailed){
   const det=(arr,fn)=>detailed&&arr.length?arr.map(fn).join(''):'';
-
   return`<div class="fin">
     <div class="fin-sec">A. Current Asset</div>
     <div class="fin-row"><span class="fn">1.</span><span class="fl">Cash and cash equivalents</span><span class="fv">${fmtRp(T.ca)}</span></div>
@@ -726,11 +800,30 @@ function buildFin(ym_,detailed){
 
 function onDashMonth(ym_){
   document.getElementById('dash-month').textContent=mLbl(ym_+'-01');
-  document.getElementById('fin-dash').innerHTML=buildFin(ym_,false);
+  document.getElementById('fin-dash').innerHTML=buildFin(ym_,false,null);
 }
-function onLapMonth(ym_){
+function onLapMonth(ym_,mode){
+  // deactivate range buttons when month picker used
+  if(mode==='month'){document.querySelectorAll('#pb-lap .pb').forEach(b=>b.classList.remove('active'));}
   document.getElementById('lap-month').textContent='Laporan Bulan '+mLbl(ym_+'-01');
-  document.getElementById('fin-lap').innerHTML=buildFin(ym_,true);
+  document.getElementById('fin-lap').innerHTML=buildFin(ym_,true,null);
+}
+
+function setLapRange(range,btn){
+  document.querySelectorAll('#pb-lap .pb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Calculate date range
+  const now=new Date();
+  let fromYM=null;
+  if(range==='30d'){const d=new Date(now);d.setDate(d.getDate()-30);fromYM=d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'));}
+  else if(range==='60d'){const d=new Date(now);d.setDate(d.getDate()-60);fromYM=d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'));}
+  else if(range==='1y'){const d=new Date(now);d.setFullYear(d.getFullYear()-1);fromYM=d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'));}
+  else if(range==='5y'){const d=new Date(now);d.setFullYear(d.getFullYear()-5);fromYM=d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'));}
+  // all = null fromYM
+  const toYM=today().slice(0,7);
+  const lbl=fromYM?mLbl(fromYM+'-01')+' — '+mLbl(toYM+'-01'):'Semua Periode';
+  document.getElementById('lap-month').textContent='Laporan '+lbl;
+  document.getElementById('fin-lap').innerHTML=buildFinRange(fromYM,toYM,true);
 }
 
 // ════════════════════════════════════
@@ -865,8 +958,19 @@ function setRecvPeriod(period,btn,silent){
   }
 }
 
-// Gain Chart — filter investments by date period
-function setGainPeriod(period,btn,silent){
+// Investment Growth Chart
+function setInvGrowthPeriod(period,btn,silent){
+  activePeriod.invGrowth=period;
+  if(btn){document.querySelectorAll('#pb-inv-growth .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+  const pts=filterPointsByPeriod(period);
+  const labels=snapLabels(pts);
+  const data=pts.map(s=>+(+(s.total_investment||0)).toFixed(0));
+  if(CH.invGrowth){
+    CH.invGrowth.data.labels=labels;
+    CH.invGrowth.data.datasets[0].data=data;
+    CH.invGrowth.update();
+  }
+}
   activePeriod.gain=period;
   if(btn){document.querySelectorAll('#pb-gain .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
 
@@ -934,9 +1038,22 @@ function initCharts(){
       scales:{...scaleBase,y:{ticks:{font:{size:9},color:'#94a3b8',callback:v=>(v>=0?'+':'')+fmtRp(Math.abs(v))},grid:{color:'rgba(0,0,0,.04)'},border:{dash:[4,3]}}}}
   });
 
+  // Investment Growth chart
+  const igEl=document.getElementById('chart-inv-growth');
+  if(igEl){
+    CH.invGrowth=new Chart(igEl.getContext('2d'),{
+      type:'line',
+      data:{labels:[],datasets:[{label:'Total Investment',data:[],borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,.08)',tension:.4,pointRadius:3,pointHoverRadius:6,fill:true,pointBackgroundColor:'#8b5cf6',pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:true,
+        plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:10},boxWidth:8,color:'#94a3b8'}},tooltip:{...ttipBase}},
+        scales:scaleBase}
+    });
+  }
+
   setGrowthPeriod('7d',null,true);
   setRecvPeriod('7d',null,true);
   setGainPeriod('7d',null,true);
+  if(CH.invGrowth)setInvGrowthPeriod('7d',null,true);
   updateAlokasiChart();
   updateInvAllocChart();
 }
@@ -989,9 +1106,10 @@ function updateAll(){
   updateStats();
   updateAlokasiChart();
   updateInvAllocChart();
-  setGrowthPeriod(activePeriod.growth,null,true);
-  setRecvPeriod(activePeriod.recv,null,true);
-  setGainPeriod(activePeriod.gain,null,true);
+  setGrowthPeriod(activePeriod.growth||'7d',null,true);
+  setRecvPeriod(activePeriod.recv||'7d',null,true);
+  setGainPeriod(activePeriod.gain||'7d',null,true);
+  if(CH.invGrowth)setInvGrowthPeriod(activePeriod.invGrowth||'7d',null,true);
   const dym=document.getElementById('dash-month-pick').value;
   if(dym)onDashMonth(dym);
   const lym=document.getElementById('lap-month-pick').value;
@@ -1029,8 +1147,8 @@ function renderINTG(){
   renderTbl('t-intg',th,DB.intg.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fmtRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openEdit('intg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delRow('intg','${r.id}')">Hapus</button></td></tr>`));
 }
 function renderINV(){
-  const th=`<thead><tr><th>#</th><th>Nama</th><th>Tipe</th><th>Nilai</th><th>Gain/Loss</th><th>Aksi</th></tr></thead>`;
-  renderTbl('t-inv',th,DB.inv.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bp">${r.type}</span></td><td><b>${fmtRp(r.amount)}</b></td><td style="color:${+r.gain>=0?'#059669':'#dc2626'};font-weight:700;">${+r.gain>=0?'+':'-'}${fmtRp(Math.abs(r.gain))}</td><td><button class="btn-sm be" onclick="openEdit('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delRow('inv','${r.id}')">Hapus</button></td></tr>`));
+  const th=`<thead><tr><th>#</th><th>Nama</th><th>Tipe</th><th>Nilai</th><th>Gain/Loss</th><th>Tanggal</th><th>Aksi</th></tr></thead>`;
+  renderTbl('t-inv',th,DB.inv.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bp">${r.type}</span></td><td><b>${fmtRp(r.amount)}</b></td><td style="color:${+r.gain>=0?'#059669':'#dc2626'};font-weight:700;">${+r.gain>=0?'+':'-'}${fmtRp(Math.abs(r.gain))}</td><td>${r.date||'-'}</td><td><button class="btn-sm be" onclick="openEdit('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delRow('inv','${r.id}')">Hapus</button></td></tr>`));
 }
 
 // ════════════════════════════════════
@@ -1107,16 +1225,41 @@ async function saveModal(){
   }catch(e){showToast('❌ Error: '+e.message);}
 }
 
+// ════════════════════════════════════
+// CONFIRM MODAL
+// ════════════════════════════════════
+let cfmCallback=null;
+function showCfm(icon,title,msg,okLabel,okClass,cb){
+  document.getElementById('cfm-icon').textContent=icon;
+  document.getElementById('cfm-title').textContent=title;
+  document.getElementById('cfm-msg').textContent=msg;
+  const btn=document.getElementById('cfm-ok-btn');
+  btn.textContent=okLabel;
+  btn.className='cfm-confirm '+(okClass||'');
+  cfmCallback=cb;
+  document.getElementById('cfm-mo').classList.add('open');
+}
+function closeCfm(){document.getElementById('cfm-mo').classList.remove('open');cfmCallback=null;}
+function execCfm(){if(cfmCallback)cfmCallback();closeCfm();}
+
 async function delRow(type,id){
-  if(!confirm('Hapus data ini?'))return;
-  try{
-    await sbDel(TMAP[type],id);
-    DB[DBARR[type]]=await sbGet(TMAP[type]);
-    await autoSnapshot();
-    updateAll();
-    rerenderPage();
-    showToast('🗑️ Data berhasil dihapus!');
-  }catch(e){showToast('❌ Error: '+e.message);}
+  const names={ca:'Current Asset',ar:'Piutang',ii:'Inventory',ppe:'PPE',intg:'Intangible Asset',inv:'Investasi'};
+  const row=getDBArr(type).find(x=>x.id===id);
+  const name=row?row.name:'data ini';
+  showCfm('🗑️','Hapus '+names[type]+'?',
+    `"${name}" akan dihapus secara permanen dari database.`,
+    'Ya, Hapus','',
+    async()=>{
+      try{
+        await sbDel(TMAP[type],id);
+        DB[DBARR[type]]=await sbGet(TMAP[type]);
+        await autoSnapshot();
+        updateAll();
+        rerenderPage();
+        showToast('🗑️ Data berhasil dihapus!');
+      }catch(e){showToast('❌ Error: '+e.message);}
+    }
+  );
 }
 
 function rerenderPage(){
