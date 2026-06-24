@@ -595,50 +595,55 @@ async function init(){
     DB={ca,ar,ii,ppe,intg,inv,snaps};
   }catch(e){
     console.error(e);
-    showToast('⚠️ Gagal memuat data. Jalankan SQL schema di Supabase terlebih dahulu.');
+    showToast('⚠️ Gagal memuat dari Supabase. Cek SQL schema & koneksi.');
   }
 
-  const curYM=today().slice(0,7);
-  document.getElementById('dash-month-pick').value=curYM;
-  document.getElementById('lap-month-pick').value=curYM;
-  onDashMonth(curYM);
-  onLapMonth(curYM);
+  try{
+    const curYM=today().slice(0,7);
+    document.getElementById('dash-month-pick').value=curYM;
+    document.getElementById('lap-month-pick').value=curYM;
+    onDashMonth(curYM);
+    onLapMonth(curYM,'init');
 
-  // Save/update today's snapshot FIRST so prev month comparison works
-  await autoSnapshot();
+    // snapshot in background — don't await so it doesn't block UI
+    autoSnapshot().catch(e=>console.warn('snapshot:',e));
 
-  // Now stats have fresh snapshot data
-  updateStats();
-  initCharts();
-  hideLoading();
+    updateStats();
+    initCharts();
+  }catch(e){
+    console.error('Init UI error:',e);
+  }finally{
+    hideLoading();
+  }
 }
 
 function hideLoading(){const e=document.getElementById('ls');e.classList.add('hide');setTimeout(()=>e.style.display='none',500);}
 
 // ════════════════════════════════════
-// AUTO SNAPSHOT
+// AUTO SNAPSHOT — runs in background
 // ════════════════════════════════════
 async function autoSnapshot(){
   const td=today();
-  const exists=DB.snaps.find(s=>s.snapshot_date===td);
   const payload={
-    total_current:totCur(),
-    total_non_current:totNC(),
-    total_asset:totAst(),
-    total_receivable:sumAR(),
-    total_investment:sumINV()
+    total_current:totCur(),total_non_current:totNC(),
+    total_asset:totAst(),total_receivable:sumAR(),total_investment:sumINV()
   };
-  try{
-    if(exists){
-      await sbUpd('laporan_snapshots',exists.id,payload);
-    } else {
-      await sbIns('laporan_snapshots',{snapshot_date:td,...payload});
-    }
-    // Always reload fresh from DB so prev month data is correct
-    DB.snaps=await sbGet('laporan_snapshots','&order=snapshot_date.asc');
-  }catch(e){
-    console.warn('Snapshot error (tabel belum ada?):', e.message);
+  const exists=DB.snaps.find(s=>s.snapshot_date===td);
+  if(exists){
+    await sbUpd('laporan_snapshots',exists.id,payload);
+    const idx=DB.snaps.indexOf(exists);
+    if(idx>=0)DB.snaps[idx]={...exists,...payload};
+  } else {
+    const res=await sbIns('laporan_snapshots',{snapshot_date:td,...payload});
+    if(Array.isArray(res)&&res[0])DB.snaps.push(res[0]);
+    else if(res&&res.id)DB.snaps.push(res);
   }
+  // Sort ascending
+  DB.snaps.sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
+  // Refresh charts
+  setGrowthPeriod(activePeriod.growth||'7d',null,true);
+  setRecvPeriod(activePeriod.recv||'7d',null,true);
+  if(CH.invGrowth)setInvGrowthPeriod(activePeriod.invGrowth||'7d',null,true);
 }
 
 // ════════════════════════════════════
@@ -761,7 +766,7 @@ function calcTotalsRange(fromYM,toYM){
     ppeItems:inRange(DB.ppe),intgItems:inRange(DB.intg),invItems:inRange(DB.inv)};
 }
 
-function buildFin(ym_,detailed,_unused){
+function buildFin(ym_,detailed){
   const T=calcTotals(ym_);
   const lbl=mLbl(ym_?ym_+'-01':today());
   const filterItems=(arr)=>ym_?arr.filter(x=>x.date&&x.date.startsWith(ym_)):arr;
@@ -799,14 +804,21 @@ function buildFinHTML(T,caItems,arItems,iiItems,ppeItems,intgItems,invItems,lbl,
 }
 
 function onDashMonth(ym_){
-  document.getElementById('dash-month').textContent=mLbl(ym_+'-01');
-  document.getElementById('fin-dash').innerHTML=buildFin(ym_,false,null);
+  const el=document.getElementById('dash-month');
+  if(el)el.textContent=mLbl(ym_+'-01');
+  const fd=document.getElementById('fin-dash');
+  if(fd)fd.innerHTML=buildFin(ym_,false);
 }
 function onLapMonth(ym_,mode){
-  // deactivate range buttons when month picker used
-  if(mode==='month'){document.querySelectorAll('#pb-lap .pb').forEach(b=>b.classList.remove('active'));}
-  document.getElementById('lap-month').textContent='Laporan Bulan '+mLbl(ym_+'-01');
-  document.getElementById('fin-lap').innerHTML=buildFin(ym_,true,null);
+  // mode: 'month' (user typed), 'init', or undefined
+  if(mode==='month'||mode===undefined){
+    const pb=document.querySelectorAll('#pb-lap .pb');
+    pb.forEach(b=>b.classList.remove('active'));
+  }
+  const el=document.getElementById('lap-month');
+  if(el)el.textContent='Laporan Bulan '+mLbl(ym_+'-01');
+  const fl=document.getElementById('fin-lap');
+  if(fl)fl.innerHTML=buildFin(ym_,true);
 }
 
 function setLapRange(range,btn){
