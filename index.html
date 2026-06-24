@@ -39,6 +39,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn-ic:hover{background:var(--border);}
 .avatar{width:34px;height:34px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;}
 
+/* WORLD CLOCKS */
+.wclocks{display:flex;align-items:center;gap:6px;margin-left:8px;}
+.wclock{display:flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:4px 10px;white-space:nowrap;}
+.wc-flag{font-size:14px;line-height:1;}
+.wc-info{display:flex;flex-direction:column;line-height:1.3;}
+.wc-label{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.wc-time{font-size:11px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+@media(max-width:1100px){.wclocks{display:none;}}
+@media(max-width:768px){.logo-tx{display:none;}}
+
 /* LAYOUT */
 .layout{display:flex;margin-top:var(--hh);min-height:calc(100vh - var(--hh));}
 .sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;backdrop-filter:blur(2px);}
@@ -195,8 +205,8 @@ body.dark .toast{background:#f1f5f9;color:#0f172a;}
   .main{margin-left:0!important;padding:12px;padding-bottom:30px;}
   .sg{grid-template-columns:1fr 1fr;gap:9px;}
   .sc-val{font-size:17px;}
+  .sc-chg{font-size:9.5px;}
   .card{padding:13px;}
-  .logo-tx{display:none;}
   .fr{grid-template-columns:1fr;}
 }
 @media(max-width:480px){.sg{grid-template-columns:1fr 1fr;gap:8px}.sc-val{font-size:15px}.sc{padding:11px}}
@@ -224,6 +234,30 @@ body.dark .toast{background:#f1f5f9;color:#0f172a;}
     <div class="logo">
       <div class="logo-ic">📊</div>
       <div class="logo-tx">Lap. Keuangan Pribadi<small>Personal Finance Tracker</small></div>
+    </div>
+    <!-- WORLD CLOCKS -->
+    <div class="wclocks" id="wclocks">
+      <div class="wclock">
+        <span class="wc-flag">🇮🇩</span>
+        <div class="wc-info">
+          <span class="wc-label">Indonesia (WITA)</span>
+          <span class="wc-time" id="wc-wita">—</span>
+        </div>
+      </div>
+      <div class="wclock">
+        <span class="wc-flag">🇬🇧</span>
+        <div class="wc-info">
+          <span class="wc-label">London (LSE)</span>
+          <span class="wc-time" id="wc-lse">—</span>
+        </div>
+      </div>
+      <div class="wclock">
+        <span class="wc-flag">🇺🇸</span>
+        <div class="wc-info">
+          <span class="wc-label">New York (NYSE)</span>
+          <span class="wc-time" id="wc-nyse">—</span>
+        </div>
+      </div>
     </div>
   </div>
   <div class="hr2">
@@ -567,44 +601,53 @@ function updateStats(){
   const now=new Date();
   const curYM=now.toISOString().slice(0,7);
 
-  // Find the most recent snapshot that is NOT in the current month (= previous data)
+  // Find latest snapshot from a PREVIOUS month (not current month)
   const prevSnaps=sorted.filter(s=>s.snapshot_date.slice(0,7)<curYM);
   const prev=prevSnaps.length?prevSnaps[prevSnaps.length-1]:null;
 
   if(prev){
-    const diffTot=ta-(+prev.total_asset||0);
-    const diffCur=tc-(+prev.total_current||0);
-    const diffNC =tnc-(+prev.total_non_current||0);
+    // diff = CURRENT value MINUS previous snapshot value
+    // If current > prev → positive → ↑ naik (good)
+    // If current < prev → negative → ↓ turun
+    const prevTa  = +prev.total_asset||0;
+    const prevCur = +prev.total_current||0;
+    const prevNC  = +prev.total_non_current||0;
 
-    const pctOf=(diff,base)=>base>0?((diff/base)*100).toFixed(1)+'%':'—';
+    const diffTot = ta  - prevTa;
+    const diffCur = tc  - prevCur;
+    const diffNC  = tnc - prevNC;
 
-    setChgFull('sc-tot',diffTot,pctOf(diffTot,+prev.total_asset||0));
-    setChgFull('sc-cur',diffCur,pctOf(diffCur,+prev.total_current||0));
-    setChgFull('sc-nc', diffNC, pctOf(diffNC, +prev.total_non_current||0));
-    setChgFull('sc-td', diffTot,pctOf(diffTot,+prev.total_asset||0));
+    const pct=(diff,base)=>base>0?((diff/base)*100).toFixed(1)+'%':'—';
+
+    setChgFull('sc-tot', diffTot, pct(diffTot, prevTa),  prev.snapshot_date);
+    setChgFull('sc-cur', diffCur, pct(diffCur, prevCur), prev.snapshot_date);
+    setChgFull('sc-nc',  diffNC,  pct(diffNC,  prevNC),  prev.snapshot_date);
   } else {
-    // No previous snapshot yet — show vs 0 (first time input)
-    if(ta>0){
-      setChgFull('sc-tot',ta,'100%');
-      setChgFull('sc-cur',tc,'100%');
-      setChgFull('sc-nc',tnc,'100%');
-      setChgFull('sc-td',ta,'100%');
-    } else {
-      ['sc-tot','sc-cur','sc-nc','sc-td'].forEach(id=>{
-        const el=document.getElementById(id);
-        el.className='sc-chg neu';
-        el.textContent='Input data untuk melihat perubahan';
-      });
-    }
+    ['sc-tot','sc-cur','sc-nc'].forEach(id=>{
+      const el=document.getElementById(id);
+      el.className='sc-chg neu';
+      el.textContent='Input data bulan lalu untuk melihat perubahan';
+    });
   }
-  document.getElementById('sc-td').textContent='Update: '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+
+  // Asset Hari Ini — full datetime WITA
+  const el=document.getElementById('sc-td');
+  el.className='sc-chg neu';
+  const fullDT=now.toLocaleString('id-ID',{
+    timeZone:'Asia/Makassar',
+    weekday:'short',day:'2-digit',month:'short',year:'numeric',
+    hour:'2-digit',minute:'2-digit',second:'2-digit'
+  });
+  el.textContent='Update: '+fullDT+' WITA';
 }
 
-function setChgFull(id,diff,pct){
+function setChgFull(id,diff,pct,prevDate){
   const el=document.getElementById(id);
   const isUp=diff>=0;
   el.className='sc-chg '+(isUp?'up':'dn');
-  el.textContent=(isUp?'↑ +':'↓ ')+fmtRp(Math.abs(diff))+' ('+pct+') dari bulan lalu';
+  const arrow=isUp?'↑ +':'↓ -';
+  const label=prevDate?` (vs ${prevDate.slice(0,7)})`:'';
+  el.textContent=arrow+fmtRp(Math.abs(diff))+' ('+pct+')'+label+' dari bulan lalu';
 }
 
 // ════════════════════════════════════
@@ -714,39 +757,74 @@ function downloadPDF(){
 // ════════════════════════════════════
 const activePeriod={growth:'7d',recv:'7d',gain:'7d'};
 
-function filterSnapsByPeriod(period){
-  const snaps=[...DB.snaps].sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
-  if(!snaps.length)return[];
-  if(period==='all')return snaps;
-  // Anchor = today
+// Build synthetic monthly data points from master tables
+// so even without daily snapshots, monthly totals appear in charts
+function buildMonthlyPoints(){
+  // Collect all dates across all tables
+  const allDates=[
+    ...DB.ca.map(x=>x.date),...DB.ar.map(x=>x.date),...DB.ii.map(x=>x.date),
+    ...DB.ppe.map(x=>x.date),...DB.intg.map(x=>x.date),...DB.inv.map(x=>x.date),
+  ].filter(Boolean);
+
+  if(!allDates.length)return[];
+
+  // Find unique months
+  const months=[...new Set(allDates.map(d=>d.slice(0,7)))].sort();
+
+  // For each month build cumulative total up to end of that month
+  // (cumulative = all data with date <= last day of month)
+  const points=months.map(ym=>{
+    const endDate=ym+'-31'; // safe upper bound
+    const sumUpTo=(arr)=>arr.filter(x=>x.date&&x.date.slice(0,7)<=ym).reduce((a,x)=>a+(+x.amount),0);
+    const ca=sumUpTo(DB.ca),ar=sumUpTo(DB.ar),ii=sumUpTo(DB.ii);
+    const ppe=sumUpTo(DB.ppe),intg=sumUpTo(DB.intg),inv=sumUpTo(DB.inv);
+    const cur=ca+ar+ii,nc=ppe+intg+inv,total=cur+nc;
+    return{snapshot_date:ym+'-28',total_asset:total,total_current:cur,total_non_current:nc,total_receivable:ar,isMonthly:true,ym};
+  });
+
+  // Merge with real snapshots (real snapshots override monthly if same month)
+  const realByMonth={};
+  DB.snaps.forEach(s=>{realByMonth[s.snapshot_date.slice(0,7)]=s;});
+  return points.map(p=>realByMonth[p.ym]||p);
+}
+
+function filterPointsByPeriod(period){
+  const all=buildMonthlyPoints().sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
+  if(!all.length)return[];
+  if(period==='all')return all;
+
   const anchor=new Date(today()+'T00:00:00');
   let days=0;
   if(period==='1d')days=1;
   else if(period==='7d')days=7;
   else if(period==='30d')days=30;
-  else if(period==='1y')days=365;
+  else if(period==='1y')days=366;
+
   const cutoff=new Date(anchor);
-  cutoff.setDate(cutoff.getDate()-days+1);
+  cutoff.setDate(cutoff.getDate()-days);
   cutoff.setHours(0,0,0,0);
-  return snaps.filter(s=>new Date(s.snapshot_date+'T00:00:00')>=cutoff);
+  return all.filter(s=>new Date(s.snapshot_date+'T00:00:00')>=cutoff);
 }
 
-function snapLabels(snaps){
-  return snaps.map(s=>{
+function snapLabels(points){
+  return points.map(s=>{
     const d=new Date(s.snapshot_date+'T00:00:00');
+    if(s.isMonthly){
+      return d.toLocaleDateString('id-ID',{month:'short',year:'numeric'});
+    }
     return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'2-digit'});
   });
 }
 
-// Growth Aset Chart — shows total_asset AND splits current/non-current
+// Growth Aset Chart
 function setGrowthPeriod(period,btn,silent){
   activePeriod.growth=period;
   if(btn){document.querySelectorAll('#pb-growth .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
-  const snaps=filterSnapsByPeriod(period);
-  const labels=snapLabels(snaps);
-  const dataTot=snaps.map(s=>+(+s.total_asset).toFixed(0));
-  const dataCur=snaps.map(s=>+(+s.total_current).toFixed(0));
-  const dataNC =snaps.map(s=>+(+s.total_non_current).toFixed(0));
+  const pts=filterPointsByPeriod(period);
+  const labels=snapLabels(pts);
+  const dataTot=pts.map(s=>+(+s.total_asset).toFixed(0));
+  const dataCur=pts.map(s=>+(+s.total_current).toFixed(0));
+  const dataNC =pts.map(s=>+(+s.total_non_current).toFixed(0));
   if(CH.growth){
     CH.growth.data.labels=labels;
     CH.growth.data.datasets[0].data=dataTot;
@@ -760,9 +838,9 @@ function setGrowthPeriod(period,btn,silent){
 function setRecvPeriod(period,btn,silent){
   activePeriod.recv=period;
   if(btn){document.querySelectorAll('#pb-recv .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
-  const snaps=filterSnapsByPeriod(period);
-  const labels=snapLabels(snaps);
-  const data=snaps.map(s=>+(+(s.total_receivable||0)).toFixed(0));
+  const pts=filterPointsByPeriod(period);
+  const labels=snapLabels(pts);
+  const data=pts.map(s=>+(+(s.total_receivable||0)).toFixed(0));
   if(CH.recv){
     CH.recv.data.labels=labels;
     CH.recv.data.datasets[0].data=data;
@@ -1072,10 +1150,31 @@ let toastT;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3000);}
 
 // ════════════════════════════════════
+// WORLD CLOCKS
+// ════════════════════════════════════
+const DT_OPTS={
+  wita:{tz:'Asia/Makassar',id:'wc-wita'},
+  lse: {tz:'Europe/London',id:'wc-lse'},
+  nyse:{tz:'America/New_York',id:'wc-nyse'},
+};
+function updateClocks(){
+  const now=new Date();
+  Object.values(DT_OPTS).forEach(({tz,id})=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const time=now.toLocaleTimeString('id-ID',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const date=now.toLocaleDateString('id-ID',{timeZone:tz,day:'2-digit',month:'short',year:'numeric'});
+    el.textContent=time+' · '+date;
+  });
+}
+function startClocks(){updateClocks();setInterval(updateClocks,1000);}
+
+// ════════════════════════════════════
 // BOOT
 // ════════════════════════════════════
 document.addEventListener('DOMContentLoaded',()=>{
   if(window.innerWidth<=768)document.getElementById('main').classList.add('full');
+  startClocks();
   init();
 });
 </script>
