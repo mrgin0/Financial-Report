@@ -377,11 +377,26 @@ body.dark .toast{background:#f1f5f9;color:#0f172a;}
     </div>
 
     <div class="card">
-      <div class="chd"><span class="ctitle">Investment Allocation</span></div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-        <canvas id="chart-inv-alloc" style="width:108px;height:108px;"></canvas>
-        <div id="inv-alloc-leg" style="width:100%;"></div>
-        <div class="lg-tot" style="width:100%;"><span>Total</span><span id="inv-alloc-tot">Rp 0</span></div>
+      <div class="chd">
+        <span class="ctitle">Investment</span>
+        <div class="period-btns" id="pb-inv-growth">
+          <button class="pb" onclick="setInvGrowthPeriod('1d',this)">1H</button>
+          <button class="pb active" onclick="setInvGrowthPeriod('7d',this)">7H</button>
+          <button class="pb" onclick="setInvGrowthPeriod('30d',this)">30H</button>
+          <button class="pb" onclick="setInvGrowthPeriod('1y',this)">1Th</button>
+          <button class="pb" onclick="setInvGrowthPeriod('all',this)">All</button>
+        </div>
+      </div>
+      <canvas id="chart-inv-growth" height="110"></canvas>
+      <div style="margin-top:14px;">
+        <div class="ctitle" style="margin-bottom:8px;">Alokasi Investment</div>
+        <div class="dw">
+          <canvas id="chart-inv-alloc" style="width:90px;height:90px;flex-shrink:0;"></canvas>
+          <div style="flex:1;min-width:0;">
+            <div id="inv-alloc-leg"></div>
+            <div class="lg-tot" style="width:100%;"><span>Total</span><span id="inv-alloc-tot">Rp 0</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -541,47 +556,48 @@ async function init(){
     console.error(e);
     showToast('⚠️ Gagal memuat data. Jalankan SQL schema di Supabase terlebih dahulu.');
   }
+
   const curYM=today().slice(0,7);
   document.getElementById('dash-month-pick').value=curYM;
   document.getElementById('lap-month-pick').value=curYM;
   onDashMonth(curYM);
   onLapMonth(curYM);
+
+  // Save/update today's snapshot FIRST so prev month comparison works
+  await autoSnapshot();
+
+  // Now stats have fresh snapshot data
   updateStats();
   initCharts();
   hideLoading();
-  // Auto-save snapshot daily
-  await autoSnapshot();
 }
 
 function hideLoading(){const e=document.getElementById('ls');e.classList.add('hide');setTimeout(()=>e.style.display='none',500);}
 
 // ════════════════════════════════════
-// AUTO SNAPSHOT — save daily if not exists
+// AUTO SNAPSHOT
 // ════════════════════════════════════
 async function autoSnapshot(){
   const td=today();
   const exists=DB.snaps.find(s=>s.snapshot_date===td);
-  if(exists){
-    // Update today's snapshot with fresh totals
-    try{
-      await sbUpd('laporan_snapshots',exists.id,{
-        total_current:totCur(),total_non_current:totNC(),
-        total_asset:totAst(),total_receivable:sumAR(),total_investment:sumINV()
-      });
-      const idx=DB.snaps.findIndex(s=>s.id===exists.id);
-      DB.snaps[idx]={...exists,total_current:totCur(),total_non_current:totNC(),total_asset:totAst(),total_receivable:sumAR(),total_investment:sumINV()};
-    }catch(e){}
-  } else {
-    try{
-      const snap={snapshot_date:td,total_current:totCur(),total_non_current:totNC(),total_asset:totAst(),total_receivable:sumAR(),total_investment:sumINV()};
-      const res=await sbIns('laporan_snapshots',snap);
-      if(Array.isArray(res)&&res[0])DB.snaps.push(res[0]);
-    }catch(e){}
+  const payload={
+    total_current:totCur(),
+    total_non_current:totNC(),
+    total_asset:totAst(),
+    total_receivable:sumAR(),
+    total_investment:sumINV()
+  };
+  try{
+    if(exists){
+      await sbUpd('laporan_snapshots',exists.id,payload);
+    } else {
+      await sbIns('laporan_snapshots',{snapshot_date:td,...payload});
+    }
+    // Always reload fresh from DB so prev month data is correct
+    DB.snaps=await sbGet('laporan_snapshots','&order=snapshot_date.asc');
+  }catch(e){
+    console.warn('Snapshot error (tabel belum ada?):', e.message);
   }
-  // Refresh charts after snapshot saved
-  setGrowthPeriod(activePeriod.growth||'7d',null,true);
-  setRecvPeriod(activePeriod.recv||'7d',null,true);
-  setGainPeriod(activePeriod.gain||'7d',null,true);
 }
 
 // ════════════════════════════════════
@@ -594,39 +610,41 @@ function updateStats(){
   document.getElementById('sv-nc').textContent=fmtRp(tnc);
   document.getElementById('sv-td').textContent=fmtRp(ta);
 
-  // Sort snapshots ascending
-  const sorted=[...DB.snaps].sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
-
-  // Current month YYYY-MM
   const now=new Date();
   const curYM=now.toISOString().slice(0,7);
 
-  // Find latest snapshot from a PREVIOUS month (not current month)
-  const prevSnaps=sorted.filter(s=>s.snapshot_date.slice(0,7)<curYM);
-  const prev=prevSnaps.length?prevSnaps[prevSnaps.length-1]:null;
+  // 1st: try real snapshots from previous months
+  const sortedSnaps=[...DB.snaps].sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
+  const prevRealSnaps=sortedSnaps.filter(s=>s.snapshot_date.slice(0,7)<curYM);
+  let prev=prevRealSnaps.length?prevRealSnaps[prevRealSnaps.length-1]:null;
+
+  // 2nd fallback: build monthly points from master data
+  if(!prev){
+    const allPts=buildMonthlyPoints();
+    const prevPts=allPts.filter(p=>p.ym&&p.ym<curYM).sort((a,b)=>a.ym.localeCompare(b.ym));
+    if(prevPts.length) prev=prevPts[prevPts.length-1];
+  }
 
   if(prev){
-    // diff = CURRENT value MINUS previous snapshot value
-    // If current > prev → positive → ↑ naik (good)
-    // If current < prev → negative → ↓ turun
-    const prevTa  = +prev.total_asset||0;
-    const prevCur = +prev.total_current||0;
-    const prevNC  = +prev.total_non_current||0;
+    const prevTa  = +(prev.total_asset||0);
+    const prevCur = +(prev.total_current||0);
+    const prevNC  = +(prev.total_non_current||0);
 
     const diffTot = ta  - prevTa;
     const diffCur = tc  - prevCur;
     const diffNC  = tnc - prevNC;
 
-    const pct=(diff,base)=>base>0?((diff/base)*100).toFixed(1)+'%':'—';
+    const pct=(d,b)=>b>0?((d/b)*100).toFixed(1)+'%':'—';
+    const pMonth=prev.ym||prev.snapshot_date.slice(0,7);
 
-    setChgFull('sc-tot', diffTot, pct(diffTot, prevTa),  prev.snapshot_date);
-    setChgFull('sc-cur', diffCur, pct(diffCur, prevCur), prev.snapshot_date);
-    setChgFull('sc-nc',  diffNC,  pct(diffNC,  prevNC),  prev.snapshot_date);
+    setChgFull('sc-tot', diffTot, pct(diffTot,prevTa),  pMonth);
+    setChgFull('sc-cur', diffCur, pct(diffCur,prevCur), pMonth);
+    setChgFull('sc-nc',  diffNC,  pct(diffNC, prevNC),  pMonth);
   } else {
     ['sc-tot','sc-cur','sc-nc'].forEach(id=>{
       const el=document.getElementById(id);
       el.className='sc-chg neu';
-      el.textContent='Input data bulan lalu untuk melihat perubahan';
+      el.textContent='Belum ada data bulan sebelumnya';
     });
   }
 
@@ -641,13 +659,12 @@ function updateStats(){
   el.textContent='Update: '+fullDT+' WITA';
 }
 
-function setChgFull(id,diff,pct,prevDate){
+function setChgFull(id,diff,pct,prevMonth){
   const el=document.getElementById(id);
   const isUp=diff>=0;
   el.className='sc-chg '+(isUp?'up':'dn');
   const arrow=isUp?'↑ +':'↓ -';
-  const label=prevDate?` (vs ${prevDate.slice(0,7)})`:'';
-  el.textContent=arrow+fmtRp(Math.abs(diff))+' ('+pct+')'+label+' dari bulan lalu';
+  el.textContent=arrow+fmtRp(Math.abs(diff))+' ('+pct+') vs '+mLbl(prevMonth+'-01');
 }
 
 // ════════════════════════════════════
