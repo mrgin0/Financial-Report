@@ -312,14 +312,14 @@ body.dark .toast{background:#f1f5f9;color:#0f172a;}
       </div>
       <canvas id="chart-growth" height="155"></canvas>
 
-      <!-- Alokasi Current Asset -->
+      <!-- Alokasi Total Asset -->
       <div style="margin-top:18px;">
-        <div class="ctitle" style="margin-bottom:10px;">Alokasi Current Asset</div>
+        <div class="ctitle" style="margin-bottom:10px;">Alokasi Total Asset</div>
         <div class="dw">
           <canvas id="chart-alok" class="dc"></canvas>
           <div style="flex:1;min-width:0;">
             <div id="alok-leg"></div>
-            <div class="lg-tot"><span>Total</span><span id="alok-tot">Rp 0</span></div>
+            <div class="lg-tot"><span>Total Asset</span><span id="alok-tot">Rp 0</span></div>
           </div>
         </div>
       </div>
@@ -560,34 +560,51 @@ function updateStats(){
   document.getElementById('sv-nc').textContent=fmtRp(tnc);
   document.getElementById('sv-td').textContent=fmtRp(ta);
 
-  // Find previous month snapshot
+  // Sort snapshots ascending
+  const sorted=[...DB.snaps].sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
+
+  // Current month YYYY-MM
   const now=new Date();
-  const prevYM=new Date(now.getFullYear(),now.getMonth()-1,1).toISOString().slice(0,7);
-  // Get the latest snapshot from previous month
-  const prevSnaps=DB.snaps.filter(s=>s.snapshot_date.startsWith(prevYM));
+  const curYM=now.toISOString().slice(0,7);
+
+  // Find the most recent snapshot that is NOT in the current month (= previous data)
+  const prevSnaps=sorted.filter(s=>s.snapshot_date.slice(0,7)<curYM);
   const prev=prevSnaps.length?prevSnaps[prevSnaps.length-1]:null;
 
   if(prev){
-    setChg('sc-tot',ta-(+prev.total_asset));
-    setChg('sc-cur',tc-(+prev.total_current));
-    setChg('sc-nc',tnc-(+prev.total_non_current));
-    const pct=prev.total_asset>0?((ta-prev.total_asset)/prev.total_asset*100).toFixed(1):'—';
-    document.getElementById('sc-tot').textContent=fmtSgn(ta-prev.total_asset)+' ('+pct+'%) dari bulan lalu';
-    document.getElementById('sc-tot').className='sc-chg '+(ta>=prev.total_asset?'up':'dn');
+    const diffTot=ta-(+prev.total_asset||0);
+    const diffCur=tc-(+prev.total_current||0);
+    const diffNC =tnc-(+prev.total_non_current||0);
+
+    const pctOf=(diff,base)=>base>0?((diff/base)*100).toFixed(1)+'%':'—';
+
+    setChgFull('sc-tot',diffTot,pctOf(diffTot,+prev.total_asset||0));
+    setChgFull('sc-cur',diffCur,pctOf(diffCur,+prev.total_current||0));
+    setChgFull('sc-nc', diffNC, pctOf(diffNC, +prev.total_non_current||0));
+    setChgFull('sc-td', diffTot,pctOf(diffTot,+prev.total_asset||0));
   } else {
-    ['sc-tot','sc-cur','sc-nc','sc-td'].forEach(id=>{
-      const el=document.getElementById(id);
-      el.className='sc-chg neu';
-      el.textContent='Belum ada data bulan lalu';
-    });
+    // No previous snapshot yet — show vs 0 (first time input)
+    if(ta>0){
+      setChgFull('sc-tot',ta,'100%');
+      setChgFull('sc-cur',tc,'100%');
+      setChgFull('sc-nc',tnc,'100%');
+      setChgFull('sc-td',ta,'100%');
+    } else {
+      ['sc-tot','sc-cur','sc-nc','sc-td'].forEach(id=>{
+        const el=document.getElementById(id);
+        el.className='sc-chg neu';
+        el.textContent='Input data untuk melihat perubahan';
+      });
+    }
   }
   document.getElementById('sc-td').textContent='Update: '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
 }
 
-function setChg(id,diff){
+function setChgFull(id,diff,pct){
   const el=document.getElementById(id);
-  el.className='sc-chg '+(diff>0?'up':diff<0?'dn':'neu');
-  el.textContent=fmtSgn(diff)+' dari bulan lalu';
+  const isUp=diff>=0;
+  el.className='sc-chg '+(isUp?'up':'dn');
+  el.textContent=(isUp?'↑ +':'↓ ')+fmtRp(Math.abs(diff))+' ('+pct+') dari bulan lalu';
 }
 
 // ════════════════════════════════════
@@ -700,34 +717,41 @@ const activePeriod={growth:'7d',recv:'7d',gain:'7d'};
 function filterSnapsByPeriod(period){
   const snaps=[...DB.snaps].sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
   if(!snaps.length)return[];
-  const last=new Date(snaps[snaps.length-1].snapshot_date+'T00:00:00');
   if(period==='all')return snaps;
-  let ms=0;
-  if(period==='1d')ms=1;
-  else if(period==='7d')ms=7;
-  else if(period==='30d')ms=30;
-  else if(period==='1y')ms=365;
-  const cutoff=new Date(last);cutoff.setDate(cutoff.getDate()-ms+1);
+  // Anchor = today
+  const anchor=new Date(today()+'T00:00:00');
+  let days=0;
+  if(period==='1d')days=1;
+  else if(period==='7d')days=7;
+  else if(period==='30d')days=30;
+  else if(period==='1y')days=365;
+  const cutoff=new Date(anchor);
+  cutoff.setDate(cutoff.getDate()-days+1);
+  cutoff.setHours(0,0,0,0);
   return snaps.filter(s=>new Date(s.snapshot_date+'T00:00:00')>=cutoff);
 }
 
 function snapLabels(snaps){
   return snaps.map(s=>{
     const d=new Date(s.snapshot_date+'T00:00:00');
-    return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'});
+    return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'2-digit'});
   });
 }
 
-// Growth Aset Chart
+// Growth Aset Chart — shows total_asset AND splits current/non-current
 function setGrowthPeriod(period,btn,silent){
   activePeriod.growth=period;
   if(btn){document.querySelectorAll('#pb-growth .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
   const snaps=filterSnapsByPeriod(period);
   const labels=snapLabels(snaps);
-  const data=snaps.map(s=>+(+s.total_asset).toFixed(0));
+  const dataTot=snaps.map(s=>+(+s.total_asset).toFixed(0));
+  const dataCur=snaps.map(s=>+(+s.total_current).toFixed(0));
+  const dataNC =snaps.map(s=>+(+s.total_non_current).toFixed(0));
   if(CH.growth){
     CH.growth.data.labels=labels;
-    CH.growth.data.datasets[0].data=data;
+    CH.growth.data.datasets[0].data=dataTot;
+    CH.growth.data.datasets[1].data=dataCur;
+    CH.growth.data.datasets[2].data=dataNC;
     CH.growth.update();
   }
 }
@@ -738,7 +762,7 @@ function setRecvPeriod(period,btn,silent){
   if(btn){document.querySelectorAll('#pb-recv .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
   const snaps=filterSnapsByPeriod(period);
   const labels=snapLabels(snaps);
-  const data=snaps.map(s=>+(+s.total_receivable||0).toFixed(0));
+  const data=snaps.map(s=>+(+(s.total_receivable||0)).toFixed(0));
   if(CH.recv){
     CH.recv.data.labels=labels;
     CH.recv.data.datasets[0].data=data;
@@ -780,36 +804,41 @@ function setGainPeriod(period,btn,silent){
 // INIT CHARTS
 // ════════════════════════════════════
 function initCharts(){
-  const base={responsive:true,maintainAspectRatio:true,
-    plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(15,23,42,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8}},
-    scales:{x:{ticks:{maxTicksLimit:7,font:{size:9},color:'#94a3b8'},grid:{display:false}},
-      y:{ticks:{font:{size:9},color:'#94a3b8',callback:v=>'Rp '+Number(v).toLocaleString('id-ID')},grid:{color:'rgba(0,0,0,.04)'}}}
-  };
+  const ttipBase={backgroundColor:'rgba(15,23,42,.92)',titleFont:{size:11},bodyFont:{size:11},padding:10,cornerRadius:8};
+  const scaleBase={x:{ticks:{maxTicksLimit:8,font:{size:9},color:'#94a3b8'},grid:{display:false}},
+    y:{ticks:{font:{size:9},color:'#94a3b8',callback:v=>'Rp '+Number(v).toLocaleString('id-ID')},grid:{color:'rgba(0,0,0,.04)'}}};
 
-  // Growth chart
+  // Growth chart — 3 datasets: Total, Current, Non-Current
   CH.growth=new Chart(document.getElementById('chart-growth').getContext('2d'),{
     type:'line',
-    data:{labels:[],datasets:[{label:'Total Asset',data:[],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',tension:.4,pointRadius:4,pointHoverRadius:6,fill:true,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:2}]},
-    options:{...base,plugins:{...base.plugins,legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:10},boxWidth:8,color:'#94a3b8'}}}}
+    data:{labels:[],datasets:[
+      {label:'Total Asset',data:[],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.07)',tension:.4,pointRadius:3,pointHoverRadius:6,fill:false,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2.5},
+      {label:'Current Asset',data:[],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.07)',tension:.4,pointRadius:3,pointHoverRadius:5,fill:false,pointBackgroundColor:'#22c55e',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:1.8,borderDash:[4,3]},
+      {label:'Non-Current',data:[],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.07)',tension:.4,pointRadius:3,pointHoverRadius:5,fill:false,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:1.8,borderDash:[4,3]},
+    ]},
+    options:{responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:10},boxWidth:8,color:'#94a3b8'}},tooltip:{...ttipBase}},
+      scales:scaleBase}
   });
 
   // Receivable chart
   CH.recv=new Chart(document.getElementById('chart-recv').getContext('2d'),{
     type:'line',
-    data:{labels:[],datasets:[{label:'Total Receivable',data:[],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.08)',tension:.4,pointRadius:4,pointHoverRadius:6,fill:true,pointBackgroundColor:'#22c55e',pointBorderColor:'#fff',pointBorderWidth:2}]},
-    options:{...base,plugins:{...base.plugins,legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:10},boxWidth:8,color:'#94a3b8'}}}}
+    data:{labels:[],datasets:[{label:'Total Receivable',data:[],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.08)',tension:.4,pointRadius:3,pointHoverRadius:6,fill:true,pointBackgroundColor:'#22c55e',pointBorderColor:'#fff',pointBorderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:10},boxWidth:8,color:'#94a3b8'}},tooltip:{...ttipBase}},
+      scales:scaleBase}
   });
 
   // Gain chart
   CH.gain=new Chart(document.getElementById('chart-gain').getContext('2d'),{
     type:'bar',
     data:{labels:[],datasets:[{label:'Gain/Loss',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:4,borderSkipped:false}]},
-    options:{...base,plugins:{...base.plugins,
-      tooltip:{...base.plugins.tooltip,callbacks:{label:c=>(c.parsed.y>=0?'Gain: +':'Loss: ')+fmtRp(Math.abs(c.parsed.y))}}},
-      scales:{...base.scales,y:{ticks:{font:{size:9},color:'#94a3b8',callback:v=>(v>=0?'+':'')+fmtRp(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+    options:{responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false},tooltip:{...ttipBase,callbacks:{label:c=>(c.parsed.y>=0?'Gain: +':'Loss: ')+fmtRp(Math.abs(c.parsed.y))}}},
+      scales:{...scaleBase,y:{ticks:{font:{size:9},color:'#94a3b8',callback:v=>(v>=0?'+':'')+fmtRp(Math.abs(v))},grid:{color:'rgba(0,0,0,.04)'},border:{dash:[4,3]}}}}
   });
 
-  // Load initial data
   setGrowthPeriod('7d',null,true);
   setRecvPeriod('7d',null,true);
   setGainPeriod('7d',null,true);
@@ -817,19 +846,35 @@ function initCharts(){
   updateInvAllocChart();
 }
 
-// Alokasi Current Asset donut
+// Alokasi TOTAL ASSET donut — 6 kategori lengkap
 function updateAlokasiChart(){
-  const COLS=['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316','#ec4899'];
+  const COLS=['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444','#06b6d4'];
   const items=[
-    ...DB.ca.map((c,i)=>({label:c.name,v:+c.amount,col:COLS[i%COLS.length]})),
-    {label:'Accounts Receivable',v:sumAR(),col:COLS[DB.ca.length%COLS.length]},
-    {label:'Inventory',v:sumII(),col:COLS[(DB.ca.length+1)%COLS.length]},
+    {label:'Current Asset (Kas/Bank)',v:sumCA(),col:COLS[0]},
+    {label:'Accounts Receivable',     v:sumAR(),col:COLS[1]},
+    {label:'Inventory',               v:sumII(),col:COLS[2]},
+    {label:'PPE',                     v:sumPPE(),col:COLS[3]},
+    {label:'Investment',              v:sumINV(),col:COLS[4]},
+    {label:'Intangible Assets',       v:sumINT(),col:COLS[5]},
   ].filter(x=>x.v>0);
-  const tot=totCur();
+  const tot=totAst(); // total semua aset
   document.getElementById('alok-tot').textContent=fmtRp(tot);
-  document.getElementById('alok-leg').innerHTML=items.map(d=>`<div class="lg-row"><div class="lg-dot" style="background:${d.col}"></div><span class="lg-nm">${d.label}</span><span class="lg-pct">${tot?((d.v/tot)*100).toFixed(1):0}%</span><span class="lg-val">${fmtRp(d.v)}</span></div>`).join('');
-  if(CH.alok){CH.alok.data.labels=items.map(d=>d.label);CH.alok.data.datasets[0].data=items.map(d=>d.v);CH.alok.data.datasets[0].backgroundColor=items.map(d=>d.col);CH.alok.update();}
-  else{const ctx=document.getElementById('chart-alok').getContext('2d');CH.alok=new Chart(ctx,{type:'doughnut',data:{labels:items.map(d=>d.label),datasets:[{data:items.map(d=>d.v),backgroundColor:items.map(d=>d.col),borderWidth:2,hoverOffset:4}]},options:{responsive:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtRp(c.parsed)}`}}}}});}
+  document.getElementById('alok-leg').innerHTML=items.map(d=>
+    `<div class="lg-row"><div class="lg-dot" style="background:${d.col}"></div><span class="lg-nm">${d.label}</span><span class="lg-pct">${tot?((d.v/tot)*100).toFixed(1):0}%</span><span class="lg-val">${fmtRp(d.v)}</span></div>`
+  ).join('');
+  if(CH.alok){
+    CH.alok.data.labels=items.map(d=>d.label);
+    CH.alok.data.datasets[0].data=items.map(d=>d.v);
+    CH.alok.data.datasets[0].backgroundColor=items.map(d=>d.col);
+    CH.alok.update();
+  } else {
+    const ctx=document.getElementById('chart-alok').getContext('2d');
+    CH.alok=new Chart(ctx,{
+      type:'doughnut',
+      data:{labels:items.map(d=>d.label),datasets:[{data:items.map(d=>d.v),backgroundColor:items.map(d=>d.col),borderWidth:2,hoverOffset:6}]},
+      options:{responsive:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtRp(c.parsed)} (${tot?((c.parsed/tot)*100).toFixed(1):0}%)`}}}}
+    });
+  }
 }
 
 // Investment Allocation donut
