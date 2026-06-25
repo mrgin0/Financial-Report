@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" id="html-root">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
@@ -7,6 +7,8 @@
 <title>Laporan Keuangan Pribadi</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#f1f5f9;--card:#fff;--sb:#fff;--txt:#0f172a;--mu:#64748b;--bd:#e2e8f0;--pr:#2563eb;--pl:#eff6ff;--pd:#1d4ed8;--ok:#10b981;--er:#ef4444;--sw:240px;--hh:58px;--r:12px}
@@ -23,139 +25,155 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 @keyframes lbar{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 /* HEADER */
-.hdr{background:var(--card);border-bottom:1px solid var(--bd);padding:0 14px;height:var(--hh);display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:200;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.hl{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden}
-.btn-ham{background:none;border:none;cursor:pointer;color:var(--txt);padding:8px;border-radius:8px;display:flex;flex-shrink:0;transition:background .2s}
+.hdr{background:var(--card);border-bottom:1px solid var(--bd);padding:0 12px;height:var(--hh);display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:200;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.hl{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
+.btn-ham{background:none;border:none;cursor:pointer;color:var(--txt);padding:8px;border-radius:8px;display:flex;flex-shrink:0}
 .btn-ham:hover{background:var(--bg)}
-.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;flex-shrink:0}
-.logo-ic{width:30px;height:30px;background:var(--pr);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex-shrink:0}
+.logo{display:flex;align-items:center;gap:7px;font-weight:700;font-size:13.5px;flex-shrink:0}
+.logo-ic{width:29px;height:29px;background:var(--pr);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0}
 .logo-tx{display:flex;flex-direction:column;line-height:1.2}
-.logo-tx small{font-size:10px;font-weight:400;color:var(--mu)}
-.wclocks{display:flex;align-items:center;gap:5px;margin-left:6px}
-.wck{display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:3px 8px;white-space:nowrap}
-.wck-flag{font-size:13px}
+.logo-tx small{font-size:9.5px;font-weight:400;color:var(--mu)}
+/* WORLD CLOCKS */
+.wclocks{display:flex;align-items:center;gap:4px;margin-left:4px}
+.wck{display:flex;align-items:center;gap:3px;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:3px 7px;white-space:nowrap}
+.wck-flag{font-size:12px}
 .wck-info{display:flex;flex-direction:column;line-height:1.25}
-.wck-lbl{font-size:8.5px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.wck-time{font-size:10.5px;font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums}
-.hr2{display:flex;align-items:center;gap:7px;flex-shrink:0}
-.btn-ic{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--txt);display:flex;align-items:center;gap:4px;transition:background .2s;white-space:nowrap}
+.wck-lbl{font-size:8px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.wck-time{font-size:10px;font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums}
+/* CURRENCY STRIP */
+.fx-strip{display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:3px 8px;white-space:nowrap}
+.fx-rate{font-size:10px;font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums}
+.fx-note{font-size:8.5px;color:var(--mu)}
+/* HEADER RIGHT */
+.hr2{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.btn-ic{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:5px 9px;font-size:11.5px;cursor:pointer;color:var(--txt);display:flex;align-items:center;gap:3px;transition:background .2s;white-space:nowrap}
 .btn-ic:hover{background:var(--bd)}
-.avatar{width:32px;height:32px;background:var(--pr);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0}
-@media(max-width:1200px){.wclocks{display:none}}
+.btn-ic.active-toggle{background:var(--pr);color:#fff;border-color:var(--pr)}
+.avatar{width:30px;height:30px;background:var(--pr);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0}
+@media(max-width:1300px){.wclocks{display:none}}
+@media(max-width:1000px){.fx-strip{display:none}}
 @media(max-width:768px){.logo-tx{display:none}}
 /* LAYOUT */
 .layout{display:flex;margin-top:var(--hh);min-height:calc(100vh - var(--hh))}
-.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;backdrop-filter:blur(2px)}
+.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150}
 .sb-ov.show{display:block}
 /* SIDEBAR */
 .sidebar{width:var(--sw);background:var(--sb);border-right:1px solid var(--bd);position:fixed;top:var(--hh);bottom:0;overflow-y:auto;overflow-x:hidden;transition:transform .28s cubic-bezier(.4,0,.2,1),width .28s;z-index:160}
 .sidebar::-webkit-scrollbar{width:4px}
 .sidebar::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
 .sb-in{width:var(--sw);padding:10px 0 24px}
-.sb-lbl{font-size:9.5px;font-weight:800;letter-spacing:1.2px;color:var(--mu);padding:14px 18px 5px;text-transform:uppercase}
-.sb-it{display:flex;align-items:center;gap:10px;padding:10px 18px;font-size:13px;cursor:pointer;color:var(--mu);transition:all .18s;border-left:3px solid transparent;user-select:none}
+.sb-lbl{font-size:9px;font-weight:800;letter-spacing:1.2px;color:var(--mu);padding:13px 18px 4px;text-transform:uppercase}
+.sb-it{display:flex;align-items:center;gap:9px;padding:10px 18px;font-size:12.5px;cursor:pointer;color:var(--mu);transition:all .18s;border-left:3px solid transparent;user-select:none}
 .sb-it:hover{background:var(--pl);color:var(--pr)}
 .sb-it.active{background:var(--pl);color:var(--pr);border-left-color:var(--pr);font-weight:600}
-.sb-it svg{width:15px;height:15px;flex-shrink:0}
-.sb-div{height:1px;background:var(--bd);margin:6px 16px}
-.sb-usr{padding:13px 18px;border-top:1px solid var(--bd);margin-top:8px}
-.sb-uname{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sb-uemail{font-size:10px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-it svg{width:14px;height:14px;flex-shrink:0}
+.sb-div{height:1px;background:var(--bd);margin:5px 16px}
+.sb-usr{padding:12px 18px;border-top:1px solid var(--bd);margin-top:6px}
+.sb-uname{font-size:11.5px;font-weight:700;color:var(--txt);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-uemail{font-size:9.5px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* MAIN */
-.main{margin-left:var(--sw);flex:1;padding:16px;transition:margin-left .28s;min-width:0;max-width:100%;padding-bottom:40px}
+.main{margin-left:var(--sw);flex:1;padding:15px;transition:margin-left .28s;min-width:0;max-width:100%;padding-bottom:36px}
 .main.full{margin-left:0}
 /* PAGE */
 .page{display:none}
 .page.active{display:block;animation:fadeIn .2s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.ptitle{font-size:18px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.ptitle svg{width:20px;height:20px;color:var(--pr)}
+.ptitle{font-size:17px;font-weight:700;margin-bottom:13px;display:flex;align-items:center;gap:7px}
+.ptitle svg{width:19px;height:19px;color:var(--pr)}
 /* STAT CARDS */
-.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:14px}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:13px}
 .sc{background:var(--card);border-radius:var(--r);padding:13px;border:1px solid var(--bd);display:flex;justify-content:space-between;align-items:flex-start;transition:transform .2s,box-shadow .2s}
 .sc:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.1)}
 .sc-inf{flex:1;min-width:0}
-.sc-lbl{font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--mu);margin-bottom:4px}
-.sc-val{font-size:19px;font-weight:800;margin-bottom:3px;font-variant-numeric:tabular-nums}
-.sc-chg{font-size:10px;font-weight:600;line-height:1.4}
+.sc-lbl{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--mu);margin-bottom:3px}
+.sc-val{font-size:18px;font-weight:800;margin-bottom:3px;font-variant-numeric:tabular-nums}
+.sc-chg{font-size:9.5px;font-weight:600;line-height:1.4}
 .sc-chg.up{color:var(--ok)}.sc-chg.dn{color:var(--er)}.sc-chg.neu{color:var(--mu)}
-.sc-ic{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;margin-left:8px}
+.sc-ic{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-left:7px}
 .ic-b{background:#dbeafe}.ic-g{background:#d1fae5}.ic-o{background:#ffedd5}.ic-p{background:#ede9fe}
 /* CARD */
-.card{background:var(--card);border-radius:var(--r);border:1px solid var(--bd);padding:15px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.chd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:7px}
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--bd);padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.chd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;flex-wrap:wrap;gap:6px}
 .ctitle{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--mu)}
 .cmonth{font-size:13px;font-weight:700;color:var(--pr);margin-top:2px}
-.mpick{border:1px solid var(--bd);border-radius:8px;padding:5px 9px;font-size:12px;background:var(--bg);color:var(--txt);cursor:pointer;outline:none}
+.mpick{border:1px solid var(--bd);border-radius:7px;padding:4px 8px;font-size:11.5px;background:var(--bg);color:var(--txt);cursor:pointer;outline:none}
 .mpick:focus{border-color:var(--pr)}
-.dwrap{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu)}
+.dwrap{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--mu);flex-wrap:wrap}
 /* GRIDS */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}
-.g2r{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.mb13{margin-bottom:13px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g2r{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mb12{margin-bottom:12px}
 /* FINANCIAL REPORT */
-.fin{font-size:12px;line-height:1.65}
-.fin-sec{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--mu);padding:9px 0 3px;display:flex;align-items:center;gap:6px}
+.fin{font-size:11.5px;line-height:1.65}
+.fin-sec{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--mu);padding:8px 0 3px;display:flex;align-items:center;gap:5px}
 .fin-sec::after{content:'';flex:1;height:1px;background:var(--bd)}
-.fin-row{display:flex;align-items:baseline;padding:3px 0;gap:5px}
-.fin-row.sub{font-weight:700;padding:5px 0 4px;border-top:1px dashed var(--bd);margin-top:2px}
-.fin-row.tot{font-weight:800;color:var(--pr);background:var(--pl);padding:8px 11px;border-radius:8px;margin-top:7px;font-size:12.5px}
-.fn{font-size:10px;color:var(--mu);min-width:16px;flex-shrink:0}
+.fin-row{display:flex;align-items:baseline;padding:2.5px 0;gap:4px}
+.fin-row.sub{font-weight:700;padding:5px 0 3px;border-top:1px dashed var(--bd);margin-top:2px}
+.fin-row.tot{font-weight:800;color:var(--pr);background:var(--pl);padding:7px 10px;border-radius:8px;margin-top:6px;font-size:12px}
+.fn{font-size:9.5px;color:var(--mu);min-width:15px;flex-shrink:0}
 .fl{flex:1}
-.fv{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:12px}
-.fin-det{display:flex;align-items:baseline;padding:2px 0 2px 22px;font-size:11px;color:var(--mu);gap:5px}
+.fv{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:11.5px}
+.fin-det{display:flex;align-items:baseline;padding:1.5px 0 1.5px 20px;font-size:10.5px;color:var(--mu);gap:4px}
 .fin-det .fl{flex:1}
 /* BUTTONS */
-.btn-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
-.btn{border:none;border-radius:9px;padding:9px 15px;font-size:12px;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:5px;transition:all .18s;white-space:nowrap}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+.btn{border:none;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:5px;transition:all .18s;white-space:nowrap}
 .btn-do{background:transparent;color:var(--er);border:1.5px solid var(--er)}
 .btn-do:hover{background:#fef2f2}
-.btn-sm{padding:4px 9px;font-size:11px;border-radius:6px;border:none;cursor:pointer;font-weight:600}
-.be{background:#eff6ff;color:var(--pr)}.bd{background:#fee2e2;color:var(--er);margin-left:4px}
-.btn-add{background:var(--pr);color:#fff;border:none;border-radius:8px;padding:7px 13px;font-size:12px;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.btn-sec{background:transparent;color:var(--pr);border:1.5px solid var(--pr)}
+.btn-sec:hover{background:var(--pl)}
+.btn-sm{padding:3px 8px;font-size:10.5px;border-radius:5px;border:none;cursor:pointer;font-weight:600}
+.be{background:#eff6ff;color:var(--pr)}.bd{background:#fee2e2;color:var(--er);margin-left:3px}
+.btn-add{background:var(--pr);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11.5px;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:4px}
 /* PERIOD BUTTONS */
 .pbtns{display:flex;gap:3px;flex-wrap:wrap}
-.pb{border:1px solid var(--bd);border-radius:6px;padding:3px 8px;font-size:10.5px;background:var(--bg);color:var(--mu);cursor:pointer;font-weight:600;transition:all .15s}
+.pb{border:1px solid var(--bd);border-radius:5px;padding:3px 7px;font-size:10px;background:var(--bg);color:var(--mu);cursor:pointer;font-weight:600;transition:all .15s}
 .pb:hover{border-color:var(--pr);color:var(--pr)}
 .pb.active{background:var(--pr);color:#fff;border-color:var(--pr)}
+/* CHART ZOOM HINT */
+.chart-wrap{position:relative}
+.zoom-hint{font-size:9px;color:var(--mu);text-align:right;margin-top:3px}
+.zoom-btns{display:flex;gap:3px;margin-top:4px;justify-content:flex-end}
+.zb{border:1px solid var(--bd);border-radius:4px;padding:2px 7px;font-size:9.5px;background:var(--bg);color:var(--mu);cursor:pointer;font-weight:600}
+.zb:hover{background:var(--bd)}
 /* DONUT */
-.dw{display:flex;align-items:center;gap:12px}
-.dc{width:100px!important;height:100px!important;flex-shrink:0}
-.lgrow{display:flex;align-items:center;gap:5px;padding:2px 0;font-size:10.5px}
+.dw{display:flex;align-items:center;gap:11px}
+.dc{width:95px!important;height:95px!important;flex-shrink:0}
+.lgrow{display:flex;align-items:center;gap:4px;padding:2px 0;font-size:10px}
 .lgdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.lgnm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:85px}
-.lgpct{color:var(--mu);min-width:30px;font-size:10px}
-.lgval{font-weight:700;min-width:50px;text-align:right;font-size:10.5px;font-variant-numeric:tabular-nums}
-.lgtot{border-top:1px solid var(--bd);margin-top:4px;padding-top:4px;display:flex;justify-content:space-between;font-weight:700;font-size:10.5px}
+.lgnm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px}
+.lgpct{color:var(--mu);min-width:30px;font-size:9.5px}
+.lgval{font-weight:700;min-width:52px;text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+.lgtot{border-top:1px solid var(--bd);margin-top:3px;padding-top:3px;display:flex;justify-content:space-between;font-weight:700;font-size:10px}
 /* GAIN LEGEND */
-.gain-leg{display:flex;gap:12px;margin-top:7px;font-size:10.5px}
-.gl-item{display:flex;align-items:center;gap:4px;color:var(--mu)}
-.gl-box{width:9px;height:9px;border-radius:2px}
+.gain-leg{display:flex;gap:10px;margin-top:6px;font-size:10px}
+.gl-item{display:flex;align-items:center;gap:3px;color:var(--mu)}
+.gl-box{width:8px;height:8px;border-radius:2px}
 /* TABLE */
-.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:9px;border-radius:8px;border:1px solid var(--bd)}
-.ct{width:100%;border-collapse:collapse;font-size:12px;min-width:460px}
-.ct th{text-align:left;padding:8px 10px;font-size:9.5px;font-weight:800;letter-spacing:.5px;color:var(--mu);text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--bd);white-space:nowrap}
-.ct td{padding:8px 10px;border-bottom:1px solid var(--bd);vertical-align:middle}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px;border-radius:7px;border:1px solid var(--bd)}
+.ct{width:100%;border-collapse:collapse;font-size:11.5px;min-width:440px}
+.ct th{text-align:left;padding:7px 9px;font-size:9px;font-weight:800;letter-spacing:.5px;color:var(--mu);text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--bd);white-space:nowrap}
+.ct td{padding:7px 9px;border-bottom:1px solid var(--bd);vertical-align:middle}
 .ct tr:last-child td{border-bottom:none}
 .ct tbody tr:hover td{background:var(--pl)}
-.empty-td{text-align:center;padding:24px!important;color:var(--mu);font-style:italic}
+.empty-td{text-align:center;padding:22px!important;color:var(--mu);font-style:italic}
 /* BADGE */
-.badge{display:inline-flex;align-items:center;border-radius:5px;padding:2px 7px;font-size:9.5px;font-weight:700;white-space:nowrap}
-.bb{background:#dbeafe;color:#1d4ed8}.bg_{background:#d1fae5;color:#059669}.br{background:#fee2e2;color:#dc2626}.bp{background:#ede9fe;color:#7c3aed}.bk{background:#f1f5f9;color:#64748b}
+.badge{display:inline-flex;align-items:center;border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;white-space:nowrap}
+.bb{background:#dbeafe;color:#1d4ed8}.bg_{background:#d1fae5;color:#059669}.br{background:#fee2e2;color:#dc2626}.bp{background:#ede9fe;color:#7c3aed}.bk{background:#f1f5f9;color:#64748b}.by{background:#fef3c7;color:#d97706}
 /* MODAL CENTER */
 .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px}
 .mo.open{display:flex}
-.modal{background:var(--card);width:100%;max-width:490px;max-height:90vh;overflow-y:auto;border-radius:18px;padding:26px 22px 22px;box-shadow:0 24px 60px rgba(0,0,0,.3);animation:mIn .22s cubic-bezier(.4,0,.2,1)}
+.modal{background:var(--card);width:100%;max-width:500px;max-height:90vh;overflow-y:auto;border-radius:18px;padding:24px 20px 20px;box-shadow:0 24px 60px rgba(0,0,0,.3);animation:mIn .22s cubic-bezier(.4,0,.2,1)}
 @keyframes mIn{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:none}}
-.modal h3{font-size:16px;font-weight:800;margin-bottom:16px}
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fg{margin-bottom:10px}
-.fg label{display:block;font-size:10px;font-weight:700;color:var(--mu);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
-.fg input,.fg select{width:100%;border:1.5px solid var(--bd);border-radius:8px;padding:9px 12px;font-size:14px;background:var(--bg);color:var(--txt);outline:none;transition:border-color .18s}
-.fg input:focus,.fg select:focus{border-color:var(--pr)}
-.mbtns{display:flex;gap:9px;margin-top:18px}
-.mbtns button{flex:1;padding:11px;font-size:14px;border-radius:10px;border:none;cursor:pointer;font-weight:700;transition:all .18s}
+.modal h3{font-size:15px;font-weight:800;margin-bottom:14px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.fg{margin-bottom:9px}
+.fg label{display:block;font-size:9.5px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{width:100%;border:1.5px solid var(--bd);border-radius:7px;padding:8px 11px;font-size:13.5px;background:var(--bg);color:var(--txt);outline:none;transition:border-color .18s;font-family:inherit}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--pr)}
+.mbtns{display:flex;gap:8px;margin-top:16px}
+.mbtns button{flex:1;padding:10px;font-size:13px;border-radius:9px;border:none;cursor:pointer;font-weight:700;transition:all .18s}
 .mb-c{background:var(--bg);color:var(--txt);border:1.5px solid var(--bd)!important}
 .mb-c:hover{background:var(--bd)}
 .mb-s{background:var(--pr);color:#fff}
@@ -163,42 +181,56 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* CONFIRM MODAL */
 .cfm-mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px}
 .cfm-mo.open{display:flex}
-.cfm-box{background:var(--card);border-radius:18px;padding:26px 22px 20px;width:100%;max-width:360px;box-shadow:0 24px 60px rgba(0,0,0,.3);animation:mIn .22s cubic-bezier(.4,0,.2,1)}
-.cfm-icon{font-size:40px;text-align:center;margin-bottom:10px}
-.cfm-title{font-size:16px;font-weight:800;text-align:center;margin-bottom:5px}
-.cfm-msg{font-size:12.5px;color:var(--mu);text-align:center;line-height:1.6;margin-bottom:20px}
-.cfm-btns{display:flex;gap:9px}
-.cfm-btns button{flex:1;padding:11px;font-size:13px;border-radius:10px;border:none;cursor:pointer;font-weight:700;transition:all .18s}
+.cfm-box{background:var(--card);border-radius:18px;padding:24px 20px 18px;width:100%;max-width:350px;box-shadow:0 24px 60px rgba(0,0,0,.3);animation:mIn .22s cubic-bezier(.4,0,.2,1)}
+.cfm-icon{font-size:38px;text-align:center;margin-bottom:9px}
+.cfm-title{font-size:15px;font-weight:800;text-align:center;margin-bottom:4px}
+.cfm-msg{font-size:12px;color:var(--mu);text-align:center;line-height:1.6;margin-bottom:18px}
+.cfm-btns{display:flex;gap:8px}
+.cfm-btns button{flex:1;padding:10px;font-size:12.5px;border-radius:9px;border:none;cursor:pointer;font-weight:700;transition:all .18s}
 .cfm-no{background:var(--bg);color:var(--txt);border:1.5px solid var(--bd)!important}
 .cfm-no:hover{background:var(--bd)}
 .cfm-yes{background:var(--er);color:#fff}
 .cfm-yes:hover{background:#dc2626}
 /* TOAST */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#0f172a;color:#fff;border-radius:11px;padding:10px 18px;font-size:12.5px;font-weight:600;z-index:9999;transition:transform .3s cubic-bezier(.4,0,.2,1);pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(80px);background:#0f172a;color:#fff;border-radius:10px;padding:9px 16px;font-size:12px;font-weight:600;z-index:9999;transition:transform .3s cubic-bezier(.4,0,.2,1);pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 body.dark .toast{background:#f1f5f9;color:#0f172a}
+/* PARTIAL PAYMENT */
+.pp-row{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:7px;padding:7px 10px;margin-top:4px;font-size:11.5px}
+.pp-row input{flex:1;border:1.5px solid var(--bd);border-radius:6px;padding:5px 9px;font-size:12px;background:var(--card);color:var(--txt);outline:none}
+.pp-row input:focus{border-color:var(--pr)}
+.pp-history{margin-top:6px;font-size:10.5px;color:var(--mu)}
+.pp-history div{padding:2px 0;display:flex;gap:6px}
 /* RESPONSIVE */
 @media(max-width:1100px){.sg{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){.g2,.g3,.g2r{grid-template-columns:1fr}}
-@media(max-width:768px){:root{--hh:52px}.sidebar{transform:translateX(-100%)}.sidebar.mob-open{transform:translateX(0)}.main{margin-left:0!important;padding:11px;padding-bottom:28px}.sg{grid-template-columns:1fr 1fr;gap:8px}.sc-val{font-size:16px}.card{padding:12px}.fr{grid-template-columns:1fr}}
-@media(max-width:480px){.sg{grid-template-columns:1fr 1fr;gap:7px}.sc-val{font-size:14px}.sc{padding:10px}}
-@media print{.hdr,.sidebar,.sb-ov,.btn,.btn-add,.btn-row,.mo,#ls,.toast,.pbtns,.chd .dwrap{display:none!important}.main{margin-left:0!important;padding:0!important}.page{display:block!important}.card{border:none;box-shadow:none;padding:0}body{background:#fff!important;color:#000!important}}
+@media(max-width:768px){:root{--hh:52px}.sidebar{transform:translateX(-100%)}.sidebar.mob-open{transform:translateX(0)}.main{margin-left:0!important;padding:11px;padding-bottom:26px}.sg{grid-template-columns:1fr 1fr;gap:8px}.sc-val{font-size:15px}.card{padding:12px}.fr{grid-template-columns:1fr}}
+@media(max-width:480px){.sg{grid-template-columns:1fr 1fr;gap:7px}.sc-val{font-size:13px}.sc{padding:9px}}
+@media print{.hdr,.sidebar,.sb-ov,.btn,.btn-add,.btn-row,.mo,#ls,.toast,.pbtns,.zoom-btns,.chd .dwrap{display:none!important}.main{margin-left:0!important;padding:0!important}.page{display:block!important}.card{border:none;box-shadow:none;padding:0}body{background:#fff!important;color:#000!important}}
 </style>
 </head>
 <body>
-<div id="ls"><div class="ll">📊</div><div class="lt">Laporan Keuangan Pribadi</div><div class="ls2">Memuat data dari Supabase…</div><div class="lb"><div class="lf"></div></div></div>
+<div id="ls"><div class="ll">📊</div><div class="lt" id="ls-title">Laporan Keuangan Pribadi</div><div class="ls2" id="ls-sub">Memuat data dari Supabase…</div><div class="lb"><div class="lf"></div></div></div>
 
 <header class="hdr">
   <div class="hl">
-    <button class="btn-ham" onclick="toggleSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-    <div class="logo"><div class="logo-ic">📊</div><div class="logo-tx">Lap. Keuangan Pribadi<small>Personal Finance Tracker</small></div></div>
+    <button class="btn-ham" onclick="toggleSidebar()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="logo"><div class="logo-ic">📊</div><div class="logo-tx">Lap. Keuangan Pribadi<small id="logo-sub">Personal Finance Tracker</small></div></div>
     <div class="wclocks">
       <div class="wck"><span class="wck-flag">🇮🇩</span><div class="wck-info"><span class="wck-lbl">Indonesia (WITA)</span><span class="wck-time" id="wc-id">—</span></div></div>
       <div class="wck"><span class="wck-flag">🇬🇧</span><div class="wck-info"><span class="wck-lbl">London (LSE)</span><span class="wck-time" id="wc-uk">—</span></div></div>
       <div class="wck"><span class="wck-flag">🇺🇸</span><div class="wck-info"><span class="wck-lbl">New York (NYSE)</span><span class="wck-time" id="wc-us">—</span></div></div>
     </div>
+    <div class="fx-strip">
+      <div>
+        <div class="fx-rate" id="fx-rate">1 USD = Rp —</div>
+        <div class="fx-note" id="fx-note">—</div>
+      </div>
+    </div>
   </div>
   <div class="hr2">
+    <button class="btn-ic" id="btn-cur" onclick="toggleCurrency()" title="Toggle IDR/USD">🏦 <span id="cur-lbl">IDR</span></button>
+    <button class="btn-ic" id="btn-lang" onclick="toggleLang()" title="Toggle Language">🌐 <span id="lang-lbl">ID</span></button>
     <button class="btn-ic" onclick="toggleDark()">🌙 <span id="dk-lbl">Dark</span></button>
     <div class="avatar">R</div>
   </div>
@@ -208,16 +240,16 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
 <div class="layout">
 <aside class="sidebar" id="sidebar">
   <div class="sb-in">
-    <div class="sb-it active" onclick="nav('dashboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</div>
+    <div class="sb-it active" onclick="nav('dashboard',this)" id="nav-dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span data-i="dashboard">Dashboard</span></div>
     <div class="sb-div"></div>
-    <div class="sb-lbl">Laporan Keuangan</div>
-    <div class="sb-it" onclick="nav('laporan',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Laporan Posisi Keuangan</div>
+    <div class="sb-lbl" data-i="sb_laporan">Laporan Keuangan</div>
+    <div class="sb-it" onclick="nav('laporan',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span data-i="laporan_pos">Laporan Posisi Keuangan</span></div>
     <div class="sb-div"></div>
-    <div class="sb-lbl">Master Data</div>
-    <div class="sb-it" onclick="nav('ca',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Current Asset</div>
-    <div class="sb-it" onclick="nav('ce',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Cash Equivalent</div>
-    <div class="sb-it" onclick="nav('nc',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Non Current Asset</div>
-    <div class="sb-it" onclick="nav('inv',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Investment</div>
+    <div class="sb-lbl" data-i="sb_master">Master Data</div>
+    <div class="sb-it" onclick="nav('ca',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span data-i="current_asset">Current Asset</span></div>
+    <div class="sb-it" onclick="nav('ce',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span data-i="cash_equiv">Cash Equivalent</span></div>
+    <div class="sb-it" onclick="nav('nc',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span data-i="non_current">Non Current Asset</span></div>
+    <div class="sb-it" onclick="nav('inv',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span data-i="investment">Investment</span></div>
     <div class="sb-div"></div>
     <div class="sb-usr"><div class="sb-uname">Raihan Nor Falah</div><div class="sb-uemail">raihan.nor.falah@mhs.politala.ac.id</div></div>
   </div>
@@ -227,89 +259,146 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
   <div class="sg">
-    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Aset</div><div class="sc-val" id="sv-tot">Rp 0</div><div class="sc-chg neu" id="sc-tot">—</div></div><div class="sc-ic ic-b">📈</div></div>
-    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Current Asset</div><div class="sc-val" id="sv-cur">Rp 0</div><div class="sc-chg neu" id="sc-cur">—</div></div><div class="sc-ic ic-g">💼</div></div>
-    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Non Current Asset</div><div class="sc-val" id="sv-nc">Rp 0</div><div class="sc-chg neu" id="sc-nc">—</div></div><div class="sc-ic ic-o">🏢</div></div>
-    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Asset Hari Ini</div><div class="sc-val" id="sv-td">Rp 0</div><div class="sc-chg neu" id="sc-td">Update: —</div></div><div class="sc-ic ic-p">🗄️</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="total_aset">Total Aset</div><div class="sc-val" id="sv-tot">0</div><div class="sc-chg neu" id="sc-tot">—</div></div><div class="sc-ic ic-b">📈</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="total_cur">Total Current Asset</div><div class="sc-val" id="sv-cur">0</div><div class="sc-chg neu" id="sc-cur">—</div></div><div class="sc-ic ic-g">💼</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="non_cur">Non Current Asset</div><div class="sc-val" id="sv-nc">0</div><div class="sc-chg neu" id="sc-nc">—</div></div><div class="sc-ic ic-o">🏢</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="asset_today">Asset Hari Ini</div><div class="sc-val" id="sv-td">0</div><div class="sc-chg neu" id="sc-td">—</div></div><div class="sc-ic ic-p">🗄️</div></div>
   </div>
   <div class="g2">
+    <!-- Laporan mini -->
     <div class="card">
-      <div class="chd"><div><div class="ctitle">Laporan Posisi Keuangan</div><div class="cmonth" id="dash-month">—</div></div><div class="dwrap">Bulan <input type="month" id="dash-pick" class="mpick" onchange="onDashMonth(this.value)"></div></div>
+      <div class="chd">
+        <div><div class="ctitle" data-i="laporan_pos">Laporan Posisi Keuangan</div><div class="cmonth" id="dash-month">—</div></div>
+        <div class="dwrap">
+          <input type="month" id="dash-pick" class="mpick" onchange="onDashMonth(this.value,'month')">
+          <div class="pbtns">
+            <button class="pb" onclick="dashRange('1m',this)" data-i="p_1b">1 Bln</button>
+            <button class="pb" onclick="dashRange('6m',this)" data-i="p_6b">6 Bln</button>
+            <button class="pb" onclick="dashRange('1y',this)" data-i="p_1t">1 Thn</button>
+            <button class="pb" onclick="dashRange('5y',this)" data-i="p_5t">5 Thn</button>
+            <button class="pb" onclick="dashRange('all',this)" data-i="p_all">All</button>
+          </div>
+        </div>
+      </div>
       <div id="fin-dash"></div>
-      <div class="btn-row"><button class="btn btn-do" onclick="downloadPDF()">📄 Download PDF</button></div>
+      <div class="btn-row">
+        <button class="btn btn-do" onclick="downloadPDF('dash')" data-i="btn_pdf">📄 Download PDF</button>
+        <button class="btn btn-sec" onclick="nav('laporan',document.getElementById('nav-laporan'))" data-i="btn_detail">📋 Detail</button>
+      </div>
     </div>
+    <!-- Growth Aset Chart -->
     <div class="card">
-      <div class="chd"><span class="ctitle">History Growth Aset</span><div class="pbtns" id="pb-growth"><button class="pb active" onclick="setPeriod('growth','7d',this)">7H</button><button class="pb" onclick="setPeriod('growth','30d',this)">30H</button><button class="pb" onclick="setPeriod('growth','1y',this)">1T</button><button class="pb" onclick="setPeriod('growth','all',this)">All</button></div></div>
-      <canvas id="c-growth" height="150"></canvas>
-      <div style="margin-top:16px"><div class="ctitle" style="margin-bottom:9px">Alokasi Total Asset</div>
-        <div class="dw"><canvas id="c-alok" class="dc"></canvas><div style="flex:1;min-width:0"><div id="alok-leg"></div><div class="lgtot"><span>Total</span><span id="alok-tot">Rp 0</span></div></div></div>
+      <div class="chd"><span class="ctitle" data-i="growth_aset">History Growth Aset</span>
+        <div class="pbtns" id="pb-growth">
+          <button class="pb" onclick="setPeriod('growth','7d',this)">7H</button>
+          <button class="pb active" onclick="setPeriod('growth','1m',this)" data-i="p_1b">1 Bln</button>
+          <button class="pb" onclick="setPeriod('growth','6m',this)" data-i="p_6b">6 Bln</button>
+          <button class="pb" onclick="setPeriod('growth','1y',this)" data-i="p_1t">1 Thn</button>
+          <button class="pb" onclick="setPeriod('growth','all',this)" data-i="p_all">All</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-growth" height="145"></canvas><div class="zoom-hint" data-i="zoom_hint">Scroll to zoom · Drag to pan</div><div class="zoom-btns"><button class="zb" onclick="resetZoom('growth')">⟳ Reset</button></div></div>
+      <div style="margin-top:14px">
+        <div class="ctitle" style="margin-bottom:8px" data-i="alokasi_total">Alokasi Total Asset</div>
+        <div class="dw"><canvas id="c-alok" class="dc"></canvas><div style="flex:1;min-width:0"><div id="alok-leg"></div><div class="lgtot"><span data-i="total">Total</span><span id="alok-tot">0</span></div></div></div>
       </div>
     </div>
   </div>
   <div class="g3">
     <div class="card">
-      <div class="chd"><span class="ctitle">Growth Receivable</span><div class="pbtns" id="pb-recv"><button class="pb active" onclick="setPeriod('recv','7d',this)">7H</button><button class="pb" onclick="setPeriod('recv','30d',this)">30H</button><button class="pb" onclick="setPeriod('recv','1y',this)">1T</button><button class="pb" onclick="setPeriod('recv','all',this)">All</button></div></div>
-      <canvas id="c-recv" height="130"></canvas>
+      <div class="chd"><span class="ctitle" data-i="growth_recv">Growth Receivable</span>
+        <div class="pbtns" id="pb-recv">
+          <button class="pb" onclick="setPeriod('recv','7d',this)">7H</button>
+          <button class="pb active" onclick="setPeriod('recv','1m',this)" data-i="p_1b">1 Bln</button>
+          <button class="pb" onclick="setPeriod('recv','6m',this)" data-i="p_6b">6 Bln</button>
+          <button class="pb" onclick="setPeriod('recv','1y',this)" data-i="p_1t">1 Thn</button>
+          <button class="pb" onclick="setPeriod('recv','all',this)" data-i="p_all">All</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-recv" height="120"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoom('recv')">⟳ Reset</button></div></div>
     </div>
     <div class="card">
-      <div class="chd"><span class="ctitle">Investment</span><div class="pbtns" id="pb-invg"><button class="pb active" onclick="setPeriod('invg','7d',this)">7H</button><button class="pb" onclick="setPeriod('invg','30d',this)">30H</button><button class="pb" onclick="setPeriod('invg','1y',this)">1T</button><button class="pb" onclick="setPeriod('invg','all',this)">All</button></div></div>
-      <canvas id="c-invg" height="100"></canvas>
-      <div style="margin-top:12px"><div class="ctitle" style="margin-bottom:7px">Alokasi Investment</div>
-        <div class="dw"><canvas id="c-invd" style="width:90px;height:90px;flex-shrink:0"></canvas><div style="flex:1;min-width:0"><div id="invd-leg"></div><div class="lgtot" style="width:100%"><span>Total</span><span id="invd-tot">Rp 0</span></div></div></div>
+      <div class="chd"><span class="ctitle" data-i="inv_chart">Investment Growth</span>
+        <div class="pbtns" id="pb-invg">
+          <button class="pb" onclick="setPeriod('invg','7d',this)">7H</button>
+          <button class="pb active" onclick="setPeriod('invg','1m',this)" data-i="p_1b">1 Bln</button>
+          <button class="pb" onclick="setPeriod('invg','6m',this)" data-i="p_6b">6 Bln</button>
+          <button class="pb" onclick="setPeriod('invg','1y',this)" data-i="p_1t">1 Thn</button>
+          <button class="pb" onclick="setPeriod('invg','all',this)" data-i="p_all">All</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-invg" height="100"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoom('invg')">⟳ Reset</button></div></div>
+      <div style="margin-top:11px">
+        <div class="ctitle" style="margin-bottom:6px" data-i="alokasi_inv">Alokasi Investment</div>
+        <div class="dw"><canvas id="c-invd" style="width:85px;height:85px;flex-shrink:0"></canvas><div style="flex:1;min-width:0"><div id="invd-leg"></div><div class="lgtot" style="width:100%"><span data-i="total">Total</span><span id="invd-tot">0</span></div></div></div>
       </div>
     </div>
     <div class="card">
-      <div class="chd"><span class="ctitle">Investment Gain/Loss</span><div class="pbtns" id="pb-gain"><button class="pb active" onclick="setPeriod('gain','7d',this)">7H</button><button class="pb" onclick="setPeriod('gain','30d',this)">30H</button><button class="pb" onclick="setPeriod('gain','1y',this)">1T</button><button class="pb" onclick="setPeriod('gain','all',this)">All</button></div></div>
-      <canvas id="c-gain" height="130"></canvas>
-      <div class="gain-leg"><div class="gl-item"><div class="gl-box" style="background:#22c55e"></div>Gain</div><div class="gl-item"><div class="gl-box" style="background:#ef4444"></div>Loss</div></div>
+      <div class="chd"><span class="ctitle" data-i="gain_loss">Investment Gain/Loss</span>
+        <div class="pbtns" id="pb-gain">
+          <button class="pb" onclick="setPeriod('gain','7d',this)">7H</button>
+          <button class="pb active" onclick="setPeriod('gain','1m',this)" data-i="p_1b">1 Bln</button>
+          <button class="pb" onclick="setPeriod('gain','6m',this)" data-i="p_6b">6 Bln</button>
+          <button class="pb" onclick="setPeriod('gain','1y',this)" data-i="p_1t">1 Thn</button>
+          <button class="pb" onclick="setPeriod('gain','all',this)" data-i="p_all">All</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-gain" height="120"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoom('gain')">⟳ Reset</button></div></div>
+      <div class="gain-leg"><div class="gl-item"><div class="gl-box" style="background:#22c55e"></div><span data-i="gain">Gain</span></div><div class="gl-item"><div class="gl-box" style="background:#ef4444"></div><span data-i="loss">Loss</span></div></div>
     </div>
   </div>
 </div>
 
 <!-- LAPORAN -->
 <div class="page" id="page-laporan">
-  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Laporan Posisi Keuangan</div>
+  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span data-i="laporan_pos">Laporan Posisi Keuangan</span></div>
   <div class="card">
     <div class="chd">
-      <div><div class="ctitle">Laporan Detail</div><div class="cmonth" id="lap-month">—</div></div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <div class="dwrap">Bulan <input type="month" id="lap-pick" class="mpick" onchange="onLapMonth(this.value)"></div>
-        <div class="pbtns"><button class="pb" onclick="lapRange('30d',this)">30H</button><button class="pb" onclick="lapRange('60d',this)">60H</button><button class="pb" onclick="lapRange('1y',this)">1T</button><button class="pb" onclick="lapRange('5y',this)">5T</button><button class="pb" onclick="lapRange('all',this)">All</button></div>
+      <div><div class="ctitle" data-i="laporan_detail">Laporan Detail</div><div class="cmonth" id="lap-month">—</div></div>
+      <div class="dwrap">
+        <input type="month" id="lap-pick" class="mpick" onchange="onLapMonth(this.value)">
+        <div class="pbtns">
+          <button class="pb" onclick="lapRange('1m',this)" data-i="p_1b">1 Bln</button>
+          <button class="pb" onclick="lapRange('6m',this)" data-i="p_6b">6 Bln</button>
+          <button class="pb" onclick="lapRange('1y',this)" data-i="p_1t">1 Thn</button>
+          <button class="pb" onclick="lapRange('5y',this)" data-i="p_5t">5 Thn</button>
+          <button class="pb" onclick="lapRange('all',this)" data-i="p_all">All</button>
+        </div>
       </div>
     </div>
     <div id="fin-lap"></div>
-    <div class="btn-row"><button class="btn btn-do" onclick="downloadPDF()">📄 Download PDF</button></div>
+    <div class="btn-row"><button class="btn btn-do" onclick="downloadPDF('lap')" data-i="btn_pdf">📄 Download PDF</button></div>
   </div>
 </div>
 
 <!-- CURRENT ASSET -->
 <div class="page" id="page-ca">
-  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Current Asset</div>
-  <div class="card"><div class="chd"><div class="ctitle">Kas, Bank & Penghasilan Platform</div><button class="btn-add" onclick="openM('ca')">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ca"></table></div></div>
+  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span data-i="current_asset">Current Asset</span></div>
+  <div class="card"><div class="chd"><div class="ctitle" data-i="ca_desc">Kas, Bank & Penghasilan Platform</div><button class="btn-add" onclick="openM('ca')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ca"></table></div></div>
 </div>
 
 <!-- CASH EQUIVALENT -->
 <div class="page" id="page-ce">
-  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>Cash Equivalent</div>
-  <div class="g2r mb13">
-    <div class="card"><div class="chd"><div class="ctitle">Accounts Receivable</div><button class="btn-add" onclick="openM('ar')">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ar"></table></div></div>
-    <div class="card"><div class="chd"><div class="ctitle">Inventory</div><button class="btn-add" onclick="openM('ii')">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ii"></table></div></div>
+  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg><span data-i="cash_equiv">Cash Equivalent</span></div>
+  <div class="g2r mb12">
+    <div class="card"><div class="chd"><div class="ctitle" data-i="ar_title">Accounts Receivable</div><button class="btn-add" onclick="openM('ar')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ar"></table></div></div>
+    <div class="card"><div class="chd"><div class="ctitle" data-i="inv_title">Inventory</div><button class="btn-add" onclick="openM('ii')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ii"></table></div></div>
   </div>
 </div>
 
 <!-- NON CURRENT -->
 <div class="page" id="page-nc">
-  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/></svg>Non Current Asset</div>
-  <div class="g2r mb13">
-    <div class="card"><div class="chd"><div class="ctitle">Property, Plant & Equipment</div><button class="btn-add" onclick="openM('ppe')">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ppe"></table></div></div>
-    <div class="card"><div class="chd"><div class="ctitle">Intangible Assets</div><button class="btn-add" onclick="openM('intg')">+ Tambah</button></div><div class="tw"><table class="ct" id="t-intg"></table></div></div>
+  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/></svg><span data-i="non_current">Non Current Asset</span></div>
+  <div class="g2r mb12">
+    <div class="card"><div class="chd"><div class="ctitle" data-i="ppe_title">Property, Plant & Equipment</div><button class="btn-add" onclick="openM('ppe')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ppe"></table></div></div>
+    <div class="card"><div class="chd"><div class="ctitle" data-i="intg_title">Intangible Assets</div><button class="btn-add" onclick="openM('intg')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-intg"></table></div></div>
   </div>
 </div>
 
 <!-- INVESTMENT -->
 <div class="page" id="page-inv">
-  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>Investment</div>
-  <div class="card"><div class="chd"><div class="ctitle">Portofolio Investasi</div><button class="btn-add" onclick="openM('inv')">+ Tambah</button></div><div class="tw"><table class="ct" id="t-inv"></table></div></div>
+  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg><span data-i="investment">Investment</span></div>
+  <div class="card"><div class="chd"><div class="ctitle" data-i="inv_port">Portofolio Investasi</div><button class="btn-add" onclick="openM('inv')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-inv"></table></div></div>
 </div>
 </main>
 </div>
@@ -317,43 +406,98 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
 <!-- MODAL -->
 <div class="mo" id="mo" onclick="if(event.target===this)closeM()">
   <div class="modal"><h3 id="m-title">Tambah</h3><div id="m-body"></div>
-    <div class="mbtns"><button class="mb-c" onclick="closeM()">Batal</button><button class="mb-s" onclick="saveM()">Simpan</button></div>
+    <div class="mbtns"><button class="mb-c" onclick="closeM()" data-i="btn_cancel">Batal</button><button class="mb-s" onclick="saveM()" data-i="btn_save">Simpan</button></div>
   </div>
 </div>
 
 <!-- CONFIRM -->
 <div class="cfm-mo" id="cfm" onclick="if(event.target===this)closeCfm()">
   <div class="cfm-box">
-    <div class="cfm-icon" id="cfm-ic">🗑️</div>
-    <div class="cfm-title" id="cfm-tt">Hapus Data?</div>
+    <div class="cfm-icon">🗑️</div>
+    <div class="cfm-title" id="cfm-tt">Hapus?</div>
     <div class="cfm-msg" id="cfm-mg">Data akan dihapus permanen.</div>
-    <div class="cfm-btns"><button class="cfm-no" onclick="closeCfm()">Batal</button><button class="cfm-yes" id="cfm-ok" onclick="runCfm()">Hapus</button></div>
+    <div class="cfm-btns"><button class="cfm-no" onclick="closeCfm()" data-i="btn_cancel">Batal</button><button class="cfm-yes" onclick="runCfm()" data-i="btn_del">Hapus</button></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════════
 const SB='https://prybtaghmbajrahijrjt.supabase.co/rest/v1';
 const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByeWJ0YWdobWJhanJhaGlqcmp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NTc0NDMsImV4cCI6MjA5NzIzMzQ0M30.kALEkLvw4a4aQYEgnYvdajUP4YG1yvjKfhPqBaakAnM';
 const H={'Content-Type':'application/json','apikey':AK,'Authorization':'Bearer '+AK,'Prefer':'return=representation'};
 
-// ── SUPABASE ─────────────────────────────────────────────────
-async function sbG(t,q=''){const r=await fetch(`${SB}/${t}?order=created_at.asc${q}`,{headers:{...H,'Prefer':''}});if(!r.ok)throw new Error(t+': '+r.status);return r.json();}
-async function sbI(t,d){const r=await fetch(`${SB}/${t}`,{method:'POST',headers:H,body:JSON.stringify(d)});if(!r.ok)throw new Error(t+': '+r.status);return r.json();}
-async function sbU(t,id,d){const r=await fetch(`${SB}/${t}?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify(d)});if(!r.ok)throw new Error(t+': '+r.status);return r.json();}
-async function sbD(t,id){const r=await fetch(`${SB}/${t}?id=eq.${id}`,{method:'DELETE',headers:{...H,'Prefer':''}});if(!r.ok)throw new Error(t+': '+r.status);}
+// ══════════════════════════════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════════════════════════════
+async function sbG(t,q=''){const r=await fetch(`${SB}/${t}?order=created_at.asc${q}`,{headers:{...H,'Prefer':''}});if(!r.ok)throw new Error(t+':'+r.status);return r.json();}
+async function sbI(t,d){const r=await fetch(`${SB}/${t}`,{method:'POST',headers:H,body:JSON.stringify(d)});if(!r.ok)throw new Error(t+':'+r.status);return r.json();}
+async function sbU(t,id,d){const r=await fetch(`${SB}/${t}?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify(d)});if(!r.ok)throw new Error(t+':'+r.status);return r.json();}
+async function sbD(t,id){const r=await fetch(`${SB}/${t}?id=eq.${id}`,{method:'DELETE',headers:{...H,'Prefer':''}});if(!r.ok)throw new Error(t+':'+r.status);}
 
-// ── STATE ────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
 let DB={ca:[],ar:[],ii:[],ppe:[],intg:[],inv:[],snaps:[]};
 let CHS={};
 let mType='',mId=null,cfmCb=null,sbOpen=window.innerWidth>768;
-const AP={growth:'7d',recv:'7d',invg:'7d',gain:'7d'};
+let LANG='id',CUR='IDR',FX_RATE=16200,FX_UPDATED='';
+const AP={growth:'1m',recv:'1m',invg:'1m',gain:'1m'};
+// Track current laporan context for PDF
+let lapCtx={mode:'month',ym:'',fromYM:'',toYM:'',label:''};
+let dashCtx={mode:'month',ym:'',fromYM:'',toYM:'',label:''};
 
-// ── COMPUTED ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// I18N — Point 4
+// ══════════════════════════════════════════════════════════════
+const I18={
+  id:{dashboard:'Dashboard',sb_laporan:'Laporan Keuangan',laporan_pos:'Laporan Posisi Keuangan',sb_master:'Master Data',current_asset:'Current Asset',cash_equiv:'Cash Equivalent',non_current:'Non Current Asset',investment:'Investment',total_aset:'Total Aset',total_cur:'Total Current Asset',non_cur:'Non Current Asset',asset_today:'Asset Hari Ini',growth_aset:'History Growth Aset',alokasi_total:'Alokasi Total Asset',growth_recv:'Growth Receivable',inv_chart:'Investment Growth',alokasi_inv:'Alokasi Investment',gain_loss:'Investment Gain/Loss',laporan_detail:'Laporan Detail',ca_desc:'Kas, Bank & Penghasilan Platform',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Portofolio Investasi',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Tambah',btn_cancel:'Batal',btn_save:'Simpan',btn_del:'Hapus',p_1b:'1 Bln',p_6b:'6 Bln',p_1t:'1 Thn',p_5t:'5 Thn',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Laporan Keuangan Pribadi',ls_sub:'Memuat data dari Supabase…'},
+  en:{dashboard:'Dashboard',sb_laporan:'Financial Reports',laporan_pos:'Statement of Financial Position',sb_master:'Master Data',current_asset:'Current Assets',cash_equiv:'Cash Equivalents',non_current:'Non-Current Assets',investment:'Investments',total_aset:'Total Assets',total_cur:'Total Current Assets',non_cur:'Non-Current Assets',asset_today:"Today's Assets",growth_aset:'Asset Growth History',alokasi_total:'Total Asset Allocation',growth_recv:'Receivable Growth',inv_chart:'Investment Growth',alokasi_inv:'Investment Allocation',gain_loss:'Investment Gain/Loss',laporan_detail:'Detailed Report',ca_desc:'Cash, Bank & Platform Income',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Investment Portfolio',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Add',btn_cancel:'Cancel',btn_save:'Save',btn_del:'Delete',p_1b:'1 Mo',p_6b:'6 Mo',p_1t:'1 Yr',p_5t:'5 Yr',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Personal Financial Report',ls_sub:'Loading data from Supabase…'}
+};
+function applyI18n(){
+  const d=I18[LANG];
+  document.querySelectorAll('[data-i]').forEach(el=>{const k=el.getAttribute('data-i');if(d[k])el.textContent=d[k];});
+}
+function toggleLang(){LANG=LANG==='id'?'en':'id';document.getElementById('lang-lbl').textContent=LANG.toUpperCase();applyI18n();}
+
+// ══════════════════════════════════════════════════════════════
+// CURRENCY — Point 11
+// ══════════════════════════════════════════════════════════════
+async function fetchFX(){
+  try{
+    const r=await fetch('https://open.er-api.com/v6/latest/USD');
+    const data=await r.json();
+    if(data&&data.rates&&data.rates.IDR){
+      FX_RATE=data.rates.IDR;
+      const now=new Date();
+      FX_UPDATED=now.toLocaleString('id-ID',{timeZone:'Asia/Makassar',hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'short',year:'numeric'});
+      document.getElementById('fx-rate').textContent='1 USD = Rp '+FX_RATE.toLocaleString('id-ID',{maximumFractionDigits:0});
+      document.getElementById('fx-note').textContent='Update: '+FX_UPDATED+' WITA';
+    }
+  }catch(e){document.getElementById('fx-rate').textContent='1 USD = Rp '+FX_RATE.toLocaleString('id-ID');document.getElementById('fx-note').textContent='Kurs default (offline)';}
+}
+function toggleCurrency(){
+  CUR=CUR==='IDR'?'USD':'IDR';
+  document.getElementById('cur-lbl').textContent=CUR;
+  const btn=document.getElementById('btn-cur');
+  btn.classList.toggle('active-toggle',CUR==='USD');
+  updateAll();
+}
+function fRp(v){
+  const n=Math.abs(+v);
+  if(CUR==='USD'){return'$'+(n/FX_RATE).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  return'Rp '+n.toLocaleString('id-ID',{maximumFractionDigits:0});
+}
+function curSym(){return CUR==='USD'?'USD':'IDR';}
+
+// ══════════════════════════════════════════════════════════════
+// COMPUTED
+// ══════════════════════════════════════════════════════════════
 const sCA=()=>DB.ca.reduce((a,x)=>a+(+x.amount),0);
-const sAR=()=>DB.ar.reduce((a,x)=>a+(+x.amount),0);
+const sAR=()=>DB.ar.reduce((a,x)=>a+(+(x.amount||0))-(+(x.paid||0)),0);
 const sII=()=>DB.ii.reduce((a,x)=>a+(+x.amount),0);
 const sPPE=()=>DB.ppe.reduce((a,x)=>a+(+x.amount),0);
 const sINT=()=>DB.intg.reduce((a,x)=>a+(+x.amount),0);
@@ -362,16 +506,21 @@ const tCur=()=>sCA()+sAR()+sII();
 const tNC=()=>sPPE()+sINT()+sINV();
 const tAst=()=>tCur()+tNC();
 
-// ── FORMAT ───────────────────────────────────────────────────
-const MN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const fRp=v=>'Rp '+Math.abs(+v).toLocaleString('id-ID',{maximumFractionDigits:0});
-const mLbl=s=>{if(!s)return'—';const[y,m]=s.split('-');return MN[+m-1]+' '+y;};
+// ══════════════════════════════════════════════════════════════
+// FORMAT
+// ══════════════════════════════════════════════════════════════
+const MN_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const MN_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MN=()=>LANG==='id'?MN_ID:MN_EN;
+const mLbl=s=>{if(!s)return'—';const[y,m]=s.split('-');return MN()[+m-1]+' '+y;};
 const td=()=>new Date().toISOString().slice(0,10);
 const ymOf=d=>d?d.slice(0,7):'';
+function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
 
-// ── INIT ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
 async function init(){
-  // Step 1: Load all data (with individual fallbacks)
   const load=async(t,q='')=>{try{return await sbG(t,q);}catch(e){console.warn(e);return[];}};
   const [ca,ar,ii,ppe,intg,inv,snaps]=await Promise.all([
     load('current_assets'),load('accounts_receivable'),load('inventory'),
@@ -380,108 +529,80 @@ async function init(){
   ]);
   DB={ca,ar,ii,ppe,intg,inv,snaps};
 
-  // Step 2: Render UI (always, even if DB is empty)
+  // Fetch FX in background
+  fetchFX().catch(()=>{});
+
   const curYM=td().slice(0,7);
   try{document.getElementById('dash-pick').value=curYM;}catch(e){}
   try{document.getElementById('lap-pick').value=curYM;}catch(e){}
-  onDashMonth(curYM);
-  onLapMonth(curYM);
+  onDashMonth(curYM,'init');
+  onLapMonth(curYM,'init');
   updateStats();
-
-  // Step 3: Init charts
   initCharts();
-
-  // Step 4: Hide loading — ALWAYS runs
+  applyI18n();
   hideLS();
-
-  // Step 5: Background snapshot (non-blocking)
   doSnap().catch(()=>{});
 }
 
-function hideLS(){
-  const e=document.getElementById('ls');
-  if(e){e.classList.add('hide');setTimeout(()=>{e.style.display='none';},500);}
-}
+function hideLS(){const e=document.getElementById('ls');if(e){e.classList.add('hide');setTimeout(()=>{e.style.display='none';},500);}}
 
-// ── SNAPSHOT ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// SNAPSHOT
+// ══════════════════════════════════════════════════════════════
 async function doSnap(){
   const day=td();
   const pay={total_current:tCur(),total_non_current:tNC(),total_asset:tAst(),total_receivable:sAR(),total_investment:sINV()};
   const ex=DB.snaps.find(s=>s.snapshot_date===day);
-  if(ex){
-    await sbU('laporan_snapshots',ex.id,pay);
-    Object.assign(ex,pay);
-  } else {
-    const r=await sbI('laporan_snapshots',{snapshot_date:day,...pay});
-    const rec=Array.isArray(r)?r[0]:r;
-    if(rec&&rec.id)DB.snaps.push(rec);
-  }
+  if(ex){await sbU('laporan_snapshots',ex.id,pay);Object.assign(ex,pay);}
+  else{const r=await sbI('laporan_snapshots',{snapshot_date:day,...pay});const rec=Array.isArray(r)?r[0]:r;if(rec&&rec.id)DB.snaps.push(rec);}
   DB.snaps.sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
   refreshCharts();
 }
 
-// ── STATS ────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════════════════
 function updateStats(){
   const ta=tAst(),tc=tCur(),tnc=tNC();
   setText('sv-tot',fRp(ta));setText('sv-cur',fRp(tc));setText('sv-nc',fRp(tnc));setText('sv-td',fRp(ta));
-
   const now=new Date();
   const curYM=now.toISOString().slice(0,7);
   const prevD=new Date(now.getFullYear(),now.getMonth()-1,1);
   const prevYM=prevD.getFullYear()+'-'+String(prevD.getMonth()+1).padStart(2,'0');
-
-  // Sum items up to end of prev month directly from master tables
   const sup=(arr)=>arr.filter(x=>x.date&&ymOf(x.date)<=prevYM).reduce((a,x)=>a+(+x.amount),0);
-  const pCa=sup(DB.ca),pAr=sup(DB.ar),pIi=sup(DB.ii);
-  const pPpe=sup(DB.ppe),pInt=sup(DB.intg),pInv=sup(DB.inv);
+  const pCa=sup(DB.ca),pAr=sup(DB.ar),pIi=sup(DB.ii),pPpe=sup(DB.ppe),pInt=sup(DB.intg),pInv=sup(DB.inv);
   const pCur=pCa+pAr+pIi,pNC=pPpe+pInt+pInv,pTa=pCur+pNC;
-
-  if(pTa>0||pCur>0){
-    setChg('sc-tot',ta-pTa,pTa,mLbl(prevYM+'-01'));
-    setChg('sc-cur',tc-pCur,pCur,mLbl(prevYM+'-01'));
-    setChg('sc-nc',tnc-pNC,pNC,mLbl(prevYM+'-01'));
-  } else {
-    // Find any older data
+  const prevLbl=mLbl(prevYM+'-01');
+  if(pTa>0||pCur>0){setChg('sc-tot',ta-pTa,pTa,prevLbl);setChg('sc-cur',tc-pCur,pCur,prevLbl);setChg('sc-nc',tnc-pNC,pNC,prevLbl);}
+  else{
     const allOld=[...DB.ca,...DB.ar,...DB.ii,...DB.ppe,...DB.intg,...DB.inv].filter(x=>x.date&&ymOf(x.date)<curYM);
-    if(allOld.length){
-      const months=[...new Set(allOld.map(x=>ymOf(x.date)))].sort();
-      const lym=months[months.length-1];
-      const su2=(arr)=>arr.filter(x=>x.date&&ymOf(x.date)<=lym).reduce((a,x)=>a+(+x.amount),0);
-      const lc=su2(DB.ca)+su2(DB.ar)+su2(DB.ii),ln=su2(DB.ppe)+su2(DB.intg)+su2(DB.inv),lt=lc+ln;
-      setChg('sc-tot',ta-lt,lt,mLbl(lym+'-01'));
-      setChg('sc-cur',tc-lc,lc,mLbl(lym+'-01'));
-      setChg('sc-nc',tnc-ln,ln,mLbl(lym+'-01'));
-    } else {
-      ['sc-tot','sc-cur','sc-nc'].forEach(id=>setEl(id,'neu','Belum ada data bulan sebelumnya'));
-    }
+    if(allOld.length){const months=[...new Set(allOld.map(x=>ymOf(x.date)))].sort();const lym=months[months.length-1];const su2=(arr)=>arr.filter(x=>x.date&&ymOf(x.date)<=lym).reduce((a,x)=>a+(+x.amount),0);const lc=su2(DB.ca)+su2(DB.ar)+su2(DB.ii),ln=su2(DB.ppe)+su2(DB.intg)+su2(DB.inv),lt=lc+ln;setChg('sc-tot',ta-lt,lt,mLbl(lym+'-01'));setChg('sc-cur',tc-lc,lc,mLbl(lym+'-01'));setChg('sc-nc',tnc-ln,ln,mLbl(lym+'-01'));}
+    else{['sc-tot','sc-cur','sc-nc'].forEach(id=>{const el=document.getElementById(id);if(el){el.className='sc-chg neu';el.textContent=LANG==='id'?'Belum ada data bulan sebelumnya':'No previous month data';}});}
   }
   const elTd=document.getElementById('sc-td');
   if(elTd){elTd.className='sc-chg neu';elTd.textContent='Update: '+now.toLocaleString('id-ID',{timeZone:'Asia/Makassar',weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})+' WITA';}
 }
-
 function setChg(id,diff,base,lbl){
   const el=document.getElementById(id);if(!el)return;
   const up=diff>=0;el.className='sc-chg '+(up?'up':'dn');
   const pct=base>0?((Math.abs(diff)/base)*100).toFixed(1)+'%':'—';
   el.textContent=(up?'↑ +':'↓ -')+fRp(Math.abs(diff))+' ('+pct+') vs '+lbl;
 }
-function setEl(id,cls,txt){const e=document.getElementById(id);if(e){e.className='sc-chg '+cls;e.textContent=txt;}}
-function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
 
-// ── FINANCIAL REPORT ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// FINANCIAL REPORT
+// ══════════════════════════════════════════════════════════════
 function calcT(ym){
   const f=(arr)=>arr.filter(x=>!ym||ymOf(x.date)===ym).reduce((a,x)=>a+(+x.amount),0);
-  const ca=f(DB.ca),ar=f(DB.ar),ii=f(DB.ii),ppe=f(DB.ppe),intg=f(DB.intg),inv=f(DB.inv);
-  return{ca,ar,ii,ppe,intg,inv,cur:ca+ar+ii,nc:ppe+intg+inv,tot:ca+ar+ii+ppe+intg+inv,
-    caI:DB.ca.filter(x=>!ym||ymOf(x.date)===ym),arI:DB.ar.filter(x=>!ym||ymOf(x.date)===ym),
-    iiI:DB.ii.filter(x=>!ym||ymOf(x.date)===ym),ppeI:DB.ppe.filter(x=>!ym||ymOf(x.date)===ym),
-    intgI:DB.intg.filter(x=>!ym||ymOf(x.date)===ym),invI:DB.inv.filter(x=>!ym||ymOf(x.date)===ym)};
+  const farr=(arr)=>!ym?arr:arr.filter(x=>ymOf(x.date)===ym);
+  const ca=f(DB.ca),ar=DB.ar.filter(x=>!ym||ymOf(x.date)===ym).reduce((a,x)=>a+(+(x.amount||0))-(+(x.paid||0)),0),ii=f(DB.ii),ppe=f(DB.ppe),intg=f(DB.intg),inv=f(DB.inv);
+  return{ca,ar,ii,ppe,intg,inv,cur:ca+ar+ii,nc:ppe+intg+inv,tot:ca+ar+ii+ppe+intg+inv,caI:farr(DB.ca),arI:farr(DB.ar),iiI:farr(DB.ii),ppeI:farr(DB.ppe),intgI:farr(DB.intg),invI:farr(DB.inv)};
 }
 function calcRange(fym,tym){
   const f=(arr)=>arr.filter(x=>x.date&&(!fym||ymOf(x.date)>=fym)&&(!tym||ymOf(x.date)<=tym));
-  const fca=f(DB.ca),far=f(DB.ar),fii=f(DB.ii),fppe=f(DB.ppe),fintg=f(DB.intg),finv=f(DB.inv);
   const s=(a)=>a.reduce((t,x)=>t+(+x.amount),0);
-  const ca=s(fca),ar=s(far),ii=s(fii),ppe=s(fppe),intg=s(fintg),inv=s(finv);
+  const fca=f(DB.ca),far=f(DB.ar),fii=f(DB.ii),fppe=f(DB.ppe),fintg=f(DB.intg),finv=f(DB.inv);
+  const ca=s(fca),ar=far.reduce((a,x)=>a+(+(x.amount||0))-(+(x.paid||0)),0),ii=s(fii),ppe=s(fppe),intg=s(fintg),inv=s(finv);
   return{ca,ar,ii,ppe,intg,inv,cur:ca+ar+ii,nc:ppe+intg+inv,tot:ca+ar+ii+ppe+intg+inv,caI:fca,arI:far,iiI:fii,ppeI:fppe,intgI:fintg,invI:finv};
 }
 function buildFin(T,lbl,det){
@@ -489,10 +610,10 @@ function buildFin(T,lbl,det){
   return`<div class="fin">
 <div class="fin-sec">A. Current Asset</div>
 <div class="fin-row"><span class="fn">1.</span><span class="fl">Cash and cash equivalents</span><span class="fv">${fRp(T.ca)}</span></div>
-${d(T.caI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">- ${r.name} <span class="badge bk" style="font-size:9px">${r.category}</span></span><span class="fv">${fRp(r.amount)}</span></div>`)}
+${d(T.caI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">— ${r.name} <span class="badge bk" style="font-size:8.5px">${r.category}</span></span><span class="fv">${fRp(r.amount)}</span></div>`)}
 <div class="fin-row sub"><span class="fn"><b>2.</b></span><span class="fl"><b>Total Cash & Equivalent</b></span><span class="fv">${fRp(T.ca)}</span></div>
 <div class="fin-row"><span class="fn">3.</span><span class="fl">Accounts Receivable</span><span class="fv">${fRp(T.ar)}</span></div>
-${d(T.arI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r.name} <span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':'bb'}" style="font-size:9px">${r.status}</span></span><span class="fv">${fRp(r.amount)}</span></div>`)}
+${d(T.arI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r.name}${r.paid>0?' <span class="badge by" style="font-size:8.5px">Partial</span>':''} <span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':'bb'}" style="font-size:8.5px">${r.status}</span></span><span class="fv">${fRp((+(r.amount||0))-(+(r.paid||0)))}</span></div>`)}
 <div class="fin-row"><span class="fn">4.</span><span class="fl">Inventory</span><span class="fv">${fRp(T.ii)}</span></div>
 ${d(T.iiI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r.name}${r.qty?' ('+r.qty+' unit)':''}</span><span class="fv">${fRp(r.amount)}</span></div>`)}
 <div class="fin-row sub"><span class="fn"><b>5.</b></span><span class="fl"><b>Total Current Asset</b></span><span class="fv">${fRp(T.cur)}</span></div>
@@ -500,119 +621,155 @@ ${d(T.iiI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r.
 <div class="fin-row"><span class="fn">6.</span><span class="fl">Property, Plant & Equipment</span><span class="fv">${fRp(T.ppe)}</span></div>
 ${d(T.ppeI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r.name}</span><span class="fv">${fRp(r.amount)}</span></div>`)}
 <div class="fin-row"><span class="fn">7.</span><span class="fl">Investment</span><span class="fv">${fRp(T.inv)}</span></div>
-${d(T.invI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r.name} <span class="badge bp" style="font-size:9px">${r.type}</span></span><span class="fv">${fRp(r.amount)}</span></div>`)}
+${d(T.invI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r.name} <span class="badge bp" style="font-size:8.5px">${r.type}</span></span><span class="fv">${fRp(r.amount)}</span></div>`)}
 <div class="fin-row"><span class="fn">8.</span><span class="fl">Intangible Assets</span><span class="fv">${fRp(T.intg)}</span></div>
 ${d(T.intgI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r.name}</span><span class="fv">${fRp(r.amount)}</span></div>`)}
 <div class="fin-row sub"><span class="fn"><b>9.</b></span><span class="fl"><b>Total Non-current Asset</b></span><span class="fv">${fRp(T.nc)}</span></div>
 <div class="fin-row tot"><span class="fn">10.</span><span class="fl"><b>TOTAL ASSET — ${lbl}</b></span><span class="fv"><b>${fRp(T.tot)}</b></span></div>
 </div>`;
 }
-function onDashMonth(ym){const e=document.getElementById('dash-month');if(e)e.textContent=mLbl(ym+'-01');const f=document.getElementById('fin-dash');if(f)f.innerHTML=buildFin(calcT(ym),mLbl(ym+'-01'),false);}
-function onLapMonth(ym){const e=document.getElementById('lap-month');if(e)e.textContent='Laporan Bulan '+mLbl(ym+'-01');document.querySelectorAll('#page-laporan .pbtns .pb').forEach(b=>b.classList.remove('active'));const f=document.getElementById('fin-lap');if(f)f.innerHTML=buildFin(calcT(ym),mLbl(ym+'-01'),true);}
+
+// Dashboard laporan
+function onDashMonth(ym,mode){
+  if(mode!=='init')document.querySelectorAll('#page-dashboard .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('dash-month');if(el)el.textContent=mLbl(ym+'-01');
+  const f=document.getElementById('fin-dash');if(f)f.innerHTML=buildFin(calcT(ym),mLbl(ym+'-01'),false);
+  dashCtx={mode:'month',ym,fromYM:'',toYM:'',label:mLbl(ym+'-01')};
+}
+function dashRange(r,btn){
+  document.querySelectorAll('#page-dashboard .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');document.getElementById('dash-pick').value='';
+  const {fym,tym,lbl}=rangeCalc(r);
+  const el=document.getElementById('dash-month');if(el)el.textContent=lbl;
+  const T=calcRange(fym,tym);
+  const f=document.getElementById('fin-dash');if(f)f.innerHTML=buildFin(T,lbl,false);
+  dashCtx={mode:'range',ym:'',fromYM:fym,toYM:tym,label:lbl};
+}
+// Laporan page
+function onLapMonth(ym,mode){
+  if(mode!=='init')document.querySelectorAll('#page-laporan .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('lap-month');if(el)el.textContent=(LANG==='id'?'Laporan Bulan ':'Report: ')+mLbl(ym+'-01');
+  const f=document.getElementById('fin-lap');if(f)f.innerHTML=buildFin(calcT(ym),mLbl(ym+'-01'),true);
+  lapCtx={mode:'month',ym,fromYM:'',toYM:'',label:mLbl(ym+'-01')};
+}
 function lapRange(r,btn){
-  document.querySelectorAll('#page-laporan .pbtns .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  const now=new Date();let fym=null;
-  if(r==='30d'){const d=new Date(now);d.setDate(d.getDate()-30);fym=d.toISOString().slice(0,7);}
-  else if(r==='60d'){const d=new Date(now);d.setDate(d.getDate()-60);fym=d.toISOString().slice(0,7);}
-  else if(r==='1y'){const d=new Date(now);d.setFullYear(d.getFullYear()-1);fym=d.toISOString().slice(0,7);}
-  else if(r==='5y'){const d=new Date(now);d.setFullYear(d.getFullYear()-5);fym=d.toISOString().slice(0,7);}
-  const tym=td().slice(0,7);
-  const lbl=fym?mLbl(fym+'-01')+' — '+mLbl(tym+'-01'):'Semua Periode';
-  const e=document.getElementById('lap-month');if(e)e.textContent='Laporan '+lbl;
+  document.querySelectorAll('#page-laporan .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');document.getElementById('lap-pick').value='';
+  const {fym,tym,lbl}=rangeCalc(r);
+  const el=document.getElementById('lap-month');if(el)el.textContent=(LANG==='id'?'Laporan ':'Report: ')+lbl;
   const f=document.getElementById('fin-lap');if(f)f.innerHTML=buildFin(calcRange(fym,tym),lbl,true);
+  lapCtx={mode:'range',ym:'',fromYM:fym,toYM:tym,label:lbl};
+}
+function rangeCalc(r){
+  const now=new Date();const tym=td().slice(0,7);
+  let fym=null,lbl='';
+  if(r==='1m'){const d=new Date(now.getFullYear(),now.getMonth()-1,1);fym=d.toISOString().slice(0,7);lbl=LANG==='id'?'1 Bulan Terakhir':'Last 1 Month';}
+  else if(r==='6m'){const d=new Date(now.getFullYear(),now.getMonth()-6,1);fym=d.toISOString().slice(0,7);lbl=LANG==='id'?'6 Bulan Terakhir':'Last 6 Months';}
+  else if(r==='1y'){const d=new Date(now.getFullYear()-1,now.getMonth(),1);fym=d.toISOString().slice(0,7);lbl=LANG==='id'?'1 Tahun Terakhir':'Last 1 Year';}
+  else if(r==='5y'){const d=new Date(now.getFullYear()-5,now.getMonth(),1);fym=d.toISOString().slice(0,7);lbl=LANG==='id'?'5 Tahun Terakhir':'Last 5 Years';}
+  else{lbl=LANG==='id'?'Semua Periode':'All Periods';}
+  return{fym,tym,lbl};
 }
 
-// ── PDF ──────────────────────────────────────────────────────
-function downloadPDF(){
-  const ym=document.getElementById('lap-pick').value||td().slice(0,7);
-  const T=calcT(ym),lbl=mLbl(ym+'-01');
-  const row=(n,l,v,b)=>`<tr style="${b?'font-weight:700;background:#f8fafc':''}"><td style="padding:5px 10px 5px ${n?10:22}px">${n?n+'. ':'— '}${l}</td><td style="text-align:right;padding:5px 10px">${fRp(v)}</td></tr>`;
-  const drow=(l,v)=>`<tr><td style="padding:3px 10px 3px 28px;color:#555;font-size:12px">— ${l}</td><td style="text-align:right;padding:3px 10px;font-size:12px">${fRp(v)}</td></tr>`;
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Laporan ${lbl}</title><style>body{font-family:Arial,sans-serif;color:#1a1a2e;padding:36px;font-size:13px}h1{font-size:20px;color:#2563eb;margin-bottom:4px}h2{font-size:12px;color:#64748b;font-weight:normal;margin-bottom:4px}hr{border:none;border-top:2px solid #2563eb;margin:14px 0}table{width:100%;border-collapse:collapse}tr{border-bottom:1px solid #f1f5f9}.sh td{font-size:9.5px;font-weight:800;text-transform:uppercase;color:#64748b;padding:11px 10px 3px;background:#f0f4ff}.tot td{font-weight:800;color:#2563eb;background:#eff6ff;font-size:14px;padding:11px 10px}.ft{margin-top:36px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:10px;text-align:center}</style></head><body>
-<h1>📊 Laporan Posisi Keuangan</h1><h2>Periode: <b>${lbl}</b></h2><h2>Dicetak: ${new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</h2><hr>
-<table><tr class="sh"><td colspan="2">A. CURRENT ASSET</td></tr>${row('1','Cash and cash equivalents',T.ca)}${T.caI.map(r=>drow(r.name+' ('+r.category+')',r.amount)).join('')}${row('2','Total Cash & Equivalent',T.ca,true)}${row('3','Accounts Receivable',T.ar)}${T.arI.map(r=>drow(r.name+' — '+r.status,r.amount)).join('')}${row('4','Inventory',T.ii)}${T.iiI.map(r=>drow(r.name+(r.qty?' ('+r.qty+' unit)':''),r.amount)).join('')}<tr style="font-weight:700;background:#f8fafc;border-top:2px solid #e2e8f0"><td style="padding:7px 10px"><b>5. Total Current Asset</b></td><td style="text-align:right;padding:7px 10px"><b>${fRp(T.cur)}</b></td></tr><tr class="sh"><td colspan="2">B. NON CURRENT ASSET</td></tr>${row('6','Property, Plant & Equipment',T.ppe)}${T.ppeI.map(r=>drow(r.name,r.amount)).join('')}${row('7','Investment',T.inv)}${T.invI.map(r=>drow(r.name+' ('+r.type+')',r.amount)).join('')}${row('8','Intangible Assets',T.intg)}${T.intgI.map(r=>drow(r.name,r.amount)).join('')}<tr style="font-weight:700;background:#f8fafc;border-top:2px solid #e2e8f0"><td style="padding:7px 10px"><b>9. Total Non-current Asset</b></td><td style="text-align:right;padding:7px 10px"><b>${fRp(T.nc)}</b></td></tr><tr class="tot"><td>10. TOTAL ASSET — ${lbl}</td><td style="text-align:right">${fRp(T.tot)}</td></tr></table>
-<div class="ft">© 2026 Laporan Keuangan Pribadi — raihan.nor.falah@mhs.politala.ac.id</div>
+// ══════════════════════════════════════════════════════════════
+// PDF — Point 12: use active context
+// ══════════════════════════════════════════════════════════════
+function downloadPDF(src){
+  const ctx=src==='dash'?dashCtx:lapCtx;
+  let T,lbl;
+  if(ctx.mode==='range'){T=calcRange(ctx.fromYM,ctx.toYM);lbl=ctx.label;}
+  else if(ctx.mode==='month'&&ctx.ym){T=calcT(ctx.ym);lbl=ctx.label||mLbl(ctx.ym+'-01');}
+  else{const ym=document.getElementById(src==='dash'?'dash-pick':'lap-pick')?.value||td().slice(0,7);T=calcT(ym);lbl=mLbl(ym+'-01');}
+  const rw=(n,l,v,b)=>`<tr style="${b?'font-weight:700;background:#f8fafc':''}"><td style="padding:5px 10px 5px ${n?10:22}px">${n?n+'. ':'— '}${l}</td><td style="text-align:right;padding:5px 10px">${fRp(v)}</td></tr>`;
+  const dr=(l,v)=>`<tr><td style="padding:3px 10px 3px 28px;color:#555;font-size:12px">— ${l}</td><td style="text-align:right;padding:3px 10px;font-size:12px">${fRp(v)}</td></tr>`;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Laporan ${lbl}</title>
+<style>body{font-family:Arial,sans-serif;color:#1a1a2e;padding:36px;font-size:13px}h1{font-size:20px;color:#2563eb;margin-bottom:4px}h2{font-size:12px;color:#64748b;font-weight:normal;margin-bottom:4px}hr{border:none;border-top:2px solid #2563eb;margin:14px 0}table{width:100%;border-collapse:collapse}tr{border-bottom:1px solid #f1f5f9}.sh td{font-size:9.5px;font-weight:800;text-transform:uppercase;color:#64748b;padding:11px 10px 3px;background:#f0f4ff}.tot td{font-weight:800;color:#2563eb;background:#eff6ff;font-size:14px;padding:11px 10px}.ft{margin-top:36px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:10px;text-align:center}</style>
+</head><body>
+<h1>📊 Laporan Posisi Keuangan</h1><h2>Periode: <b>${lbl}</b></h2><h2>Mata Uang: ${curSym()}</h2><h2>Dicetak: ${new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</h2><hr>
+<table><tr class="sh"><td colspan="2">A. CURRENT ASSET</td></tr>${rw('1','Cash and cash equivalents',T.ca)}${T.caI.map(r=>dr(r.name+' ('+r.category+')',r.amount)).join('')}${rw('2','Total Cash & Equivalent',T.ca,true)}${rw('3','Accounts Receivable',T.ar)}${T.arI.map(r=>dr(r.name+' — '+r.status+((+(r.paid||0))>0?' [Partial: '+fRp(r.paid)+']':''),Math.max(0,(+(r.amount||0))-(+(r.paid||0))))).join('')}${rw('4','Inventory',T.ii)}${T.iiI.map(r=>dr(r.name+(r.qty?' ('+r.qty+' unit)':''),r.amount)).join('')}
+<tr style="font-weight:700;background:#f8fafc;border-top:2px solid #e2e8f0"><td style="padding:7px 10px"><b>5. Total Current Asset</b></td><td style="text-align:right;padding:7px 10px"><b>${fRp(T.cur)}</b></td></tr>
+<tr class="sh"><td colspan="2">B. NON CURRENT ASSET</td></tr>${rw('6','Property, Plant & Equipment',T.ppe)}${T.ppeI.map(r=>dr(r.name,r.amount)).join('')}${rw('7','Investment',T.inv)}${T.invI.map(r=>dr(r.name+' ('+r.type+')',r.amount)).join('')}${rw('8','Intangible Assets',T.intg)}${T.intgI.map(r=>dr(r.name,r.amount)).join('')}
+<tr style="font-weight:700;background:#f8fafc;border-top:2px solid #e2e8f0"><td style="padding:7px 10px"><b>9. Total Non-current Asset</b></td><td style="text-align:right;padding:7px 10px"><b>${fRp(T.nc)}</b></td></tr>
+<tr class="tot"><td>10. TOTAL ASSET — ${lbl}</td><td style="text-align:right">${fRp(T.tot)}</td></tr></table>
+<div class="ft">© 2026 Laporan Keuangan Pribadi — raihan.nor.falah@mhs.politala.ac.id | Kurs: 1 USD = Rp ${FX_RATE.toLocaleString('id-ID')}</div>
 <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>`;
-  const w=window.open('','_blank','width=760,height=960');
-  if(!w){showToast('❌ Aktifkan popup browser');return;}
-  w.document.write(html);w.document.close();
+  const w=window.open('','_blank','width=760,height=960');if(!w){showToast('❌ Aktifkan popup browser');return;}w.document.write(html);w.document.close();
 }
 
-// ── CHARTS ───────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// CHARTS — Points 5,6,7,8
+// ══════════════════════════════════════════════════════════════
+const CHART_COLORS=['#2563eb','#22c55e','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316','#ec4899','#14b8a6','#a855f7'];
+const TT={backgroundColor:'rgba(15,23,42,.92)',titleFont:{size:11},bodyFont:{size:11},padding:9,cornerRadius:7};
+const zoomPlugin={zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x'},pan:{enabled:true,mode:'x'}};
+const SC=(ycb)=>({x:{ticks:{maxTicksLimit:7,font:{size:9},color:'#94a3b8'},grid:{display:false}},y:{ticks:{font:{size:9},color:'#94a3b8',callback:ycb||((v)=>fRp(v))},grid:{color:'rgba(0,0,0,.04)'}}});
+
 function buildMonthPts(){
   const allD=[...DB.ca,...DB.ar,...DB.ii,...DB.ppe,...DB.intg,...DB.inv].map(x=>x.date).filter(Boolean);
   if(!allD.length)return[];
   const months=[...new Set(allD.map(d=>d.slice(0,7)))].sort();
   const su=(arr,ym)=>arr.filter(x=>x.date&&x.date.slice(0,7)<=ym).reduce((a,x)=>a+(+x.amount),0);
   return months.map(ym=>{
-    const ca=su(DB.ca,ym),ar=su(DB.ar,ym),ii=su(DB.ii,ym);
+    const ca=su(DB.ca,ym),ar=DB.ar.filter(x=>x.date&&x.date.slice(0,7)<=ym).reduce((a,x)=>a+(+(x.amount||0))-(+(x.paid||0)),0),ii=su(DB.ii,ym);
     const ppe=su(DB.ppe,ym),intg=su(DB.intg,ym),inv=su(DB.inv,ym);
     const cur=ca+ar+ii,nc=ppe+intg+inv;
-    return{ym,snapshot_date:ym+'-28',total_asset:cur+nc,total_current:cur,total_non_current:nc,total_receivable:ar,total_investment:inv,isMon:true};
+    return{ym,snapshot_date:ym+'-28',total_asset:cur+nc,total_current:cur,total_non_current:nc,total_receivable:ar,total_investment:inv};
   });
 }
-
 function filterPts(period){
   const pts=buildMonthPts();
-  // Merge with real snapshots
   const byM={};DB.snaps.forEach(s=>{byM[s.snapshot_date.slice(0,7)]=s;});
   const all=pts.map(p=>byM[p.ym]||p).sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
   if(!all.length)return[];
   if(period==='all')return all;
-  const now=new Date();let days=0;
-  if(period==='7d')days=7;else if(period==='30d')days=30;else if(period==='1y')days=366;
-  const cut=new Date(now);cut.setDate(cut.getDate()-days);cut.setHours(0,0,0,0);
-  return all.filter(s=>new Date(s.snapshot_date+'T00:00:00')>=cut);
+  const now=new Date();let months=0;
+  if(period==='7d'){const cut=new Date(now);cut.setDate(cut.getDate()-7);return all.filter(s=>new Date(s.snapshot_date+'T00:00:00')>=cut);}
+  if(period==='1m')months=1;else if(period==='6m')months=6;else if(period==='1y')months=12;
+  if(months){const cut=new Date(now.getFullYear(),now.getMonth()-months,1);return all.filter(s=>new Date(s.snapshot_date+'T00:00:00')>=cut);}
+  return all;
 }
-
-function ptLabels(pts){
-  return pts.map(s=>{
-    const d=new Date(s.snapshot_date+'T00:00:00');
-    return d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'});
-  });
-}
-
-const TT={backgroundColor:'rgba(15,23,42,.92)',titleFont:{size:11},bodyFont:{size:11},padding:9,cornerRadius:7};
-const SC={x:{ticks:{maxTicksLimit:7,font:{size:9},color:'#94a3b8'},grid:{display:false}},y:{ticks:{font:{size:9},color:'#94a3b8',callback:v=>'Rp '+Number(v).toLocaleString('id-ID')},grid:{color:'rgba(0,0,0,.04)'}}};
+function ptLabel(s){const d=new Date(s.snapshot_date+'T00:00:00');return d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'});}
 
 function initCharts(){
-  // Growth Aset
+  // Growth Aset — 3 lines
   const gc=document.getElementById('c-growth');
   if(gc)CHS.growth=new Chart(gc.getContext('2d'),{type:'line',data:{labels:[],datasets:[
-    {label:'Total Asset',data:[],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.07)',tension:.4,pointRadius:3,fill:false,borderWidth:2.5},
-    {label:'Current',data:[],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.07)',tension:.4,pointRadius:2,fill:false,borderWidth:1.5,borderDash:[4,3]},
-    {label:'Non-Current',data:[],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.07)',tension:.4,pointRadius:2,fill:false,borderWidth:1.5,borderDash:[4,3]},
-  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:9},boxWidth:7,color:'#94a3b8'}},tooltip:TT},scales:SC}});
+    {label:'Total Asset',data:[],borderColor:CHART_COLORS[0],backgroundColor:'rgba(37,99,235,.07)',tension:.4,pointRadius:3,fill:false,borderWidth:2.5},
+    {label:'Current',data:[],borderColor:CHART_COLORS[1],tension:.4,pointRadius:2,fill:false,borderWidth:1.5,borderDash:[4,3]},
+    {label:'Non-Current',data:[],borderColor:CHART_COLORS[2],tension:.4,pointRadius:2,fill:false,borderWidth:1.5,borderDash:[4,3]},
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:9},boxWidth:7,color:'#94a3b8'}},tooltip:TT,zoom:zoomPlugin},scales:SC()}});
 
   // Receivable
   const rc=document.getElementById('c-recv');
-  if(rc)CHS.recv=new Chart(rc.getContext('2d'),{type:'line',data:{labels:[],datasets:[{label:'Total Receivable',data:[],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.08)',tension:.4,pointRadius:3,fill:true,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:9},boxWidth:7,color:'#94a3b8'}},tooltip:TT},scales:SC}});
+  if(rc)CHS.recv=new Chart(rc.getContext('2d'),{type:'line',data:{labels:[],datasets:[{label:'Total Receivable',data:[],borderColor:CHART_COLORS[1],backgroundColor:'rgba(34,197,94,.08)',tension:.4,pointRadius:3,fill:true,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:9},boxWidth:7,color:'#94a3b8'}},tooltip:TT,zoom:zoomPlugin},scales:SC()}});
 
-  // Investment Growth
+  // Investment Growth — multi-line per instrument (Point 6)
   const ic=document.getElementById('c-invg');
-  if(ic)CHS.invg=new Chart(ic.getContext('2d'),{type:'line',data:{labels:[],datasets:[{label:'Total Investment',data:[],borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,.08)',tension:.4,pointRadius:3,fill:true,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:9},boxWidth:7,color:'#94a3b8'}},tooltip:TT},scales:SC}});
+  if(ic)CHS.invg=new Chart(ic.getContext('2d'),{type:'line',data:{labels:[],datasets:[]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:9},boxWidth:7,color:'#94a3b8'}},tooltip:{...TT,mode:'index',intersect:false},zoom:zoomPlugin},scales:SC()}});
 
   // Gain
   const gainc=document.getElementById('c-gain');
-  if(gainc)CHS.gain=new Chart(gainc.getContext('2d'),{type:'bar',data:{labels:[],datasets:[{label:'Gain/Loss',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>(c.parsed.y>=0?'Gain: +':'Loss: ')+fRp(Math.abs(c.parsed.y))}}},scales:{...SC,y:{ticks:{font:{size:9},color:'#94a3b8',callback:v=>(v>=0?'+':'')+fRp(Math.abs(v))},grid:{color:'rgba(0,0,0,.04)'}}}}});
+  if(gainc)CHS.gain=new Chart(gainc.getContext('2d'),{type:'bar',data:{labels:[],datasets:[{label:'Gain/Loss',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>(c.parsed.y>=0?'Gain: +':'Loss: ')+fRp(Math.abs(c.parsed.y))}},zoom:zoomPlugin},scales:{...SC(),y:{ticks:{font:{size:9},color:'#94a3b8',callback:v=>(v>=0?'+':'')+fRp(Math.abs(v))},grid:{color:'rgba(0,0,0,.04)'}}}}});
 
   refreshCharts();
   updateAlokasiChart();
   updateInvDChart();
 }
 
+function resetZoom(key){if(CHS[key])CHS[key].resetZoom();}
+
 function refreshCharts(){
-  setPeriod('growth',AP.growth,null,true);
-  setPeriod('recv',AP.recv,null,true);
-  setPeriod('invg',AP.invg,null,true);
-  setPeriod('gain',AP.gain,null,true);
+  setPeriod('growth',AP.growth,null);
+  setPeriod('recv',AP.recv,null);
+  setPeriod('invg',AP.invg,null);
+  setPeriod('gain',AP.gain,null);
 }
 
-function setPeriod(type,period,btn,silent){
+function setPeriod(type,period,btn){
   AP[type]=period;
   if(btn){document.querySelectorAll('#pb-'+type+' .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
   const pts=filterPts(period);
-  const labels=ptLabels(pts);
+  const labels=pts.map(ptLabel);
   if(type==='growth'&&CHS.growth){
     CHS.growth.data.labels=labels;
     CHS.growth.data.datasets[0].data=pts.map(s=>+(+s.total_asset).toFixed(0));
@@ -626,15 +783,31 @@ function setPeriod(type,period,btn,silent){
     CHS.recv.update();
   }
   if(type==='invg'&&CHS.invg){
+    // Multi-line: one line per investment instrument (Point 6)
+    const names=[...new Set(DB.inv.map(x=>x.name))];
     CHS.invg.data.labels=labels;
-    CHS.invg.data.datasets[0].data=pts.map(s=>+(+(s.total_investment||0)).toFixed(0));
+    CHS.invg.data.datasets=names.map((name,i)=>{
+      const color=CHART_COLORS[i%CHART_COLORS.length];
+      const data=pts.map(p=>{
+        // Cumulative investment for this name up to each point's month
+        const items=DB.inv.filter(x=>x.name===name&&x.date&&x.date.slice(0,7)<=p.ym);
+        return items.reduce((a,x)=>a+(+x.amount),0);
+      });
+      return{label:name,data,borderColor:color,backgroundColor:'transparent',tension:.4,pointRadius:2,fill:false,borderWidth:1.8};
+    });
+    // Also add total line
+    CHS.invg.data.datasets.unshift({label:'Total Investment',data:pts.map(s=>+(+(s.total_investment||0)).toFixed(0)),borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.06)',tension:.4,pointRadius:3,fill:true,borderWidth:2.5});
     CHS.invg.update();
   }
   if(type==='gain'&&CHS.gain){
     let items=[...DB.inv];
     if(period!=='all'&&items.length){
-      let days=period==='7d'?7:period==='30d'?30:period==='1y'?366:0;
-      if(days>0){const cut=new Date();cut.setDate(cut.getDate()-days);cut.setHours(0,0,0,0);items=items.filter(x=>{if(!x.date)return true;return new Date(x.date+'T00:00:00')>=cut;});}
+      let cut=null;
+      if(period==='7d'){cut=new Date();cut.setDate(cut.getDate()-7);}
+      else if(period==='1m'){cut=new Date(new Date().getFullYear(),new Date().getMonth()-1,1);}
+      else if(period==='6m'){cut=new Date(new Date().getFullYear(),new Date().getMonth()-6,1);}
+      else if(period==='1y'){cut=new Date(new Date().getFullYear()-1,new Date().getMonth(),1);}
+      if(cut){cut.setHours(0,0,0,0);items=items.filter(x=>{if(!x.date)return true;return new Date(x.date+'T00:00:00')>=cut;});}
     }
     const data=items.map(i=>+(+i.gain).toFixed(0));
     CHS.gain.data.labels=items.map(i=>i.name.length>12?i.name.slice(0,12)+'…':i.name);
@@ -645,11 +818,11 @@ function setPeriod(type,period,btn,silent){
   }
 }
 
+// Alokasi all 6 categories (total asset)
 function updateAlokasiChart(){
   const COLS=['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444','#06b6d4'];
-  const items=[{l:'Current Asset (Kas/Bank)',v:sCA(),c:COLS[0]},{l:'Accounts Receivable',v:sAR(),c:COLS[1]},{l:'Inventory',v:sII(),c:COLS[2]},{l:'PPE',v:sPPE(),c:COLS[3]},{l:'Investment',v:sINV(),c:COLS[4]},{l:'Intangible',v:sINT(),c:COLS[5]}].filter(x=>x.v>0);
-  const tot=tAst();
-  setText('alok-tot',fRp(tot));
+  const items=[{l:'Kas/Bank',v:sCA(),c:COLS[0]},{l:'Receivable',v:sAR(),c:COLS[1]},{l:'Inventory',v:sII(),c:COLS[2]},{l:'PPE',v:sPPE(),c:COLS[3]},{l:'Investment',v:sINV(),c:COLS[4]},{l:'Intangible',v:sINT(),c:COLS[5]}].filter(x=>x.v>0);
+  const tot=tAst();setText('alok-tot',fRp(tot));
   const el=document.getElementById('alok-leg');
   if(el)el.innerHTML=items.map(d=>`<div class="lgrow"><div class="lgdot" style="background:${d.c}"></div><span class="lgnm">${d.l}</span><span class="lgpct">${tot?((d.v/tot)*100).toFixed(1):0}%</span><span class="lgval">${fRp(d.v)}</span></div>`).join('');
   const ctx=document.getElementById('c-alok');if(!ctx)return;
@@ -657,50 +830,123 @@ function updateAlokasiChart(){
   else{CHS.alok=new Chart(ctx.getContext('2d'),{type:'doughnut',data:{labels:items.map(d=>d.l),datasets:[{data:items.map(d=>d.v),backgroundColor:items.map(d=>d.c),borderWidth:2,hoverOffset:5}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fRp(c.parsed)}`}}}}});}
 }
 
+// Investment donut — by name (Point 5)
 function updateInvDChart(){
-  const COLS=['#3b82f6','#22c55e','#f59e0b','#f97316','#8b5cf6','#ec4899'];
-  const tot=sINV();
-  setText('invd-tot',fRp(tot));
+  const COLS=CHART_COLORS;
+  const tot=sINV();setText('invd-tot',fRp(tot));
+  // Group by name
+  const byName={};DB.inv.forEach(x=>{byName[x.name]=(byName[x.name]||0)+(+x.amount);});
+  const items=Object.entries(byName).map(([n,v],i)=>({l:n,v,c:COLS[i%COLS.length]})).filter(x=>x.v>0);
   const el=document.getElementById('invd-leg');
-  if(el)el.innerHTML=DB.inv.map((d,i)=>`<div class="lgrow"><div class="lgdot" style="background:${COLS[i%COLS.length]}"></div><span class="lgnm">${d.type}</span><span class="lgpct">${tot?((+d.amount/tot)*100).toFixed(1):0}%</span><span class="lgval">${fRp(d.amount)}</span></div>`).join('');
+  if(el)el.innerHTML=items.map(d=>`<div class="lgrow"><div class="lgdot" style="background:${d.c}"></div><span class="lgnm">${d.l}</span><span class="lgpct">${tot?((d.v/tot)*100).toFixed(1):0}%</span><span class="lgval">${fRp(d.v)}</span></div>`).join('');
   const ctx=document.getElementById('c-invd');if(!ctx)return;
-  if(CHS.invd){CHS.invd.data.labels=DB.inv.map(d=>d.type);CHS.invd.data.datasets[0].data=DB.inv.map(d=>+d.amount);CHS.invd.update();}
-  else{CHS.invd=new Chart(ctx.getContext('2d'),{type:'doughnut',data:{labels:DB.inv.map(d=>d.type),datasets:[{data:DB.inv.map(d=>+d.amount),backgroundColor:COLS,borderWidth:2,hoverOffset:4}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false}}}});}
+  if(CHS.invd){CHS.invd.data.labels=items.map(d=>d.l);CHS.invd.data.datasets[0].data=items.map(d=>d.v);CHS.invd.data.datasets[0].backgroundColor=items.map(d=>d.c);CHS.invd.update();}
+  else{CHS.invd=new Chart(ctx.getContext('2d'),{type:'doughnut',data:{labels:items.map(d=>d.l),datasets:[{data:items.map(d=>d.v),backgroundColor:items.map(d=>d.c),borderWidth:2,hoverOffset:4}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fRp(c.parsed)}`}}}}});}
 }
 
 function updateAll(){
   updateStats();updateAlokasiChart();updateInvDChart();refreshCharts();
-  onDashMonth(document.getElementById('dash-pick')?.value||td().slice(0,7));
+  const dym=document.getElementById('dash-pick')?.value;if(dym)onDashMonth(dym,'update');
 }
 
-// ── CRUD TABLES ───────────────────────────────────────────────
-const noR=(c)=>`<tbody><tr><td class="empty-td" colspan="${c}">📭 Belum ada data — klik + Tambah</td></tr></tbody>`;
-function mkTbl(id,ths,rows){const el=document.getElementById(id);if(!el)return;el.innerHTML=`<thead><tr>${ths.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`+(rows.length?`<tbody>${rows.join('')}</tbody>`:noR(ths.length));}
-function rCA(){mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal','Aksi'],DB.ca.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bb">${r.category}</span></td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ca','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ca','${r.id}','${r.name}')">Hapus</button></td></tr>`));}
-function rAR(){mkTbl('t-ar',['#','Penghutang','Jumlah','Tgl','Jatuh Tempo','Status','Aksi'],DB.ar.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td>${r.due_date||'-'}</td><td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':'bb'}">${r.status}</span></td><td><button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ar','${r.id}','${r.name}')">Hapus</button></td></tr>`));}
-function rII(){mkTbl('t-ii',['#','Nama','Qty','Nilai','Tgl','Aksi'],DB.ii.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${r.qty||'-'}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ii','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ii','${r.id}','${r.name}')">Hapus</button></td></tr>`));}
-function rPPE(){mkTbl('t-ppe',['#','Nama Aset','Nilai','Tgl Beli','Aksi'],DB.ppe.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ppe','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ppe','${r.id}','${r.name}')">Hapus</button></td></tr>`));}
-function rINTG(){mkTbl('t-intg',['#','Nama Aset','Nilai','Tanggal','Aksi'],DB.intg.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('intg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('intg','${r.id}','${r.name}')">Hapus</button></td></tr>`));}
-function rINV(){mkTbl('t-inv',['#','Nama','Tipe','Nilai','Gain/Loss','Tanggal','Aksi'],DB.inv.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bp">${r.type}</span></td><td><b>${fRp(r.amount)}</b></td><td style="color:${+r.gain>=0?'#059669':'#dc2626'};font-weight:700">${+r.gain>=0?'+':'-'}${fRp(Math.abs(r.gain))}</td><td>${r.date||'-'}</td><td><button class="btn-sm be" onclick="openE('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('inv','${r.id}','${r.name}')">Hapus</button></td></tr>`));}
-
-function reRender(){const p=document.querySelector('.page.active')?.id;if(p==='page-ca')rCA();if(p==='page-ce'){rAR();rII();}if(p==='page-nc'){rPPE();rINTG();}if(p==='page-inv')rINV();}
-
-// ── MODAL FORMS ───────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// CRUD TABLES
+// ══════════════════════════════════════════════════════════════
 const TMAP={ca:'current_assets',ar:'accounts_receivable',ii:'inventory',ppe:'property_plant_equipment',intg:'intangible_assets',inv:'investments'};
 const DARR={ca:'ca',ar:'ar',ii:'ii',ppe:'ppe',intg:'intg',inv:'inv'};
-const MLBL={ca:'Current Asset',ar:'Piutang',ii:'Inventory',ppe:'PPE',intg:'Intangible Asset',inv:'Investasi'};
+const MLBL_={ca:'Current Asset',ar:'Piutang',ii:'Inventory',ppe:'PPE',intg:'Intangible',inv:'Investasi'};
+const noR=(c)=>`<tbody><tr><td class="empty-td" colspan="${c}">📭 Belum ada data</td></tr></tbody>`;
+function mkTbl(id,ths,rows){const el=document.getElementById(id);if(!el)return;el.innerHTML=`<thead><tr>${ths.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`+(rows.length?`<tbody>${rows.join('')}</tbody>`:noR(ths.length));}
+
+// Point 9: dynamic categories from existing data
+function getCategories(){
+  const base=['Kas','Bank','Platform'];
+  const custom=[...new Set(DB.ca.map(x=>x.category).filter(c=>c&&!base.includes(c)))];
+  return[...base,...custom,'Lainnya'];
+}
+
+function rCA(){mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal','Aksi'],DB.ca.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bb">${r.category}</span></td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ca','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ca','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
+function rAR(){mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tgl','Jatuh Tempo','Status','Aksi'],DB.ar.map((r,i)=>{const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));return`<tr><td>${i+1}</td><td>${r.name}</td><td>${fRp(r.amount)}</td><td style="color:var(--ok)">${fRp(r.paid||0)}</td><td><b>${fRp(sisa)}</b></td><td>${r.date}</td><td>${r.due_date||'-'}</td><td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':r.status==='Partial'?'by':'bb'}">${r.status}</span></td><td><button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ar','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`;}));}
+function rII(){mkTbl('t-ii',['#','Nama','Qty','Nilai','Tgl','Aksi'],DB.ii.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${r.qty||'-'}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ii','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ii','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
+function rPPE(){mkTbl('t-ppe',['#','Nama Aset','Nilai','Tgl Beli','Aksi'],DB.ppe.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ppe','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ppe','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
+function rINTG(){mkTbl('t-intg',['#','Nama Aset','Nilai','Tanggal','Aksi'],DB.intg.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('intg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('intg','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
+function rINV(){mkTbl('t-inv',['#','Nama','Tipe','Nilai','Gain/Loss','Tanggal','Aksi'],DB.inv.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bp">${r.type}</span></td><td><b>${fRp(r.amount)}</b></td><td style="color:${+r.gain>=0?'#059669':'#dc2626'};font-weight:700">${+r.gain>=0?'+':'-'}${fRp(Math.abs(r.gain))}</td><td>${r.date||'-'}</td><td><button class="btn-sm be" onclick="openE('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('inv','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
+function reRender(){const p=document.querySelector('.page.active')?.id;if(p==='page-ca')rCA();if(p==='page-ce'){rAR();rII();}if(p==='page-nc'){rPPE();rINTG();}if(p==='page-inv')rINV();}
+
+// ══════════════════════════════════════════════════════════════
+// MODAL FORMS — Points 9, 10
+// ══════════════════════════════════════════════════════════════
+// Point 9: category select with custom option
+function buildCatSelect(cur){
+  const cats=getCategories();
+  const isCustom=cur&&!cats.slice(0,-1).includes(cur);
+  return`<select id="f-cat" onchange="handleCatChange(this)">
+    ${cats.map(c=>`<option value="${c}" ${cur===c||(!cur&&c==='Kas')?'selected':''}>${c}</option>`).join('')}
+    ${isCustom?`<option value="${cur}" selected>${cur}</option>`:''}
+  </select>
+  <div id="f-cat-custom" style="display:${isCustom?'block':'none'};margin-top:6px">
+    <input id="f-cat-input" placeholder="Tulis kategori baru…" value="${isCustom?cur:''}" style="width:100%;border:1.5px solid var(--bd);border-radius:7px;padding:7px 10px;font-size:13px;background:var(--bg);color:var(--txt);outline:none">
+  </div>`;
+}
+function handleCatChange(el){
+  const custom=document.getElementById('f-cat-custom');
+  if(custom)custom.style.display=el.value==='Lainnya'?'block':'none';
+}
+function getCatValue(){
+  const sel=document.getElementById('f-cat');
+  if(!sel)return'Kas';
+  if(sel.value==='Lainnya'){const inp=document.getElementById('f-cat-input');return inp&&inp.value.trim()?inp.value.trim():'Lainnya';}
+  return sel.value;
+}
+
+// Point 10: partial payment in AR form
+function buildARForm(r){
+  const payments=r&&r.payments?JSON.parse(r.payments||'[]'):[];
+  return`
+<div class="fg"><label>Nama Penghutang</label><input id="f-nm" value="${r?r.name:''}"></div>
+<div class="fr">
+  <div class="fg"><label>Total Tagihan (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div>
+  <div class="fg"><label>Status</label><select id="f-sts">
+    ${['Outstanding','Paid','Overdue','Partial'].map(s=>`<option ${r&&r.status===s?'selected':''}>${s}</option>`).join('')}
+  </select></div>
+</div>
+<div class="fr">
+  <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
+  <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r?r.due_date||'':''}"></div>
+</div>
+<div class="fg"><label>💳 Partial Payment (Jumlah yang sudah dibayar)</label>
+  <div class="pp-row">
+    <span style="font-size:11px;color:var(--mu);min-width:60px">Terbayar:</span>
+    <input id="f-paid" type="number" min="0" placeholder="0" value="${r?+(r.paid||0):0}">
+    <button type="button" style="background:var(--ok);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;font-weight:700" onclick="addPartial()">+ Bayar</button>
+  </div>
+  ${r&&+(r.paid||0)>0?`<div class="pp-history"><b>Sudah terbayar: ${fRp(r.paid)}</b> dari ${fRp(r.amount)}</div>`:''}
+</div>`;
+}
+function addPartial(){
+  const paidEl=document.getElementById('f-paid');
+  const amtEl=document.getElementById('f-amt');
+  if(!paidEl||!amtEl)return;
+  const total=+(amtEl.value||0);
+  const currentPaid=+(paidEl.value||0);
+  if(currentPaid>=total){showToast('✅ Sudah lunas!');document.getElementById('f-sts').value='Paid';return;}
+  showToast('💳 Partial payment dicatat: '+fRp(currentPaid));
+  if(currentPaid>0)document.getElementById('f-sts').value='Partial';
+}
 
 const MF={
-  ca:r=>`<div class="fg"><label>Nama</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Kategori</label><select id="f-cat">${['Kas','Bank','Platform','Lainnya'].map(c=>`<option ${r&&r.category===c?'selected':''}>${c}</option>`).join('')}</select></div><div class="fg"><label>Jumlah (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+r.amount:0}"></div></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>`,
-  ar:r=>`<div class="fg"><label>Nama Penghutang</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Jumlah (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+r.amount:0}"></div><div class="fg"><label>Status</label><select id="f-sts">${['Outstanding','Paid','Overdue'].map(s=>`<option ${r&&r.status===s?'selected':''}>${s}</option>`).join('')}</select></div></div><div class="fr"><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div><div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r?r.due_date||'':''}"></div></div>`,
-  ii:r=>`<div class="fg"><label>Nama Item</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Qty</label><input id="f-qty" type="number" min="0" value="${r?r.qty||0:0}"></div><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+r.amount:0}"></div></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>`,
-  ppe:r=>`<div class="fg"><label>Nama Aset</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+r.amount:0}"></div><div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
-  intg:r=>`<div class="fg"><label>Nama Aset Tak Berwujud</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+r.amount:0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
-  inv:r=>`<div class="fg"><label>Nama Investasi</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Tipe</label><select id="f-typ">${['Saham','Reksa Dana','Crypto','Emas','Obligasi','Lainnya'].map(t=>`<option ${r&&r.type===t?'selected':''}>${t}</option>`).join('')}</select></div><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+r.amount:0}"></div></div><div class="fr"><div class="fg"><label>Gain/Loss (Rp)</label><input id="f-gain" type="number" value="${r?+r.gain:0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
+  ca:r=>`<div class="fg"><label>Nama</label><input id="f-nm" value="${r?r.name:''}"></div>
+<div class="fg"><label>Kategori</label>${buildCatSelect(r?.category)}</div>
+<div class="fr"><div class="fg"><label>Jumlah (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
+  ar:r=>buildARForm(r),
+  ii:r=>`<div class="fg"><label>Nama Item</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Qty</label><input id="f-qty" type="number" min="0" value="${r?r.qty||0:0}"></div><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>`,
+  ppe:r=>`<div class="fg"><label>Nama Aset</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
+  intg:r=>`<div class="fg"><label>Nama Aset Tak Berwujud</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
+  inv:r=>`<div class="fg"><label>Nama Investasi (misal: BBCA, BTC, QQQ)</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Tipe</label><select id="f-typ">${['Saham','Reksa Dana','Crypto','Emas','Obligasi','Lainnya'].map(t=>`<option ${r&&r.type===t?'selected':''}>${t}</option>`).join('')}</select></div><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div></div><div class="fr"><div class="fg"><label>Gain/Loss (Rp)</label><input id="f-gain" type="number" value="${r?+(r.gain||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
 };
 
-function openM(type){mType=type;mId=null;document.getElementById('m-title').textContent='+ Tambah '+MLBL[type];document.getElementById('m-body').innerHTML=MF[type](null);document.getElementById('mo').classList.add('open');setTimeout(()=>document.querySelector('#m-body input')?.focus(),200);}
-function openE(type,id){mType=type;mId=id;const r=DB[DARR[type]].find(x=>x.id===id);if(!r)return;document.getElementById('m-title').textContent='✏️ Edit '+MLBL[type];document.getElementById('m-body').innerHTML=MF[type](r);document.getElementById('mo').classList.add('open');}
+function openM(type){mType=type;mId=null;document.getElementById('m-title').textContent='+ '+(MLBL_[type]||type);document.getElementById('m-body').innerHTML=MF[type](null);document.getElementById('mo').classList.add('open');setTimeout(()=>document.querySelector('#m-body input')?.focus(),200);}
+function openE(type,id){mType=type;mId=id;const r=DB[DARR[type]].find(x=>x.id===id);if(!r)return;document.getElementById('m-title').textContent='✏️ Edit '+(MLBL_[type]||type);document.getElementById('m-body').innerHTML=MF[type](r);document.getElementById('mo').classList.add('open');}
 function closeM(){document.getElementById('mo').classList.remove('open');}
 
 async function saveM(){
@@ -709,25 +955,33 @@ async function saveM(){
   const date=document.getElementById('f-dt')?.value||td();
   if(!name){showToast('⚠️ Nama tidak boleh kosong');return;}
   let pay={};
-  if(mType==='ca')pay={name,category:document.getElementById('f-cat').value,amount,date};
-  else if(mType==='ar')pay={name,amount,date,due_date:document.getElementById('f-due').value||null,status:document.getElementById('f-sts').value};
+  if(mType==='ca')pay={name,category:getCatValue(),amount,date};
+  else if(mType==='ar'){
+    const paid=parseFloat(document.getElementById('f-paid')?.value)||0;
+    let status=document.getElementById('f-sts').value;
+    if(paid>=amount&&amount>0)status='Paid';
+    else if(paid>0&&paid<amount)status='Partial';
+    pay={name,amount,date,due_date:document.getElementById('f-due')?.value||null,status,paid};
+  }
   else if(mType==='ii')pay={name,qty:parseInt(document.getElementById('f-qty')?.value)||0,amount,date};
   else if(mType==='ppe')pay={name,amount,date};
   else if(mType==='intg')pay={name,amount,date};
-  else if(mType==='inv')pay={name,type:document.getElementById('f-typ').value,amount,gain:parseFloat(document.getElementById('f-gain')?.value)||0,date};
+  else if(mType==='inv')pay={name,type:document.getElementById('f-typ')?.value||'Saham',amount,gain:parseFloat(document.getElementById('f-gain')?.value)||0,date};
   try{
     if(mId){await sbU(TMAP[mType],mId,pay);}
     else{const res=await sbI(TMAP[mType],pay);const rec=Array.isArray(res)?res[0]:res;if(rec)DB[DARR[mType]].push(rec);}
     DB[DARR[mType]]=await sbG(TMAP[mType]);
     closeM();doSnap().catch(()=>{});updateAll();reRender();
     showToast(mId?'✅ Data diupdate!':'✅ Data ditambahkan!');
-  }catch(e){showToast('❌ Error: '+e.message);}
+  }catch(e){showToast('❌ '+e.message);}
 }
 
-// ── CONFIRM MODAL ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// CONFIRM MODAL
+// ══════════════════════════════════════════════════════════════
 function delR(type,id,name){
-  document.getElementById('cfm-tt').textContent='Hapus '+MLBL[type]+'?';
-  document.getElementById('cfm-mg').textContent=`"${name}" akan dihapus permanen dari database.`;
+  document.getElementById('cfm-tt').textContent='Hapus '+MLBL_[type]+'?';
+  document.getElementById('cfm-mg').textContent=`"${name}" akan dihapus permanen.`;
   cfmCb=async()=>{
     try{await sbD(TMAP[type],id);DB[DARR[type]]=await sbG(TMAP[type]);doSnap().catch(()=>{});updateAll();reRender();showToast('🗑️ Data dihapus!');}
     catch(e){showToast('❌ '+e.message);}
@@ -737,7 +991,11 @@ function delR(type,id,name){
 function closeCfm(){document.getElementById('cfm').classList.remove('open');cfmCb=null;}
 function runCfm(){if(cfmCb)cfmCb();closeCfm();}
 
-// ── NAVIGATION ────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════
+// expose nav-laporan id for detail button
+document.addEventListener('DOMContentLoaded',()=>{const n=document.querySelector('.sb-it[onclick*="nav(\'laporan\'"]');if(n)n.id='nav-laporan';});
 function nav(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const pg=document.getElementById('page-'+id);if(pg)pg.classList.add('active');
@@ -745,11 +1003,13 @@ function nav(id,el){
   if(el)el.classList.add('active');
   if(window.innerWidth<=768)closeSidebar();
   if(id==='ca')rCA();if(id==='ce'){rAR();rII();}if(id==='nc'){rPPE();rINTG();}if(id==='inv')rINV();
-  if(id==='laporan'){const lym=document.getElementById('lap-pick')?.value||td().slice(0,7);onLapMonth(lym);}
+  if(id==='laporan'){const lym=document.getElementById('lap-pick')?.value||td().slice(0,7);onLapMonth(lym,'nav');}
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ── SIDEBAR ───────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════════════════
 function toggleSidebar(){
   if(window.innerWidth<=768){document.getElementById('sidebar').classList.toggle('mob-open');document.getElementById('sb-ov').classList.toggle('show');}
   else{sbOpen=!sbOpen;const sb=document.getElementById('sidebar'),mn=document.getElementById('main');sb.style.transform=sbOpen?'':'translateX(-100%)';sb.style.width=sbOpen?'':'0';mn.style.marginLeft=sbOpen?'var(--sw)':'0';}
@@ -757,15 +1017,21 @@ function toggleSidebar(){
 function closeSidebar(){document.getElementById('sidebar').classList.remove('mob-open');document.getElementById('sb-ov').classList.remove('show');}
 window.addEventListener('resize',()=>{if(window.innerWidth>768){document.getElementById('sidebar').classList.remove('mob-open');document.getElementById('sb-ov').classList.remove('show');}});
 
-// ── DARK MODE ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// DARK MODE
+// ══════════════════════════════════════════════════════════════
 function toggleDark(){document.body.classList.toggle('dark');const d=document.body.classList.contains('dark');document.getElementById('dk-lbl').textContent=d?'Light':'Dark';localStorage.setItem('dk',d?'1':'0');}
 if(localStorage.getItem('dk')==='1'){document.body.classList.add('dark');document.getElementById('dk-lbl').textContent='Light';}
 
-// ── TOAST ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════
 let _tt;
-function showToast(m){const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3000);}
+function showToast(m){const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),3200);}
 
-// ── WORLD CLOCKS ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// WORLD CLOCKS
+// ══════════════════════════════════════════════════════════════
 function tickClocks(){
   const now=new Date();
   [['wc-id','Asia/Makassar'],['wc-uk','Europe/London'],['wc-us','America/New_York']].forEach(([id,tz])=>{
@@ -774,12 +1040,22 @@ function tickClocks(){
   });
 }
 
-// ── BOOT ──────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded',()=>{
   if(window.innerWidth<=768){const m=document.getElementById('main');if(m)m.classList.add('full');}
   tickClocks();setInterval(tickClocks,1000);
-  init().catch(e=>{console.error('Critical:',e);hideLS();showToast('❌ Error: '+e.message);});
+  // Refresh FX every 5 minutes
+  setInterval(fetchFX,5*60*1000);
+  init().catch(e=>{console.error(e);hideLS();showToast('❌ Error: '+e.message);});
 });
 </script>
 </body>
-</html>
+</html>"""
+
+with open('/mnt/user-data/outputs/keuangan-app/index.html','w',encoding='utf-8') as f:
+    f.write(html)
+print(f"Done: {len(html):,} chars, {html.count(chr(10)):,} lines")
+PYEOF
+python3 /tmp/gen.py
