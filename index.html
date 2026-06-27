@@ -272,6 +272,7 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
         <div class="dwrap">
           <input type="month" id="dash-pick" class="mpick" onchange="onDashMonth(this.value,'month')">
           <div class="pbtns">
+            <button class="pb" onclick="dashRange('1m',this)" data-i="p_1b">1 Bln</button>
             <button class="pb" onclick="dashRange('6m',this)" data-i="p_6b">6 Bln</button>
             <button class="pb" onclick="dashRange('1y',this)" data-i="p_1t">1 Thn</button>
             <button class="pb" onclick="dashRange('5y',this)" data-i="p_5t">5 Thn</button>
@@ -357,6 +358,7 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
       <div class="dwrap">
         <input type="month" id="lap-pick" class="mpick" onchange="onLapMonth(this.value)">
         <div class="pbtns">
+          <button class="pb" onclick="lapRange('1m',this)" data-i="p_1b">1 Bln</button>
           <button class="pb" onclick="lapRange('6m',this)" data-i="p_6b">6 Bln</button>
           <button class="pb" onclick="lapRange('1y',this)" data-i="p_1t">1 Thn</button>
           <button class="pb" onclick="lapRange('5y',this)" data-i="p_5t">5 Thn</button>
@@ -707,9 +709,12 @@ function buildMonthPts(){
   if(!allD.length)return[];
   const months=[...new Set(allD.map(d=>d.slice(0,7)))].sort();
   const su=(arr,ym)=>arr.filter(x=>x.date&&x.date.slice(0,7)<=ym).reduce((a,x)=>a+(+x.amount),0);
+  const suInv=(arr,ym)=>arr.filter(x=>x.date&&x.date.slice(0,7)<=ym).reduce((a,x)=>a+(+(x.total_buy||x.amount||0)),0);
   return months.map(ym=>{
-    const ca=su(DB.ca,ym),ar=DB.ar.filter(x=>x.date&&x.date.slice(0,7)<=ym).reduce((a,x)=>a+(+(x.amount||0))-(+(x.paid||0)),0),ii=su(DB.ii,ym);
-    const ppe=su(DB.ppe,ym),intg=su(DB.intg,ym),inv=su(DB.inv,ym);
+    const ca=su(DB.ca,ym);
+    const ar=DB.ar.filter(x=>x.date&&x.date.slice(0,7)<=ym).reduce((a,x)=>a+(+(x.amount||0))-(+(x.paid||0)),0);
+    const ii=su(DB.ii,ym);
+    const ppe=su(DB.ppe,ym),intg=su(DB.intg,ym),inv=suInv(DB.inv,ym);
     const cur=ca+ar+ii,nc=ppe+intg+inv;
     return{ym,snapshot_date:ym+'-28',total_asset:cur+nc,total_current:cur,total_non_current:nc,total_receivable:ar,total_investment:inv};
   });
@@ -781,20 +786,33 @@ function setPeriod(type,period,btn){
     CHS.recv.update();
   }
   if(type==='invg'&&CHS.invg){
-    // Multi-line: one line per investment instrument (Point 6)
+    // Multi-line: one line per investment name
+    // FIX: use carry-forward — if no data at a month point, keep last known value
     const names=[...new Set(DB.inv.map(x=>x.name))];
     CHS.invg.data.labels=labels;
     CHS.invg.data.datasets=names.map((name,i)=>{
-      const color=CHART_COLORS[i%CHART_COLORS.length];
+      const color=CHART_COLORS[(i+1)%CHART_COLORS.length];
+      let lastVal=0;
       const data=pts.map(p=>{
-        // Cumulative investment for this name up to each point's month
+        // All records for this name with date <= this month
         const items=DB.inv.filter(x=>x.name===name&&x.date&&x.date.slice(0,7)<=p.ym);
-        return items.reduce((a,x)=>a+(+x.amount),0);
+        if(items.length>0){
+          // Use total_buy for that instrument (most recent value)
+          lastVal=items.reduce((a,x)=>a+(+(x.total_buy||x.amount||0)),0);
+        }
+        // carry-forward: if no data yet, return null (Chart.js skips null)
+        // if we had data before, keep last value
+        return lastVal>0?lastVal:null;
       });
-      return{label:name,data,borderColor:color,backgroundColor:'transparent',tension:.4,pointRadius:2,fill:false,borderWidth:1.8};
+      return{label:name,data,borderColor:color,backgroundColor:'transparent',tension:.4,pointRadius:2,fill:false,borderWidth:1.8,spanGaps:true};
     });
-    // Also add total line
-    CHS.invg.data.datasets.unshift({label:'Total Investment',data:pts.map(s=>+(+(s.total_investment||0)).toFixed(0)),borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.06)',tension:.4,pointRadius:3,fill:true,borderWidth:2.5});
+    // Total Investment line
+    CHS.invg.data.datasets.unshift({
+      label:'Total Investment',
+      data:pts.map(s=>+(+(s.total_investment||0)).toFixed(0)),
+      borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.06)',
+      tension:.4,pointRadius:3,fill:true,borderWidth:2.5,spanGaps:true
+    });
     CHS.invg.update();
   }
   if(type==='gain'&&CHS.gain){
@@ -866,15 +884,33 @@ function getCategories(){
 function rCA(){mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal','Aksi'],DB.ca.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bb">${r.category}</span></td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ca','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ca','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
 function rAR(){mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tgl','Jatuh Tempo','Status','Aksi'],DB.ar.map((r,i)=>{const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));return`<tr><td>${i+1}</td><td>${r.name}</td><td>${fRp(r.amount)}</td><td style="color:var(--ok)">${fRp(r.paid||0)}</td><td><b>${fRp(sisa)}</b></td><td>${r.date}</td><td>${r.due_date||'-'}</td><td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':r.status==='Partial'?'by':'bb'}">${r.status}</span></td><td><button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ar','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`;}));}
 function rII(){mkTbl('t-ii',['#','Nama','Qty','Nilai','Tgl','Aksi'],DB.ii.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${r.qty||'-'}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ii','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ii','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
-function rPPE(){mkTbl('t-ppe',['#','Nama Aset','Nilai','Tgl Beli','Aksi'],DB.ppe.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ppe','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ppe','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
+function rPPE(){mkTbl('t-ppe',['#','Nama Aset','Nilai','Tgl Beli','Tgl Update Depresiasi','Aksi'],DB.ppe.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td>${r.depreciation_date||'—'}</td><td><button class="btn-sm be" onclick="openE('ppe','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ppe','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
+function rINV(){
+  mkTbl('t-inv',['#','Nama','Tipe','Nilai Beli','Unrealized Gain','Gain/Loss','Tgl Beli','Tgl Update','Aksi'],
+    DB.inv.map((r,i)=>{
+      const totalBuy=+(r.total_buy||r.amount||0);
+      const unrealized=+(r.unrealized_gain||0);
+      const gainLoss=unrealized; // gain/loss = unrealized (value vs cost)
+      const glColor=gainLoss>=0?'#059669':'#dc2626';
+      const updAt=r.updated_at?new Date(r.updated_at).toLocaleDateString('id-ID'):'—';
+      return`<tr>
+        <td>${i+1}</td><td>${r.name}</td>
+        <td><span class="badge bp">${r.type}</span></td>
+        <td>${fRp(totalBuy)}</td>
+        <td style="font-weight:700;color:${unrealized>=0?'#059669':'#dc2626'}">${unrealized>=0?'+':''}${fRp(unrealized)}</td>
+        <td style="font-weight:700;color:${glColor}">${gainLoss>=0?'↑ +':'↓ '}${fRp(Math.abs(gainLoss))}</td>
+        <td>${r.date||'—'}</td><td>${updAt}</td>
+        <td><button class="btn-sm be" onclick="openE('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('inv','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td>
+      </tr>`;
+    })
+  );
+}
 function rINTG(){mkTbl('t-intg',['#','Nama Aset','Nilai','Tanggal','Aksi'],DB.intg.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('intg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('intg','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
-function rINV(){mkTbl('t-inv',['#','Nama','Tipe','Nilai','Gain/Loss','Tanggal','Aksi'],DB.inv.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bp">${r.type}</span></td><td><b>${fRp(r.amount)}</b></td><td style="color:${+r.gain>=0?'#059669':'#dc2626'};font-weight:700">${+r.gain>=0?'+':'-'}${fRp(Math.abs(r.gain))}</td><td>${r.date||'-'}</td><td><button class="btn-sm be" onclick="openE('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('inv','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
 function reRender(){const p=document.querySelector('.page.active')?.id;if(p==='page-ca')rCA();if(p==='page-ce'){rAR();rII();}if(p==='page-nc'){rPPE();rINTG();}if(p==='page-inv')rINV();}
 
 // ══════════════════════════════════════════════════════════════
-// MODAL FORMS — Points 9, 10
+// MODAL FORMS
 // ══════════════════════════════════════════════════════════════
-// Point 9: category select with custom option
 function buildCatSelect(cur){
   const cats=getCategories();
   const isCustom=cur&&!cats.slice(0,-1).includes(cur);
@@ -891,56 +927,184 @@ function handleCatChange(el){
   if(custom)custom.style.display=el.value==='Lainnya'?'block':'none';
 }
 function getCatValue(){
-  const sel=document.getElementById('f-cat');
-  if(!sel)return'Kas';
+  const sel=document.getElementById('f-cat');if(!sel)return'Kas';
   if(sel.value==='Lainnya'){const inp=document.getElementById('f-cat-input');return inp&&inp.value.trim()?inp.value.trim():'Lainnya';}
   return sel.value;
 }
 
-// Point 10: partial payment in AR form
-function buildARForm(r){
-  const payments=r&&r.payments?JSON.parse(r.payments||'[]'):[];
+// AR FORM — ADD: no partial payment
+function buildARFormAdd(){
   return`
-<div class="fg"><label>Nama Penghutang</label><input id="f-nm" value="${r?r.name:''}"></div>
+<div class="fg"><label>Nama Penghutang</label><input id="f-nm" value=""></div>
 <div class="fr">
-  <div class="fg"><label>Total Tagihan (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div>
+  <div class="fg"><label>Total Tagihan (Rp)</label><input id="f-amt" type="number" min="0" value="0"></div>
+  <div class="fg"><label>Status</label><select id="f-sts"><option>Outstanding</option><option>Overdue</option></select></div>
+</div>
+<div class="fr">
+  <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${td()}"></div>
+  <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value=""></div>
+</div>`;
+}
+
+// AR FORM — EDIT: with partial payment + via pembayaran (linked to CA categories)
+function buildARFormEdit(r){
+  const paid=+(r.paid||0);
+  const total=+(r.amount||0);
+  const sisa=Math.max(0,total-paid);
+  const caNames=DB.ca.map(x=>x.name);
+  return`
+<div class="fg"><label>Nama Penghutang</label><input id="f-nm" value="${r.name||''}"></div>
+<div class="fr">
+  <div class="fg"><label>Total Tagihan (Rp)</label><input id="f-amt" type="number" min="0" value="${total}"></div>
   <div class="fg"><label>Status</label><select id="f-sts">
-    ${['Outstanding','Paid','Overdue','Partial'].map(s=>`<option ${r&&r.status===s?'selected':''}>${s}</option>`).join('')}
+    ${['Outstanding','Paid','Overdue','Partial'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}
   </select></div>
 </div>
 <div class="fr">
-  <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
-  <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r?r.due_date||'':''}"></div>
+  <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r.date||td()}"></div>
+  <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r.due_date||''}"></div>
 </div>
-<div class="fg"><label>💳 Partial Payment (Jumlah yang sudah dibayar)</label>
-  <div class="pp-row">
-    <span style="font-size:11px;color:var(--mu);min-width:60px">Terbayar:</span>
-    <input id="f-paid" type="number" min="0" placeholder="0" value="${r?+(r.paid||0):0}">
-    <button type="button" style="background:var(--ok);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;font-weight:700" onclick="addPartial()">+ Bayar</button>
+<div style="background:var(--bg);border-radius:9px;padding:12px;margin-top:4px">
+  <div style="font-size:10px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">💳 Partial Payment</div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:11.5px">
+    <span style="color:var(--mu);min-width:70px">Sudah bayar:</span>
+    <b style="color:var(--ok)">${fRp(paid)}</b>
+    <span style="color:var(--mu);margin-left:4px">Sisa: <b style="color:var(--er)">${fRp(sisa)}</b></span>
   </div>
-  ${r&&+(r.paid||0)>0?`<div class="pp-history"><b>Sudah terbayar: ${fRp(r.paid)}</b> dari ${fRp(r.amount)}</div>`:''}
+  <div class="fr">
+    <div class="fg"><label>Tambah Pembayaran (Rp)</label>
+      <input id="f-paid-add" type="number" min="0" placeholder="0" value="0" oninput="calcNewPaid()">
+    </div>
+    <div class="fg"><label>Via Pembayaran</label>
+      <select id="f-via">
+        <option value="">— Tidak ada —</option>
+        ${caNames.map(n=>`<option value="${n}">${n}</option>`).join('')}
+      </select>
+    </div>
+  </div>
+  <div id="paid-preview" style="font-size:11px;color:var(--mu);margin-top:2px"></div>
+  <input type="hidden" id="f-paid-total" value="${paid}">
 </div>`;
 }
-function addPartial(){
-  const paidEl=document.getElementById('f-paid');
-  const amtEl=document.getElementById('f-amt');
-  if(!paidEl||!amtEl)return;
-  const total=+(amtEl.value||0);
-  const currentPaid=+(paidEl.value||0);
-  if(currentPaid>=total){showToast('✅ Sudah lunas!');document.getElementById('f-sts').value='Paid';return;}
-  showToast('💳 Partial payment dicatat: '+fRp(currentPaid));
-  if(currentPaid>0)document.getElementById('f-sts').value='Partial';
+function calcNewPaid(){
+  const add=parseFloat(document.getElementById('f-paid-add')?.value)||0;
+  const existing=parseFloat(document.getElementById('f-paid-total')?.value)||0;
+  const total=parseFloat(document.getElementById('f-amt')?.value)||0;
+  const newTotal=Math.min(existing+add,total);
+  const el=document.getElementById('paid-preview');
+  if(el&&add>0){
+    el.textContent=`Total terbayar akan menjadi: ${fRp(newTotal)} | Sisa: ${fRp(Math.max(0,total-newTotal))}`;
+    if(newTotal>=total)document.getElementById('f-sts').value='Paid';
+    else if(newTotal>0)document.getElementById('f-sts').value='Partial';
+  }
+}
+
+// INV TYPE SELECT — dynamic from DB
+function getInvTypes(){
+  const base=['Saham','Reksa Dana','Crypto','Emas','Obligasi'];
+  const custom=[...new Set(DB.inv.map(x=>x.type).filter(t=>t&&!base.includes(t)&&t!=='Lainnya'))];
+  return[...base,...custom,'Lainnya'];
+}
+function buildInvTypeSelect(cur){
+  const types=getInvTypes();
+  const isCustom=cur&&!types.slice(0,-1).includes(cur);
+  return`<select id="f-typ" onchange="handleInvTypChange(this)">
+    ${types.map(t=>`<option value="${t}" ${cur===t?'selected':''}>${t}</option>`).join('')}
+    ${isCustom?`<option value="${cur}" selected>${cur}</option>`:''}
+  </select>
+  <div id="f-typ-custom" style="display:${isCustom?'block':'none'};margin-top:5px">
+    <input id="f-typ-input" placeholder="Tulis tipe investasi…" value="${isCustom?cur:''}" style="width:100%;border:1.5px solid var(--bd);border-radius:7px;padding:7px 10px;font-size:13px;background:var(--bg);color:var(--txt);outline:none">
+  </div>`;
+}
+function handleInvTypChange(el){
+  const d=document.getElementById('f-typ-custom');
+  if(d)d.style.display=el.value==='Lainnya'?'block':'none';
+}
+function getInvTypValue(){
+  const sel=document.getElementById('f-typ');if(!sel)return'Saham';
+  if(sel.value==='Lainnya'){const inp=document.getElementById('f-typ-input');return inp&&inp.value.trim()?inp.value.trim():'Lainnya';}
+  return sel.value;
+}
+
+// INV FORM — ADD
+function buildInvFormAdd(){
+  return`
+<div class="fg"><label>Nama Investasi (misal: BBCA, BTC, QQQ)</label><input id="f-nm" value=""></div>
+<div class="fg"><label>Tipe</label>${buildInvTypeSelect('')}</div>
+<div class="fr">
+  <div class="fg"><label>Harga per Unit (Rp)</label><input id="f-buy-price" type="number" min="0" value="0" oninput="calcTotalBuy()"></div>
+  <div class="fg"><label>Jumlah / Qty</label><input id="f-qty" type="number" min="0" step="any" value="0" oninput="calcTotalBuy()"></div>
+</div>
+<div class="fg"><label>Total Beli (Rp) — otomatis</label>
+  <input id="f-total-buy" type="number" min="0" value="0" style="background:var(--bg);font-weight:700;color:var(--pr)" readonly>
+</div>
+<div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${td()}"></div>`;
+}
+function calcTotalBuy(){
+  const p=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+  const q=parseFloat(document.getElementById('f-qty')?.value)||0;
+  const el=document.getElementById('f-total-buy');
+  if(el)el.value=(p*q).toFixed(0);
+}
+
+// INV FORM — EDIT
+function buildInvFormEdit(r){
+  const buyPrice=+(r.buy_price||0);
+  const qty=+(r.qty||0);
+  const totalBuy=+(r.total_buy||r.amount||0);
+  const curPrice=+(r.current_price||buyPrice);
+  const unrealized=(curPrice*qty)-totalBuy;
+  const gainLoss=unrealized;
+  return`
+<div class="fg"><label>Nama Investasi</label><input id="f-nm" value="${r.name||''}"></div>
+<div class="fg"><label>Tipe</label>${buildInvTypeSelect(r.type||'')}</div>
+<div class="fr">
+  <div class="fg"><label>Harga Beli per Unit (Rp)</label><input id="f-buy-price" type="number" min="0" value="${buyPrice}" readonly style="background:var(--bg);color:var(--mu)"></div>
+  <div class="fg"><label>Jumlah / Qty</label><input id="f-qty" type="number" min="0" step="any" value="${qty}" readonly style="background:var(--bg);color:var(--mu)"></div>
+</div>
+<div class="fg"><label>Total Beli (Rp)</label>
+  <input id="f-total-buy" type="number" value="${totalBuy}" readonly style="background:var(--bg);font-weight:700;color:var(--pr)">
+</div>
+<div class="fg"><label>Harga Sekarang per Unit (Rp)</label>
+  <input id="f-cur-price" type="number" min="0" value="${curPrice}" oninput="calcUnrealized()">
+</div>
+<div class="fg"><label>Total Unrealized Gain/Loss (Rp) — otomatis</label>
+  <input id="f-unrealized" type="number" value="${unrealized.toFixed(0)}" readonly style="background:var(--bg);font-weight:700;color:${unrealized>=0?'var(--ok)':'var(--er)'}">
+</div>
+<div style="font-size:10.5px;color:var(--mu);margin-top:-6px;margin-bottom:6px">
+  Gain/Loss = (Harga Skrg × Qty) − Total Beli = ${fRp(curPrice*qty)} − ${fRp(totalBuy)} = <b style="color:${gainLoss>=0?'var(--ok)':'var(--er)'}">${gainLoss>=0?'+':''}${fRp(gainLoss)}</b>
+</div>
+<div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r.date||td()}"></div>`;
+}
+function calcUnrealized(){
+  const qty=parseFloat(document.getElementById('f-qty')?.value)||0;
+  const totalBuy=parseFloat(document.getElementById('f-total-buy')?.value)||0;
+  const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||0;
+  const unrealized=(curPrice*qty)-totalBuy;
+  const el=document.getElementById('f-unrealized');
+  if(el){el.value=unrealized.toFixed(0);el.style.color=unrealized>=0?'var(--ok)':'var(--er)';}
+}
+
+// PPE FORM
+function buildPPEForm(r,isEdit){
+  return`
+<div class="fg"><label>Nama Aset</label><input id="f-nm" value="${r?r.name:''}"></div>
+<div class="fr">
+  <div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div>
+  <div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
+</div>
+${isEdit?`<div class="fg"><label>Tanggal Update Depresiasi</label><input id="f-dep-dt" type="date" value="${r&&r.depreciation_date?r.depreciation_date:''}"></div>`:''}`;
 }
 
 const MF={
   ca:r=>`<div class="fg"><label>Nama</label><input id="f-nm" value="${r?r.name:''}"></div>
 <div class="fg"><label>Kategori</label>${buildCatSelect(r?.category)}</div>
 <div class="fr"><div class="fg"><label>Jumlah (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
-  ar:r=>buildARForm(r),
+  ar:r=>r?buildARFormEdit(r):buildARFormAdd(),
   ii:r=>`<div class="fg"><label>Nama Item</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Qty</label><input id="f-qty" type="number" min="0" value="${r?r.qty||0:0}"></div><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>`,
-  ppe:r=>`<div class="fg"><label>Nama Aset</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
+  ppe:r=>buildPPEForm(r,!!r),
   intg:r=>`<div class="fg"><label>Nama Aset Tak Berwujud</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
-  inv:r=>`<div class="fg"><label>Nama Investasi (misal: BBCA, BTC, QQQ)</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Tipe</label><select id="f-typ">${['Saham','Reksa Dana','Crypto','Emas','Obligasi','Lainnya'].map(t=>`<option ${r&&r.type===t?'selected':''}>${t}</option>`).join('')}</select></div><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div></div><div class="fr"><div class="fg"><label>Gain/Loss (Rp)</label><input id="f-gain" type="number" value="${r?+(r.gain||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
+  inv:r=>r?buildInvFormEdit(r):buildInvFormAdd(),
 };
 
 function openM(type){mType=type;mId=null;document.getElementById('m-title').textContent='+ '+(MLBL_[type]||type);document.getElementById('m-body').innerHTML=MF[type](null);document.getElementById('mo').classList.add('open');setTimeout(()=>document.querySelector('#m-body input')?.focus(),200);}
@@ -948,23 +1112,76 @@ function openE(type,id){mType=type;mId=id;const r=DB[DARR[type]].find(x=>x.id===
 function closeM(){document.getElementById('mo').classList.remove('open');}
 
 async function saveM(){
-  const name=document.getElementById('f-nm')?.value.trim()||'';
-  const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
+  const name=(document.getElementById('f-nm')?.value||'').trim();
   const date=document.getElementById('f-dt')?.value||td();
   if(!name){showToast('⚠️ Nama tidak boleh kosong');return;}
   let pay={};
-  if(mType==='ca')pay={name,category:getCatValue(),amount,date};
-  else if(mType==='ar'){
-    const paid=parseFloat(document.getElementById('f-paid')?.value)||0;
-    let status=document.getElementById('f-sts').value;
-    if(paid>=amount&&amount>0)status='Paid';
-    else if(paid>0&&paid<amount)status='Partial';
-    pay={name,amount,date,due_date:document.getElementById('f-due')?.value||null,status,paid};
+
+  if(mType==='ca'){
+    const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
+    pay={name,category:getCatValue(),amount,date};
   }
-  else if(mType==='ii')pay={name,qty:parseInt(document.getElementById('f-qty')?.value)||0,amount,date};
-  else if(mType==='ppe')pay={name,amount,date};
-  else if(mType==='intg')pay={name,amount,date};
-  else if(mType==='inv')pay={name,type:document.getElementById('f-typ')?.value||'Saham',amount,gain:parseFloat(document.getElementById('f-gain')?.value)||0,date};
+  else if(mType==='ar'){
+    const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
+    const status=document.getElementById('f-sts')?.value||'Outstanding';
+    const due_date=document.getElementById('f-due')?.value||null;
+    if(mId){
+      // EDIT: handle partial payment
+      const existingPaid=parseFloat(document.getElementById('f-paid-total')?.value)||0;
+      const addPayment=parseFloat(document.getElementById('f-paid-add')?.value)||0;
+      const via=document.getElementById('f-via')?.value||'';
+      const newPaid=Math.min(existingPaid+addPayment,amount);
+      let newStatus=status;
+      if(newPaid>=amount&&amount>0)newStatus='Paid';
+      else if(newPaid>0&&newPaid<amount)newStatus='Partial';
+      pay={name,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null};
+      // Point 2: update CA amount if via is selected
+      if(addPayment>0&&via){
+        const caItem=DB.ca.find(x=>x.name===via);
+        if(caItem){
+          const newAmt=(+(caItem.amount||0))+addPayment;
+          await sbU('current_assets',caItem.id,{amount:newAmt,date:td()});
+          DB.ca=await sbG('current_assets');
+        }
+      }
+    } else {
+      // ADD: no partial payment
+      pay={name,amount,date,due_date,status,paid:0};
+    }
+  }
+  else if(mType==='ii'){
+    const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
+    pay={name,qty:parseInt(document.getElementById('f-qty')?.value)||0,amount,date};
+  }
+  else if(mType==='ppe'){
+    const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
+    pay={name,amount,date};
+    if(mId){const depDt=document.getElementById('f-dep-dt')?.value;if(depDt)pay.depreciation_date=depDt;}
+  }
+  else if(mType==='intg'){
+    const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
+    pay={name,amount,date};
+  }
+  else if(mType==='inv'){
+    if(mId){
+      // EDIT investment
+      const typ=getInvTypValue();
+      const qty=parseFloat(document.getElementById('f-qty')?.value)||0;
+      const totalBuy=parseFloat(document.getElementById('f-total-buy')?.value)||0;
+      const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||0;
+      const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+      const unrealized=parseFloat(document.getElementById('f-unrealized')?.value)||0;
+      pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:curPrice,unrealized_gain:unrealized,amount:unrealized,gain:unrealized,date,updated_at:new Date().toISOString()};
+    } else {
+      // ADD investment
+      const typ=getInvTypValue();
+      const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+      const qty=parseFloat(document.getElementById('f-qty')?.value)||0;
+      const totalBuy=parseFloat(document.getElementById('f-total-buy')?.value)||(buyPrice*qty);
+      pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:buyPrice,unrealized_gain:0,amount:totalBuy,gain:0,date};
+    }
+  }
+
   try{
     if(mId){await sbU(TMAP[mType],mId,pay);}
     else{const res=await sbI(TMAP[mType],pay);const rec=Array.isArray(res)?res[0]:res;if(rec)DB[DARR[mType]].push(rec);}
@@ -1050,10 +1267,4 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 </body>
-</html>"""
-
-with open('/mnt/user-data/outputs/keuangan-app/index.html','w',encoding='utf-8') as f:
-    f.write(html)
-print(f"Done: {len(html):,} chars, {html.count(chr(10)):,} lines")
-PYEOF
-python3 /tmp/gen.py
+</html>
