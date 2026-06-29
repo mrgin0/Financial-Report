@@ -154,6 +154,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px;border-radius:7px;border:1px solid var(--bd)}
 .ct{width:100%;border-collapse:collapse;font-size:11.5px;min-width:440px}
 .ct th{text-align:left;padding:7px 9px;font-size:9px;font-weight:800;letter-spacing:.5px;color:var(--mu);text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--bd);white-space:nowrap}
+.ct th:hover{background:var(--pl);color:var(--pr)}
 .ct td{padding:7px 9px;border-bottom:1px solid var(--bd);vertical-align:middle}
 .ct tr:last-child td{border-bottom:none}
 .ct tbody tr:hover td{background:var(--pl)}
@@ -315,7 +316,14 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
           <button class="pb" onclick="setPeriod('recv','all',this)" data-i="p_all">All</button>
         </div>
       </div>
-      <div class="chart-wrap"><canvas id="c-recv" height="120"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoom('recv')">⟳ Reset</button></div></div>
+      <div class="chart-wrap"><canvas id="c-recv" height="110"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoom('recv')">⟳ Reset</button></div></div>
+      <div style="margin-top:12px">
+        <div class="ctitle" style="margin-bottom:8px">Alokasi Piutang per Penghutang</div>
+        <div class="dw">
+          <canvas id="c-recv-pie" style="width:85px;height:85px;flex-shrink:0"></canvas>
+          <div style="flex:1;min-width:0"><div id="recv-pie-leg"></div><div class="lgtot" style="width:100%"><span>Total Piutang</span><span id="recv-pie-tot">0</span></div></div>
+        </div>
+      </div>
     </div>
     <div class="card">
       <div class="chd"><span class="ctitle" data-i="inv_chart">Investment Growth</span>
@@ -757,6 +765,7 @@ function initCharts(){
   refreshCharts();
   updateAlokasiChart();
   updateInvDChart();
+  updateRecvPieChart();
 }
 
 function resetZoom(key){if(CHS[key])CHS[key].resetZoom();}
@@ -860,8 +869,39 @@ function updateInvDChart(){
   else{CHS.invd=new Chart(ctx.getContext('2d'),{type:'doughnut',data:{labels:items.map(d=>d.l),datasets:[{data:items.map(d=>d.v),backgroundColor:items.map(d=>d.c),borderWidth:2,hoverOffset:4}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fRp(c.parsed)}`}}}}});}
 }
 
+// ══════════════════════════════════════════════════════════════
+// RECEIVABLE PIE CHART — per penghutang
+// ══════════════════════════════════════════════════════════════
+function updateRecvPieChart(){
+  const COLS=['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316','#ec4899'];
+  // Group by name, use outstanding sisa
+  const byName={};
+  DB.ar.forEach(r=>{
+    const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));
+    if(sisa>0)byName[r.name]=(byName[r.name]||0)+sisa;
+  });
+  const items=Object.entries(byName).map(([n,v],i)=>({l:n,v,c:COLS[i%COLS.length]}));
+  const tot=items.reduce((a,x)=>a+x.v,0);
+  setText('recv-pie-tot',fRp(tot));
+  const legEl=document.getElementById('recv-pie-leg');
+  if(legEl)legEl.innerHTML=items.map(d=>`<div class="lgrow"><div class="lgdot" style="background:${d.c}"></div><span class="lgnm">${d.l}</span><span class="lgpct">${tot?((d.v/tot)*100).toFixed(1):0}%</span><span class="lgval">${fRp(d.v)}</span></div>`).join('');
+  const ctx=document.getElementById('c-recv-pie');if(!ctx)return;
+  if(CHS.recvPie){
+    CHS.recvPie.data.labels=items.map(d=>d.l);
+    CHS.recvPie.data.datasets[0].data=items.map(d=>d.v);
+    CHS.recvPie.data.datasets[0].backgroundColor=items.map(d=>d.c);
+    CHS.recvPie.update();
+  } else {
+    CHS.recvPie=new Chart(ctx.getContext('2d'),{
+      type:'doughnut',
+      data:{labels:items.map(d=>d.l),datasets:[{data:items.map(d=>d.v),backgroundColor:items.map(d=>d.c),borderWidth:2,hoverOffset:4}]},
+      options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fRp(c.parsed)}`}}}}
+    });
+  }
+}
+
 function updateAll(){
-  updateStats();updateAlokasiChart();updateInvDChart();refreshCharts();
+  updateStats();updateAlokasiChart();updateInvDChart();updateRecvPieChart();refreshCharts();
   const dym=document.getElementById('dash-pick')?.value;if(dym)onDashMonth(dym,'update');
 }
 
@@ -872,57 +912,154 @@ const TMAP={ca:'current_assets',ar:'accounts_receivable',ii:'inventory',ppe:'pro
 const DARR={ca:'ca',ar:'ar',ii:'ii',ppe:'ppe',intg:'intg',inv:'inv'};
 const MLBL_={ca:'Current Asset',ar:'Piutang',ii:'Inventory',ppe:'PPE',intg:'Intangible',inv:'Investasi'};
 const noR=(c)=>`<tbody><tr><td class="empty-td" colspan="${c}">📭 Belum ada data</td></tr></tbody>`;
-function mkTbl(id,ths,rows){const el=document.getElementById(id);if(!el)return;el.innerHTML=`<thead><tr>${ths.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`+(rows.length?`<tbody>${rows.join('')}</tbody>`:noR(ths.length));}
 
-// Point 9: dynamic categories from existing data
 function getCategories(){
   const base=['Kas','Bank','Platform'];
   const custom=[...new Set(DB.ca.map(x=>x.category).filter(c=>c&&!base.includes(c)))];
   return[...base,...custom,'Lainnya'];
 }
 
-function rCA(){mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal','Aksi'],DB.ca.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bb">${r.category}</span></td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ca','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ca','${r.id}','${escQ(r.name)}')">Hapus</button></td></tr>`));}
+// ══════════════════════════════════════════════════════════════
+// SORTABLE TABLE ENGINE
+// ══════════════════════════════════════════════════════════════
+const SORT_STATE={};
 
-function rAR(){mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tgl','Jatuh Tempo','Status','Aksi'],DB.ar.map((r,i)=>{const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));return`<tr><td>${i+1}</td><td>${r.name}</td><td>${fRp(r.amount)}</td><td style="color:var(--ok)">${fRp(r.paid||0)}</td><td><b>${fRp(sisa)}</b></td><td>${r.date}</td><td>${r.due_date||'-'}</td><td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':r.status==='Partial'?'by':'bb'}">${r.status}</span></td><td><button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ar','${r.id}','${escQ(r.name)}')">Hapus</button></td></tr>`;}));}
+function mkTbl(id,ths,rows){
+  const el=document.getElementById(id);if(!el)return;
+  // Preserve sort state for this table
+  if(!SORT_STATE[id])SORT_STATE[id]={col:-1,asc:true};
+  const ss=SORT_STATE[id];
+  const thHtml=ths.map((h,i)=>{
+    const isAksi=h==='Aksi';
+    if(isAksi)return`<th>${h}</th>`;
+    const dir=ss.col===i?(ss.asc?'↑':'↓'):'⇅';
+    return`<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="sortTbl('${id}',${i})">${h} <span style="font-size:9px;opacity:.6">${dir}</span></th>`;
+  }).join('');
+  el.innerHTML=`<thead><tr>${thHtml}</tr></thead>`+(rows.length?`<tbody>${rows.join('')}</tbody>`:noR(ths.length));
+}
+
+function sortTbl(id,col){
+  const ss=SORT_STATE[id]||{col:-1,asc:true};
+  if(ss.col===col){ss.asc=!ss.asc;}else{ss.col=col;ss.asc=true;}
+  SORT_STATE[id]=ss;
+  // Find render function for this table id
+  const map={'t-ca':rCA,'t-ar':rAR,'t-ii':rII,'t-ppe':rPPE,'t-intg':rINTG,'t-inv':rINV};
+  if(map[id])map[id]();
+}
+
+function sortArr(arr,id){
+  const ss=SORT_STATE[id];if(!ss||ss.col<0)return arr;
+  return[...arr].sort((a,b)=>{
+    // Get text content of col index by generating a temp row and reading cell
+    const aVal=getSortVal(a,id,ss.col);
+    const bVal=getSortVal(b,id,ss.col);
+    const cmp=typeof aVal==='number'&&typeof bVal==='number'
+      ?aVal-bVal
+      :String(aVal).localeCompare(String(bVal),'id',{numeric:true});
+    return ss.asc?cmp:-cmp;
+  });
+}
+
+function getSortVal(r,tid,col){
+  // Map column index to data field per table
+  const maps={
+    't-ca':   [null,'name','category','amount','date',null],
+    't-ar':   [null,'name','amount','paid',r=>(Math.max(0,(+(r.amount||0))-(+(r.paid||0)))),'date','due_date','status',null],
+    't-ii':   [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date',r=>(+(r.current_price||0))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},r=>r.updated_at||'',null],
+    't-ppe':  [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date','depreciation_date',r=>(+(r.current_price||+(r.buy_price||r.amount||0)))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},null],
+    't-intg': [null,'name','amount','date',null],
+    't-inv':  [null,'name','type',r=>+(r.total_buy||r.amount||0),'date',r=>(+(r.current_price||0))*(+(r.qty||0)),r=>r.updated_at||'',r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return ns-tb;},r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return tb>0?((ns-tb)/tb*100):0;},null],
+  };
+  const m=maps[tid];if(!m||col>=m.length)return'';
+  const fn=m[col];
+  if(fn===null)return'';
+  if(typeof fn==='function')return fn(r);
+  return r[fn]??'';
+}
+
+// ══════════════════════════════════════════════════════════════
+// TABLE RENDERS
+// ══════════════════════════════════════════════════════════════
+function rCA(){
+  const data=sortArr(DB.ca,'t-ca');
+  mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal Update','Aksi'],
+    data.map((r,i)=>`<tr>
+      <td>${i+1}</td><td>${r.name}</td>
+      <td><span class="badge bb">${r.category}</span></td>
+      <td><b>${fRp(r.amount)}</b></td>
+      <td>${r.date}</td>
+      <td><button class="btn-sm be" onclick="openE('ca','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ca','${r.id}','${escQ(r.name)}')">Hapus</button></td>
+    </tr>`));
+}
+
+function rAR(){
+  const data=sortArr(DB.ar,'t-ar');
+  mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tanggal Update','Jatuh Tempo','Status','Aksi'],
+    data.map((r,i)=>{
+      const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));
+      return`<tr>
+        <td>${i+1}</td><td>${r.name}</td>
+        <td>${fRp(r.amount)}</td>
+        <td style="color:var(--ok)">${fRp(r.paid||0)}</td>
+        <td><b>${fRp(sisa)}</b></td>
+        <td>${r.date}</td><td>${r.due_date||'-'}</td>
+        <td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':r.status==='Partial'?'by':'bb'}">${r.status}</span></td>
+        <td><button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ar','${r.id}','${escQ(r.name)}')">Hapus</button></td>
+      </tr>`;
+    }));
+}
 
 function rII(){
-  mkTbl('t-ii',['#','Nama','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Aksi'],
-    DB.ii.map((r,i)=>{
-      const hargaBeli=+(r.buy_price||r.amount||0);
-      const hargaSkrg=+(r.current_price||hargaBeli);
+  const data=sortArr(DB.ii,'t-ii');
+  mkTbl('t-ii',['#','Nama','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Pertumbuhan (Rp)','Pertumbuhan (%)','Tanggal Update','Aksi'],
+    data.map((r,i)=>{
+      const bp=+(r.buy_price||r.amount||0);
+      const sp=+(r.current_price||bp);
       const qty=+(r.qty||0);
+      const tumbuhRp=(sp-bp)*qty;
+      const tumbuhPct=bp>0?((sp-bp)/bp*100).toFixed(2):0;
+      const isUp=tumbuhRp>=0;
+      const updAt=r.updated_at?new Date(r.updated_at).toLocaleDateString('id-ID'):'—';
       return`<tr>
         <td>${i+1}</td><td>${r.name}</td><td>${qty||'—'}</td>
-        <td>${fRp(hargaBeli)}</td>
-        <td style="color:${hargaSkrg>=hargaBeli?'var(--ok)':'var(--er)'}"><b>${fRp(hargaSkrg)}</b></td>
+        <td>${fRp(bp)}</td>
+        <td style="color:${sp>=bp?'var(--ok)':'var(--er)'}"><b>${fRp(sp)}</b></td>
         <td>${r.date}</td>
+        <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'↑ +':'↓ -'}${fRp(Math.abs(tumbuhRp))}</td>
+        <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${tumbuhPct}%</td>
+        <td>${updAt}</td>
         <td><button class="btn-sm be" onclick="openE('ii','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ii','${r.id}','${escQ(r.name)}')">Hapus</button></td>
       </tr>`;
-    })
-  );
+    }));
 }
 
 function rPPE(){
-  mkTbl('t-ppe',['#','Nama Aset','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Tgl Update Depresiasi','Aksi'],
-    DB.ppe.map((r,i)=>{
-      const hargaBeli=+(r.buy_price||r.amount||0);
-      const hargaSkrg=+(r.current_price||hargaBeli);
+  const data=sortArr(DB.ppe,'t-ppe');
+  mkTbl('t-ppe',['#','Nama Aset','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Tgl Update Depresiasi','Pertumbuhan (Rp)','Pertumbuhan (%)','Aksi'],
+    data.map((r,i)=>{
+      const bp=+(r.buy_price||r.amount||0);
+      const sp=+(r.current_price||bp);
       const qty=+(r.qty||1);
+      const tumbuhRp=(sp-bp)*qty;
+      const tumbuhPct=bp>0?((sp-bp)/bp*100).toFixed(2):0;
+      const isUp=tumbuhRp>=0;
       return`<tr>
         <td>${i+1}</td><td>${r.name}</td><td>${qty}</td>
-        <td>${fRp(hargaBeli)}</td>
-        <td style="color:${hargaSkrg<=hargaBeli?'var(--mu)':'var(--ok)'}"><b>${fRp(hargaSkrg)}</b></td>
+        <td>${fRp(bp)}</td>
+        <td style="color:${sp<=bp?'var(--mu)':'var(--ok)'}"><b>${fRp(sp)}</b></td>
         <td>${r.date}</td><td>${r.depreciation_date||'—'}</td>
+        <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'↑ +':'↓ -'}${fRp(Math.abs(tumbuhRp))}</td>
+        <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${tumbuhPct}%</td>
         <td><button class="btn-sm be" onclick="openE('ppe','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ppe','${r.id}','${escQ(r.name)}')">Hapus</button></td>
       </tr>`;
-    })
-  );
+    }));
 }
 
 function rINV(){
+  const data=sortArr(DB.inv,'t-inv');
   mkTbl('t-inv',
     ['#','Nama Investasi','Tipe','Nilai Beli','Tgl Beli','Harga Sekarang','Tgl Update','Unrealized Gain/Loss','Gain/Loss %','Aksi'],
-    DB.inv.map((r,i)=>{
+    data.map((r,i)=>{
       const totalBuy=+(r.total_buy||r.amount||0);
       const curPrice=+(r.current_price||0);
       const qty=+(r.qty||0);
@@ -942,13 +1079,20 @@ function rINV(){
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${pct}%</td>
         <td><button class="btn-sm be" onclick="openE('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('inv','${r.id}','${escQ(r.name)}')">Hapus</button></td>
       </tr>`;
-    })
-  );
+    }));
 }
 
-function rINTG(){mkTbl('t-intg',['#','Nama Aset','Nilai','Tanggal','Aksi'],DB.intg.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('intg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('intg','${r.id}','${escQ(r.name)}')">Hapus</button></td></tr>`));}
+function rINTG(){
+  const data=sortArr(DB.intg,'t-intg');
+  mkTbl('t-intg',['#','Nama Aset','Nilai','Tanggal','Aksi'],
+    data.map((r,i)=>`<tr>
+      <td>${i+1}</td><td>${r.name}</td>
+      <td><b>${fRp(r.amount)}</b></td><td>${r.date}</td>
+      <td><button class="btn-sm be" onclick="openE('intg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('intg','${r.id}','${escQ(r.name)}')">Hapus</button></td>
+    </tr>`));
+}
 
-function escQ(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function escQ(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
 function reRender(){const p=document.querySelector('.page.active')?.id;if(p==='page-ca')rCA();if(p==='page-ce'){rAR();rII();}if(p==='page-nc'){rPPE();rINTG();}if(p==='page-inv')rINV();}
 
 // ══════════════════════════════════════════════════════════════
