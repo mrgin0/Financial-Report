@@ -881,31 +881,74 @@ function getCategories(){
   return[...base,...custom,'Lainnya'];
 }
 
-function rCA(){mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal','Aksi'],DB.ca.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bb">${r.category}</span></td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ca','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ca','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
-function rAR(){mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tgl','Jatuh Tempo','Status','Aksi'],DB.ar.map((r,i)=>{const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));return`<tr><td>${i+1}</td><td>${r.name}</td><td>${fRp(r.amount)}</td><td style="color:var(--ok)">${fRp(r.paid||0)}</td><td><b>${fRp(sisa)}</b></td><td>${r.date}</td><td>${r.due_date||'-'}</td><td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':r.status==='Partial'?'by':'bb'}">${r.status}</span></td><td><button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ar','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`;}));}
-function rII(){mkTbl('t-ii',['#','Nama','Qty','Nilai','Tgl','Aksi'],DB.ii.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${r.qty||'-'}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ii','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ii','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
-function rPPE(){mkTbl('t-ppe',['#','Nama Aset','Nilai','Tgl Beli','Tgl Update Depresiasi','Aksi'],DB.ppe.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td>${r.depreciation_date||'—'}</td><td><button class="btn-sm be" onclick="openE('ppe','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ppe','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
-function rINV(){
-  mkTbl('t-inv',['#','Nama','Tipe','Nilai Beli','Unrealized Gain','Gain/Loss','Tgl Beli','Tgl Update','Aksi'],
-    DB.inv.map((r,i)=>{
-      const totalBuy=+(r.total_buy||r.amount||0);
-      const unrealized=+(r.unrealized_gain||0);
-      const gainLoss=unrealized; // gain/loss = unrealized (value vs cost)
-      const glColor=gainLoss>=0?'#059669':'#dc2626';
-      const updAt=r.updated_at?new Date(r.updated_at).toLocaleDateString('id-ID'):'—';
+function rCA(){mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal','Aksi'],DB.ca.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><span class="badge bb">${r.category}</span></td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('ca','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ca','${r.id}','${escQ(r.name)}')">Hapus</button></td></tr>`));}
+
+function rAR(){mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tgl','Jatuh Tempo','Status','Aksi'],DB.ar.map((r,i)=>{const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));return`<tr><td>${i+1}</td><td>${r.name}</td><td>${fRp(r.amount)}</td><td style="color:var(--ok)">${fRp(r.paid||0)}</td><td><b>${fRp(sisa)}</b></td><td>${r.date}</td><td>${r.due_date||'-'}</td><td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':r.status==='Partial'?'by':'bb'}">${r.status}</span></td><td><button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ar','${r.id}','${escQ(r.name)}')">Hapus</button></td></tr>`;}));}
+
+function rII(){
+  mkTbl('t-ii',['#','Nama','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Aksi'],
+    DB.ii.map((r,i)=>{
+      const hargaBeli=+(r.buy_price||r.amount||0);
+      const hargaSkrg=+(r.current_price||hargaBeli);
+      const qty=+(r.qty||0);
       return`<tr>
-        <td>${i+1}</td><td>${r.name}</td>
-        <td><span class="badge bp">${r.type}</span></td>
-        <td>${fRp(totalBuy)}</td>
-        <td style="font-weight:700;color:${unrealized>=0?'#059669':'#dc2626'}">${unrealized>=0?'+':''}${fRp(unrealized)}</td>
-        <td style="font-weight:700;color:${glColor}">${gainLoss>=0?'↑ +':'↓ '}${fRp(Math.abs(gainLoss))}</td>
-        <td>${r.date||'—'}</td><td>${updAt}</td>
-        <td><button class="btn-sm be" onclick="openE('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('inv','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td>
+        <td>${i+1}</td><td>${r.name}</td><td>${qty||'—'}</td>
+        <td>${fRp(hargaBeli)}</td>
+        <td style="color:${hargaSkrg>=hargaBeli?'var(--ok)':'var(--er)'}"><b>${fRp(hargaSkrg)}</b></td>
+        <td>${r.date}</td>
+        <td><button class="btn-sm be" onclick="openE('ii','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ii','${r.id}','${escQ(r.name)}')">Hapus</button></td>
       </tr>`;
     })
   );
 }
-function rINTG(){mkTbl('t-intg',['#','Nama Aset','Nilai','Tanggal','Aksi'],DB.intg.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('intg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('intg','${r.id}','${r.name.replace(/'/g,"\\'")}')">Hapus</button></td></tr>`));}
+
+function rPPE(){
+  mkTbl('t-ppe',['#','Nama Aset','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Tgl Update Depresiasi','Aksi'],
+    DB.ppe.map((r,i)=>{
+      const hargaBeli=+(r.buy_price||r.amount||0);
+      const hargaSkrg=+(r.current_price||hargaBeli);
+      const qty=+(r.qty||1);
+      return`<tr>
+        <td>${i+1}</td><td>${r.name}</td><td>${qty}</td>
+        <td>${fRp(hargaBeli)}</td>
+        <td style="color:${hargaSkrg<=hargaBeli?'var(--mu)':'var(--ok)'}"><b>${fRp(hargaSkrg)}</b></td>
+        <td>${r.date}</td><td>${r.depreciation_date||'—'}</td>
+        <td><button class="btn-sm be" onclick="openE('ppe','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ppe','${r.id}','${escQ(r.name)}')">Hapus</button></td>
+      </tr>`;
+    })
+  );
+}
+
+function rINV(){
+  mkTbl('t-inv',
+    ['#','Nama Investasi','Tipe','Nilai Beli','Tgl Beli','Harga Sekarang','Tgl Update','Unrealized Gain/Loss','Gain/Loss %','Aksi'],
+    DB.inv.map((r,i)=>{
+      const totalBuy=+(r.total_buy||r.amount||0);
+      const curPrice=+(r.current_price||0);
+      const qty=+(r.qty||0);
+      const nilaiSkrg=curPrice*qty;
+      const unrealized=nilaiSkrg-totalBuy;
+      const pct=totalBuy>0?((unrealized/totalBuy)*100).toFixed(2):0;
+      const isUp=unrealized>=0;
+      const updAt=r.updated_at?new Date(r.updated_at).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      return`<tr>
+        <td>${i+1}</td><td><b>${r.name}</b></td>
+        <td><span class="badge bp">${r.type}</span></td>
+        <td>${fRp(totalBuy)}</td>
+        <td>${r.date||'—'}</td>
+        <td style="font-variant-numeric:tabular-nums">${curPrice>0?fRp(nilaiSkrg):'—'}</td>
+        <td>${updAt}</td>
+        <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'↑ +':'↓ -'}${fRp(Math.abs(unrealized))}</td>
+        <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${pct}%</td>
+        <td><button class="btn-sm be" onclick="openE('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('inv','${r.id}','${escQ(r.name)}')">Hapus</button></td>
+      </tr>`;
+    })
+  );
+}
+
+function rINTG(){mkTbl('t-intg',['#','Nama Aset','Nilai','Tanggal','Aksi'],DB.intg.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td><b>${fRp(r.amount)}</b></td><td>${r.date}</td><td><button class="btn-sm be" onclick="openE('intg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('intg','${r.id}','${escQ(r.name)}')">Hapus</button></td></tr>`));}
+
+function escQ(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 function reRender(){const p=document.querySelector('.page.active')?.id;if(p==='page-ca')rCA();if(p==='page-ce'){rAR();rII();}if(p==='page-nc'){rPPE();rINTG();}if(p==='page-inv')rINV();}
 
 // ══════════════════════════════════════════════════════════════
@@ -1026,89 +1069,165 @@ function getInvTypValue(){
   return sel.value;
 }
 
-// INV FORM — ADD
+// INV FORM — ADD: total buy auto but also editable
 function buildInvFormAdd(){
   return`
 <div class="fg"><label>Nama Investasi (misal: BBCA, BTC, QQQ)</label><input id="f-nm" value=""></div>
 <div class="fg"><label>Tipe</label>${buildInvTypeSelect('')}</div>
 <div class="fr">
-  <div class="fg"><label>Harga per Unit (Rp)</label><input id="f-buy-price" type="number" min="0" value="0" oninput="calcTotalBuy()"></div>
-  <div class="fg"><label>Jumlah / Qty</label><input id="f-qty" type="number" min="0" step="any" value="0" oninput="calcTotalBuy()"></div>
+  <div class="fg"><label>Harga Saat Beli per Unit (Rp)</label><input id="f-buy-price" type="number" min="0" value="0" oninput="syncTotalBuy()"></div>
+  <div class="fg"><label>Jumlah / Qty</label><input id="f-qty" type="number" min="0" step="any" value="0" oninput="syncTotalBuy()"></div>
 </div>
-<div class="fg"><label>Total Beli (Rp) — otomatis</label>
-  <input id="f-total-buy" type="number" min="0" value="0" style="background:var(--bg);font-weight:700;color:var(--pr)" readonly>
+<div class="fg">
+  <label>Total Beli (Rp) <span style="font-size:9px;color:var(--mu);font-weight:400">— otomatis atau edit manual</span></label>
+  <input id="f-total-buy" type="number" min="0" value="0" style="font-weight:700;color:var(--pr)" oninput="markManualTotalBuy()">
+  <div id="total-buy-note" style="font-size:10px;color:var(--mu);margin-top:2px">Dihitung otomatis dari Harga × Qty</div>
 </div>
-<div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${td()}"></div>`;
+<div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${td()}"></div>
+<input type="hidden" id="f-manual-total" value="0">`;
 }
-function calcTotalBuy(){
+
+function syncTotalBuy(){
+  if(document.getElementById('f-manual-total')?.value==='1')return; // user edited manually
   const p=parseFloat(document.getElementById('f-buy-price')?.value)||0;
   const q=parseFloat(document.getElementById('f-qty')?.value)||0;
   const el=document.getElementById('f-total-buy');
   if(el)el.value=(p*q).toFixed(0);
 }
+function markManualTotalBuy(){
+  const el=document.getElementById('f-manual-total');
+  if(el)el.value='1';
+  const note=document.getElementById('total-buy-note');
+  if(note)note.textContent='✏️ Nilai manual';
+}
+// keep alias for backward compat
+function calcTotalBuy(){syncTotalBuy();}
 
-// INV FORM — EDIT
+// INV FORM — EDIT: all fields editable, full sync, fix buy_price/qty bug
 function buildInvFormEdit(r){
-  const buyPrice=+(r.buy_price||0);
-  const qty=+(r.qty||0);
-  const totalBuy=+(r.total_buy||r.amount||0);
-  const curPrice=+(r.current_price||buyPrice);
-  const unrealized=(curPrice*qty)-totalBuy;
-  const gainLoss=unrealized;
+  // Safely extract all values from DB record — never default to 0 if field exists
+  const buyPrice   = r.buy_price    != null ? +(r.buy_price)    : (r.amount && r.qty ? +(r.amount)/+(r.qty||1) : 0);
+  const qty        = r.qty          != null ? +(r.qty)          : 0;
+  const totalBuy   = r.total_buy    != null ? +(r.total_buy)    : (r.amount != null ? +(r.amount) : buyPrice*qty);
+  const curPrice   = r.current_price!= null ? +(r.current_price): buyPrice;
+  const nilaiSkrg  = curPrice * qty;
+  const unrealized = nilaiSkrg - totalBuy;
+  const pct        = totalBuy > 0 ? ((unrealized/totalBuy)*100).toFixed(2) : '0.00';
+  const updDate    = r.updated_at   ? new Date(r.updated_at).toISOString().slice(0,10) : td();
+
   return`
-<div class="fg"><label>Nama Investasi</label><input id="f-nm" value="${r.name||''}"></div>
+<div class="fg"><label>Nama Investasi</label><input id="f-nm" value="${esc(r.name||'')}"></div>
 <div class="fg"><label>Tipe</label>${buildInvTypeSelect(r.type||'')}</div>
 <div class="fr">
-  <div class="fg"><label>Harga Beli per Unit (Rp)</label><input id="f-buy-price" type="number" min="0" value="${buyPrice}" readonly style="background:var(--bg);color:var(--mu)"></div>
-  <div class="fg"><label>Jumlah / Qty</label><input id="f-qty" type="number" min="0" step="any" value="${qty}" readonly style="background:var(--bg);color:var(--mu)"></div>
+  <div class="fg"><label>Harga Saat Beli per Unit (Rp)</label>
+    <input id="f-buy-price" type="number" min="0" value="${buyPrice}" oninput="syncEditTotalBuy()">
+  </div>
+  <div class="fg"><label>Jumlah / Qty</label>
+    <input id="f-qty" type="number" min="0" step="any" value="${qty}" oninput="syncEditTotalBuy()">
+  </div>
 </div>
-<div class="fg"><label>Total Beli (Rp)</label>
-  <input id="f-total-buy" type="number" value="${totalBuy}" readonly style="background:var(--bg);font-weight:700;color:var(--pr)">
+<div class="fg">
+  <label>Total Beli (Rp) <span style="font-size:9px;color:var(--mu);font-weight:400">— otomatis atau edit manual</span></label>
+  <input id="f-total-buy" type="number" min="0" value="${totalBuy}" style="font-weight:700;color:var(--pr)" oninput="calcUnrealized();markManualTotalBuy()">
 </div>
-<div class="fg"><label>Harga Sekarang per Unit (Rp)</label>
+<div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r.date||td()}"></div>
+<div class="fg" style="margin-top:4px">
+  <label>Harga Sekarang per Unit (Rp)</label>
   <input id="f-cur-price" type="number" min="0" value="${curPrice}" oninput="calcUnrealized()">
 </div>
-<div class="fg"><label>Total Unrealized Gain/Loss (Rp) — otomatis</label>
-  <input id="f-unrealized" type="number" value="${unrealized.toFixed(0)}" readonly style="background:var(--bg);font-weight:700;color:${unrealized>=0?'var(--ok)':'var(--er)'}">
+<div class="fg"><label>Tanggal Update Harga</label><input id="f-price-dt" type="date" value="${updDate}"></div>
+<div class="fg">
+  <label>Total Unrealized Gain/Loss (Rp) <span style="font-size:9px;color:var(--mu)">— otomatis</span></label>
+  <input id="f-unrealized" type="number" value="${unrealized.toFixed(0)}" readonly
+    style="font-weight:700;background:var(--bg);color:${unrealized>=0?'var(--ok)':'var(--er)'}">
 </div>
-<div style="font-size:10.5px;color:var(--mu);margin-top:-6px;margin-bottom:6px">
-  Gain/Loss = (Harga Skrg × Qty) − Total Beli = ${fRp(curPrice*qty)} − ${fRp(totalBuy)} = <b style="color:${gainLoss>=0?'var(--ok)':'var(--er)'}">${gainLoss>=0?'+':''}${fRp(gainLoss)}</b>
+<div style="font-size:10.5px;margin-top:-5px;margin-bottom:5px;padding:6px 10px;background:var(--bg);border-radius:6px">
+  <span id="gain-formula-txt">Nilai Skrg ${fRp(nilaiSkrg)} − Beli ${fRp(totalBuy)} = <b style="color:${unrealized>=0?'var(--ok)':'var(--er)'}">${unrealized>=0?'+':''}${fRp(unrealized)} (${unrealized>=0?'+':''}${pct}%)</b></span>
 </div>
-<div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r.date||td()}"></div>`;
+<input type="hidden" id="f-manual-total" value="0">`;
 }
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+
+function syncEditTotalBuy(){
+  if(document.getElementById('f-manual-total')?.value==='1')return;
+  const p=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+  const q=parseFloat(document.getElementById('f-qty')?.value)||0;
+  const el=document.getElementById('f-total-buy');
+  if(el){el.value=(p*q).toFixed(0);calcUnrealized();}
+}
+
 function calcUnrealized(){
-  const qty=parseFloat(document.getElementById('f-qty')?.value)||0;
-  const totalBuy=parseFloat(document.getElementById('f-total-buy')?.value)||0;
-  const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||0;
-  const unrealized=(curPrice*qty)-totalBuy;
+  const qty      = parseFloat(document.getElementById('f-qty')?.value)||0;
+  const totalBuy = parseFloat(document.getElementById('f-total-buy')?.value)||0;
+  const curPrice = parseFloat(document.getElementById('f-cur-price')?.value)||0;
+  const unrealized = (curPrice*qty) - totalBuy;
+  const pct = totalBuy>0?((unrealized/totalBuy)*100).toFixed(2):'0.00';
   const el=document.getElementById('f-unrealized');
   if(el){el.value=unrealized.toFixed(0);el.style.color=unrealized>=0?'var(--ok)':'var(--er)';}
+  const txt=document.getElementById('gain-formula-txt');
+  if(txt)txt.innerHTML=`Nilai Skrg ${fRp(curPrice*qty)} − Beli ${fRp(totalBuy)} = <b style="color:${unrealized>=0?'var(--ok)':'var(--er)'}">${unrealized>=0?'+':''}${fRp(unrealized)} (${unrealized>=0?'+':''}${pct}%)</b>`;
 }
 
 // PPE FORM
 function buildPPEForm(r,isEdit){
+  const buyPrice  = r ? (+(r.buy_price||r.amount||0)) : 0;
+  const curPrice  = r ? (+(r.current_price||buyPrice)) : 0;
+  const qty       = r ? (+(r.qty||1))                 : 1;
   return`
-<div class="fg"><label>Nama Aset</label><input id="f-nm" value="${r?r.name:''}"></div>
+<div class="fg"><label>Nama Aset</label><input id="f-nm" value="${r?esc(r.name):''}"></div>
 <div class="fr">
-  <div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div>
-  <div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
+  <div class="fg"><label>Qty / Jumlah Unit</label><input id="f-qty" type="number" min="0" value="${qty}"></div>
+  <div class="fg"><label>Harga Beli per Unit (Rp)</label><input id="f-buy-price" type="number" min="0" value="${buyPrice}" oninput="syncPPEAmount()"></div>
 </div>
-${isEdit?`<div class="fg"><label>Tanggal Update Depresiasi</label><input id="f-dep-dt" type="date" value="${r&&r.depreciation_date?r.depreciation_date:''}"></div>`:''}`;
+<div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
+${isEdit?`
+<div class="fg"><label>Harga Sekarang per Unit (Rp)</label><input id="f-cur-price" type="number" min="0" value="${curPrice}"></div>
+<div class="fg"><label>Tanggal Update Depresiasi</label><input id="f-dep-dt" type="date" value="${r&&r.depreciation_date?r.depreciation_date:''}"></div>`:''}`;
+}
+function syncPPEAmount(){
+  const p=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+  const q=parseFloat(document.getElementById('f-qty')?.value)||1;
+  const el=document.getElementById('f-amt-ppe');
+  if(el)el.value=(p*q).toFixed(0);
+}
+
+// Inventory FORM
+function buildIIForm(r,isEdit){
+  const buyPrice  = r ? (+(r.buy_price||r.amount||0)) : 0;
+  const curPrice  = r ? (+(r.current_price||buyPrice)) : 0;
+  const qty       = r ? (+(r.qty||0))                  : 0;
+  return`
+<div class="fg"><label>Nama Item</label><input id="f-nm" value="${r?esc(r.name):''}"></div>
+<div class="fr">
+  <div class="fg"><label>Qty</label><input id="f-qty" type="number" min="0" value="${qty}"></div>
+  <div class="fg"><label>Harga Beli per Unit (Rp)</label><input id="f-buy-price" type="number" min="0" value="${buyPrice}"></div>
+</div>
+<div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
+${isEdit?`<div class="fg"><label>Harga Sekarang per Unit (Rp)</label><input id="f-cur-price" type="number" min="0" value="${curPrice}"></div>`:''}`;
 }
 
 const MF={
-  ca:r=>`<div class="fg"><label>Nama</label><input id="f-nm" value="${r?r.name:''}"></div>
+  ca:r=>`<div class="fg"><label>Nama</label><input id="f-nm" value="${r?esc(r.name):''}"></div>
 <div class="fg"><label>Kategori</label>${buildCatSelect(r?.category)}</div>
 <div class="fr"><div class="fg"><label>Jumlah (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
   ar:r=>r?buildARFormEdit(r):buildARFormAdd(),
-  ii:r=>`<div class="fg"><label>Nama Item</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Qty</label><input id="f-qty" type="number" min="0" value="${r?r.qty||0:0}"></div><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>`,
+  ii:r=>buildIIForm(r,!!r),
   ppe:r=>buildPPEForm(r,!!r),
-  intg:r=>`<div class="fg"><label>Nama Aset Tak Berwujud</label><input id="f-nm" value="${r?r.name:''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
+  intg:r=>`<div class="fg"><label>Nama Aset Tak Berwujud</label><input id="f-nm" value="${r?esc(r.name):''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
   inv:r=>r?buildInvFormEdit(r):buildInvFormAdd(),
 };
 
 function openM(type){mType=type;mId=null;document.getElementById('m-title').textContent='+ '+(MLBL_[type]||type);document.getElementById('m-body').innerHTML=MF[type](null);document.getElementById('mo').classList.add('open');setTimeout(()=>document.querySelector('#m-body input')?.focus(),200);}
-function openE(type,id){mType=type;mId=id;const r=DB[DARR[type]].find(x=>x.id===id);if(!r)return;document.getElementById('m-title').textContent='✏️ Edit '+(MLBL_[type]||type);document.getElementById('m-body').innerHTML=MF[type](r);document.getElementById('mo').classList.add('open');}
+function openE(type,id){
+  mType=type;mId=id;
+  // Always get fresh data from DB
+  const r=DB[DARR[type]].find(x=>x.id===id);
+  if(!r){showToast('❌ Data tidak ditemukan');return;}
+  document.getElementById('m-title').textContent='✏️ Edit '+(MLBL_[type]||type);
+  document.getElementById('m-body').innerHTML=MF[type](r);
+  document.getElementById('mo').classList.add('open');
+}
 function closeM(){document.getElementById('mo').classList.remove('open');}
 
 async function saveM(){
@@ -1126,7 +1245,6 @@ async function saveM(){
     const status=document.getElementById('f-sts')?.value||'Outstanding';
     const due_date=document.getElementById('f-due')?.value||null;
     if(mId){
-      // EDIT: handle partial payment
       const existingPaid=parseFloat(document.getElementById('f-paid-total')?.value)||0;
       const addPayment=parseFloat(document.getElementById('f-paid-add')?.value)||0;
       const via=document.getElementById('f-via')?.value||'';
@@ -1135,50 +1253,53 @@ async function saveM(){
       if(newPaid>=amount&&amount>0)newStatus='Paid';
       else if(newPaid>0&&newPaid<amount)newStatus='Partial';
       pay={name,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null};
-      // Point 2: update CA amount if via is selected
       if(addPayment>0&&via){
         const caItem=DB.ca.find(x=>x.name===via);
-        if(caItem){
-          const newAmt=(+(caItem.amount||0))+addPayment;
-          await sbU('current_assets',caItem.id,{amount:newAmt,date:td()});
-          DB.ca=await sbG('current_assets');
-        }
+        if(caItem){await sbU('current_assets',caItem.id,{amount:(+(caItem.amount||0))+addPayment,date:td()});DB.ca=await sbG('current_assets');}
       }
     } else {
-      // ADD: no partial payment
       pay={name,amount,date,due_date,status,paid:0};
     }
   }
   else if(mType==='ii'){
-    const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
-    pay={name,qty:parseInt(document.getElementById('f-qty')?.value)||0,amount,date};
+    const qty=parseFloat(document.getElementById('f-qty')?.value)||0;
+    const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+    const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||buyPrice;
+    const amount=buyPrice*qty||0;
+    pay={name,qty,buy_price:buyPrice,current_price:curPrice,amount,date};
   }
   else if(mType==='ppe'){
-    const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
-    pay={name,amount,date};
-    if(mId){const depDt=document.getElementById('f-dep-dt')?.value;if(depDt)pay.depreciation_date=depDt;}
+    const qty=parseFloat(document.getElementById('f-qty')?.value)||1;
+    const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+    const amount=buyPrice*qty;
+    pay={name,qty,buy_price:buyPrice,amount,date};
+    if(mId){
+      const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||buyPrice;
+      const depDt=document.getElementById('f-dep-dt')?.value||null;
+      pay.current_price=curPrice;
+      if(depDt)pay.depreciation_date=depDt;
+    }
   }
   else if(mType==='intg'){
     const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
     pay={name,amount,date};
   }
   else if(mType==='inv'){
+    const typ=getInvTypValue();
+    const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+    const qty     =parseFloat(document.getElementById('f-qty')?.value)||0;
+    const totalBuy=parseFloat(document.getElementById('f-total-buy')?.value)||(buyPrice*qty);
+    const nowIso  =new Date().toISOString();
     if(mId){
-      // EDIT investment
-      const typ=getInvTypValue();
-      const qty=parseFloat(document.getElementById('f-qty')?.value)||0;
-      const totalBuy=parseFloat(document.getElementById('f-total-buy')?.value)||0;
-      const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||0;
-      const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+      const curPrice  =parseFloat(document.getElementById('f-cur-price')?.value)||buyPrice;
+      const priceDt   =document.getElementById('f-price-dt')?.value;
       const unrealized=parseFloat(document.getElementById('f-unrealized')?.value)||0;
-      pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:curPrice,unrealized_gain:unrealized,amount:unrealized,gain:unrealized,date,updated_at:new Date().toISOString()};
+      pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:curPrice,
+           unrealized_gain:unrealized,amount:totalBuy,gain:unrealized,date,
+           updated_at:priceDt?new Date(priceDt).toISOString():nowIso};
     } else {
-      // ADD investment
-      const typ=getInvTypValue();
-      const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
-      const qty=parseFloat(document.getElementById('f-qty')?.value)||0;
-      const totalBuy=parseFloat(document.getElementById('f-total-buy')?.value)||(buyPrice*qty);
-      pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:buyPrice,unrealized_gain:0,amount:totalBuy,gain:0,date};
+      pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:buyPrice,
+           unrealized_gain:0,amount:totalBuy,gain:0,date,updated_at:nowIso};
     }
   }
 
