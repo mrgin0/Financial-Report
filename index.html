@@ -428,6 +428,30 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
   </div>
 </div>
 
+<!-- PAYMENT HISTORY MODAL -->
+<div class="mo" id="phist-mo" onclick="if(event.target===this)document.getElementById('phist-mo').classList.remove('open')" style="align-items:center">
+  <div class="modal" style="max-width:700px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h3 style="margin-bottom:0">📋 Riwayat Pembayaran — <span id="phist-title"></span></h3>
+      <button onclick="document.getElementById('phist-mo').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mu);line-height:1">×</button>
+    </div>
+    <div id="phist-meta" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;font-size:11px"></div>
+    <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--bd)">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">
+        <thead><tr style="background:var(--bg)">
+          <th style="padding:8px 10px;text-align:left;color:var(--mu);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">#</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--mu);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Total Tagihan</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--mu);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Dibayar</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--mu);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Tgl Bayar Partial</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--mu);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Sisa Tagihan</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--mu);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Via Pembayaran</th>
+        </tr></thead>
+        <tbody id="phist-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -795,33 +819,41 @@ function setPeriod(type,period,btn){
     CHS.recv.update();
   }
   if(type==='invg'&&CHS.invg){
-    // Multi-line: one line per investment name
-    // FIX: use carry-forward — if no data at a month point, keep last known value
     const names=[...new Set(DB.inv.map(x=>x.name))];
     CHS.invg.data.labels=labels;
-    CHS.invg.data.datasets=names.map((name,i)=>{
+
+    const perNameDatasets=names.map((name,i)=>{
       const color=CHART_COLORS[(i+1)%CHART_COLORS.length];
-      let lastVal=0;
+      let lastVal=null;
       const data=pts.map(p=>{
-        // All records for this name with date <= this month
-        const items=DB.inv.filter(x=>x.name===name&&x.date&&x.date.slice(0,7)<=p.ym);
+        // p.ym exists for synthetic points, for real snapshots use snapshot_date
+        const ptYM=p.ym||p.snapshot_date.slice(0,7);
+        const items=DB.inv.filter(x=>x.name===name&&x.date&&x.date.slice(0,7)<=ptYM);
         if(items.length>0){
-          // Use total_buy for that instrument (most recent value)
           lastVal=items.reduce((a,x)=>a+(+(x.total_buy||x.amount||0)),0);
         }
-        // carry-forward: if no data yet, return null (Chart.js skips null)
-        // if we had data before, keep last value
-        return lastVal>0?lastVal:null;
+        // carry-forward: return lastVal (null means no data yet → Chart.js skips)
+        return lastVal;
       });
-      return{label:name,data,borderColor:color,backgroundColor:'transparent',tension:.4,pointRadius:2,fill:false,borderWidth:1.8,spanGaps:true};
+      return{label:name,data,borderColor:color,backgroundColor:'transparent',
+             tension:.4,pointRadius:2,fill:false,borderWidth:1.8,spanGaps:true};
     });
-    // Total Investment line
-    CHS.invg.data.datasets.unshift({
+
+    // Total line first (behind others)
+    const totalLine={
       label:'Total Investment',
-      data:pts.map(s=>+(+(s.total_investment||0)).toFixed(0)),
+      data:pts.map(p=>{
+        const ptYM=p.ym||p.snapshot_date.slice(0,7);
+        // Sum all investments up to this month for total
+        return DB.inv.filter(x=>x.date&&x.date.slice(0,7)<=ptYM)
+                     .reduce((a,x)=>a+(+(x.total_buy||x.amount||0)),0)||
+               +(+(p.total_investment||0)).toFixed(0);
+      }),
       borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.06)',
       tension:.4,pointRadius:3,fill:true,borderWidth:2.5,spanGaps:true
-    });
+    };
+
+    CHS.invg.data.datasets=[totalLine,...perNameDatasets];
     CHS.invg.update();
   }
   if(type==='gain'&&CHS.gain){
@@ -997,6 +1029,7 @@ function rAR(){
   mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tanggal Update','Jatuh Tempo','Status','Aksi'],
     data.map((r,i)=>{
       const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));
+      const logs=parsePayLogs(r);
       return`<tr>
         <td>${i+1}</td><td>${r.name}</td>
         <td>${fRp(r.amount)}</td>
@@ -1004,7 +1037,11 @@ function rAR(){
         <td><b>${fRp(sisa)}</b></td>
         <td>${r.date}</td><td>${r.due_date||'-'}</td>
         <td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':r.status==='Partial'?'by':'bb'}">${r.status}</span></td>
-        <td><button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ar','${r.id}','${escQ(r.name)}')">Hapus</button></td>
+        <td style="white-space:nowrap">
+          <button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button>
+          <button class="btn-sm bd" onclick="delR('ar','${r.id}','${escQ(r.name)}')">Hapus</button>
+          ${logs.length>0?`<button class="btn-sm" style="background:#ede9fe;color:#7c3aed;margin-left:3px" onclick="showPayHistory('${r.id}')">📋 Detail</button>`:''}
+        </td>
       </tr>`;
     }));
 }
@@ -1133,12 +1170,36 @@ function buildARFormAdd(){
 </div>`;
 }
 
-// AR FORM — EDIT: with partial payment + via pembayaran (linked to CA categories)
+// AR FORM — EDIT: with partial payment + payment date + via pembayaran
 function buildARFormEdit(r){
   const paid=+(r.paid||0);
   const total=+(r.amount||0);
   const sisa=Math.max(0,total-paid);
   const caNames=DB.ca.map(x=>x.name);
+  const logs=parsePayLogs(r);
+  const historyHTML=logs.length?`
+<div style="margin-top:8px">
+  <div style="font-size:9.5px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px">📜 Riwayat Pembayaran</div>
+  <div style="overflow-x:auto;border-radius:7px;border:1px solid var(--bd)">
+    <table style="width:100%;border-collapse:collapse;font-size:10.5px">
+      <thead><tr style="background:var(--bg)">
+        <th style="padding:5px 8px;text-align:left;color:var(--mu);font-weight:700">Tgl Bayar</th>
+        <th style="padding:5px 8px;text-align:right;color:var(--mu);font-weight:700">Bayar</th>
+        <th style="padding:5px 8px;text-align:right;color:var(--mu);font-weight:700">Total Bayar</th>
+        <th style="padding:5px 8px;text-align:right;color:var(--mu);font-weight:700">Sisa</th>
+        <th style="padding:5px 8px;text-align:left;color:var(--mu);font-weight:700">Via</th>
+      </tr></thead>
+      <tbody>${logs.map(l=>`<tr style="border-top:1px solid var(--bd)">
+        <td style="padding:5px 8px">${l.date}</td>
+        <td style="padding:5px 8px;text-align:right;color:var(--ok);font-weight:700">${fRp(l.amount)}</td>
+        <td style="padding:5px 8px;text-align:right">${fRp(l.paid_total)}</td>
+        <td style="padding:5px 8px;text-align:right;color:var(--er)">${fRp(l.sisa)}</td>
+        <td style="padding:5px 8px">${l.via||'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>
+</div>`:'';
+
   return`
 <div class="fg"><label>Nama Penghutang</label><input id="f-nm" value="${r.name||''}"></div>
 <div class="fr">
@@ -1148,42 +1209,79 @@ function buildARFormEdit(r){
   </select></div>
 </div>
 <div class="fr">
-  <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r.date||td()}"></div>
+  <div class="fg"><label>Tanggal Awal Hutang</label><input id="f-dt" type="date" value="${r.date||td()}"></div>
   <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r.due_date||''}"></div>
 </div>
 <div style="background:var(--bg);border-radius:9px;padding:12px;margin-top:4px">
-  <div style="font-size:10px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">💳 Partial Payment</div>
-  <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:11.5px">
-    <span style="color:var(--mu);min-width:70px">Sudah bayar:</span>
+  <div style="font-size:10px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">💳 Tambah Pembayaran</div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:11.5px;flex-wrap:wrap">
+    <span style="color:var(--mu)">Sudah bayar:</span>
     <b style="color:var(--ok)">${fRp(paid)}</b>
-    <span style="color:var(--mu);margin-left:4px">Sisa: <b style="color:var(--er)">${fRp(sisa)}</b></span>
+    <span style="color:var(--mu)">Sisa:</span>
+    <b style="color:var(--er)">${fRp(sisa)}</b>
   </div>
   <div class="fr">
-    <div class="fg"><label>Tambah Pembayaran (Rp)</label>
+    <div class="fg"><label>Jumlah Pembayaran (Rp)</label>
       <input id="f-paid-add" type="number" min="0" placeholder="0" value="0" oninput="calcNewPaid()">
     </div>
-    <div class="fg"><label>Via Pembayaran</label>
-      <select id="f-via">
-        <option value="">— Tidak ada —</option>
-        ${caNames.map(n=>`<option value="${n}">${n}</option>`).join('')}
-      </select>
+    <div class="fg"><label>Tanggal Pembayaran</label>
+      <input id="f-pay-date" type="date" value="${td()}">
     </div>
   </div>
-  <div id="paid-preview" style="font-size:11px;color:var(--mu);margin-top:2px"></div>
+  <div class="fg"><label>Via Pembayaran</label>
+    <select id="f-via">
+      <option value="">— Tidak ada —</option>
+      ${caNames.map(n=>`<option value="${n}">${n}</option>`).join('')}
+    </select>
+  </div>
+  <div id="paid-preview" style="font-size:10.5px;color:var(--mu);margin-top:4px;padding:5px 8px;background:var(--card);border-radius:6px;min-height:24px"></div>
   <input type="hidden" id="f-paid-total" value="${paid}">
+  ${historyHTML}
 </div>`;
 }
 function calcNewPaid(){
   const add=parseFloat(document.getElementById('f-paid-add')?.value)||0;
   const existing=parseFloat(document.getElementById('f-paid-total')?.value)||0;
   const total=parseFloat(document.getElementById('f-amt')?.value)||0;
+  const payDate=document.getElementById('f-pay-date')?.value||td();
   const newTotal=Math.min(existing+add,total);
   const el=document.getElementById('paid-preview');
-  if(el&&add>0){
-    el.textContent=`Total terbayar akan menjadi: ${fRp(newTotal)} | Sisa: ${fRp(Math.max(0,total-newTotal))}`;
-    if(newTotal>=total)document.getElementById('f-sts').value='Paid';
-    else if(newTotal>0)document.getElementById('f-sts').value='Partial';
+  if(el){
+    if(add>0){
+      el.innerHTML=`✅ Akan terbayar <b style="color:var(--ok)">${fRp(add)}</b> pada <b>${payDate}</b> → Total: <b>${fRp(newTotal)}</b> | Sisa: <b style="color:var(--er)">${fRp(Math.max(0,total-newTotal))}</b>`;
+      if(newTotal>=total)document.getElementById('f-sts').value='Paid';
+      else if(newTotal>0)document.getElementById('f-sts').value='Partial';
+    } else {
+      el.innerHTML='';
+    }
   }
+}
+
+// ── PAYMENT LOG HELPERS ──────────────────────────────────────
+function parsePayLogs(r){
+  if(!r||!r.payment_logs)return[];
+  try{return JSON.parse(r.payment_logs)||[];}catch(e){return[];}
+}
+
+function showPayHistory(arId){
+  const r=DB.ar.find(x=>x.id===arId);
+  if(!r)return;
+  const logs=parsePayLogs(r);
+  const total=+(r.amount||0);
+  // Build popup content
+  const rows=logs.map((l,i)=>`<tr style="border-bottom:1px solid var(--bd)">
+    <td style="padding:8px 10px">${i+1}</td>
+    <td style="padding:8px 10px;font-weight:700">${fRp(total)}</td>
+    <td style="padding:8px 10px;color:var(--ok);font-weight:700">${fRp(l.amount)}</td>
+    <td style="padding:8px 10px">${l.date||'—'}</td>
+    <td style="padding:8px 10px;color:var(--er);font-weight:700">${fRp(l.sisa)}</td>
+    <td style="padding:8px 10px">${l.via||'—'}</td>
+  </tr>`).join('');
+
+  document.getElementById('phist-title').textContent=r.name;
+  document.getElementById('phist-meta').innerHTML=`<span class="badge bb">Hutang Awal: ${fRp(total)}</span> &nbsp; <span class="badge bk">Tgl Hutang: ${r.date||'—'}</span> &nbsp; <span class="badge ${+(r.paid||0)>0?'by':'bb'}">Terbayar: ${fRp(r.paid||0)}</span> &nbsp; <span class="badge br">Sisa: ${fRp(Math.max(0,total-(+(r.paid||0))))}</span>`;
+  document.getElementById('phist-body').innerHTML=rows||`<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--mu);font-style:italic">Belum ada riwayat pembayaran</td></tr>`;
+  document.getElementById('phist-mo').classList.add('open');
 }
 
 // INV TYPE SELECT — dynamic from DB
@@ -1392,17 +1490,31 @@ async function saveM(){
       const existingPaid=parseFloat(document.getElementById('f-paid-total')?.value)||0;
       const addPayment=parseFloat(document.getElementById('f-paid-add')?.value)||0;
       const via=document.getElementById('f-via')?.value||'';
+      const payDate=document.getElementById('f-pay-date')?.value||td();
       const newPaid=Math.min(existingPaid+addPayment,amount);
       let newStatus=status;
       if(newPaid>=amount&&amount>0)newStatus='Paid';
       else if(newPaid>0&&newPaid<amount)newStatus='Partial';
-      pay={name,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null};
+
+      // Build payment_logs
+      const arRec=DB.ar.find(x=>x.id===mId);
+      let logs=parsePayLogs(arRec);
+      if(addPayment>0){
+        logs.push({
+          amount:addPayment,
+          date:payDate,
+          via:via||null,
+          paid_total:newPaid,
+          sisa:Math.max(0,amount-newPaid)
+        });
+      }
+      pay={name,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null,payment_logs:JSON.stringify(logs)};
       if(addPayment>0&&via){
         const caItem=DB.ca.find(x=>x.name===via);
-        if(caItem){await sbU('current_assets',caItem.id,{amount:(+(caItem.amount||0))+addPayment,date:td()});DB.ca=await sbG('current_assets');}
+        if(caItem){await sbU('current_assets',caItem.id,{amount:(+(caItem.amount||0))+addPayment,date:payDate});DB.ca=await sbG('current_assets');}
       }
     } else {
-      pay={name,amount,date,due_date,status,paid:0};
+      pay={name,amount,date,due_date,status,paid:0,payment_logs:'[]'};
     }
   }
   else if(mType==='ii'){
