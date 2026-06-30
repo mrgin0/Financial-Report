@@ -102,7 +102,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* GRIDS */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.g2r{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g2r{display:grid;grid-template-columns:1fr;gap:12px}
 .mb12{margin-bottom:12px}
 /* FINANCIAL REPORT */
 .fin{font-size:11.5px;line-height:1.65}
@@ -152,6 +152,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .gl-box{width:8px;height:8px;border-radius:2px}
 /* TABLE */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px;border-radius:7px;border:1px solid var(--bd)}
+.tbl-pager{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap;font-size:11px}
+.pager-info{color:var(--mu)}
+.pager-controls{display:flex;align-items:center;gap:6px}
+.pager-size{border:1px solid var(--bd);border-radius:6px;padding:3px 7px;font-size:11px;background:var(--bg);color:var(--txt);cursor:pointer;outline:none}
+.pager-btn{border:1px solid var(--bd);border-radius:6px;width:24px;height:24px;background:var(--bg);color:var(--txt);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
+.pager-btn:hover:not(:disabled){background:var(--pl);color:var(--pr);border-color:var(--pr)}
+.pager-btn:disabled{opacity:.4;cursor:not-allowed}
+.pager-num{color:var(--mu);font-weight:600;min-width:36px;text-align:center}
 .ct{width:100%;border-collapse:collapse;font-size:11.5px;min-width:440px}
 .ct th{text-align:left;padding:7px 9px;font-size:9px;font-weight:800;letter-spacing:.5px;color:var(--mu);text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--bd);white-space:nowrap}
 .ct th:hover{background:var(--pl);color:var(--pr)}
@@ -473,7 +481,7 @@ async function sbD(t,id){const r=await fetch(`${SB}/${t}?id=eq.${id}`,{method:'D
 // ══════════════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════════════
-let DB={ca:[],ar:[],ii:[],ppe:[],intg:[],inv:[],snaps:[]};
+let DB={ca:[],ar:[],ii:[],ppe:[],intg:[],inv:[],snaps:[],payHist:[]};
 let CHS={};
 let mType='',mId=null,cfmCb=null,sbOpen=window.innerWidth>768;
 let LANG='id',CUR='IDR',FX_RATE=16200,FX_UPDATED='';
@@ -554,12 +562,13 @@ function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;
 // ══════════════════════════════════════════════════════════════
 async function init(){
   const load=async(t,q='')=>{try{return await sbG(t,q);}catch(e){console.warn(e);return[];}};
-  const [ca,ar,ii,ppe,intg,inv,snaps]=await Promise.all([
+  const [ca,ar,ii,ppe,intg,inv,snaps,payHist]=await Promise.all([
     load('current_assets'),load('accounts_receivable'),load('inventory'),
     load('property_plant_equipment'),load('intangible_assets'),load('investments'),
     load('laporan_snapshots','&order=snapshot_date.asc'),
+    load('payment_history','&order=paid_date.asc'),
   ]);
-  DB={ca,ar,ii,ppe,intg,inv,snaps};
+  DB={ca,ar,ii,ppe,intg,inv,snaps,payHist};
 
   // Fetch FX in background
   fetchFX().catch(()=>{});
@@ -952,31 +961,84 @@ function getCategories(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// SORTABLE TABLE ENGINE
+// SORTABLE + PAGINATED TABLE ENGINE
 // ══════════════════════════════════════════════════════════════
 const SORT_STATE={};
+const PAGE_STATE={};
+const RENDER_MAP={'t-ca':()=>rCA(),'t-ar':()=>rAR(),'t-ii':()=>rII(),'t-ppe':()=>rPPE(),'t-intg':()=>rINTG(),'t-inv':()=>rINV()};
 
 function mkTbl(id,ths,rows){
   const el=document.getElementById(id);if(!el)return;
-  // Preserve sort state for this table
   if(!SORT_STATE[id])SORT_STATE[id]={col:-1,asc:true};
+  if(!PAGE_STATE[id])PAGE_STATE[id]={size:10,page:1};
   const ss=SORT_STATE[id];
+  const ps=PAGE_STATE[id];
+
   const thHtml=ths.map((h,i)=>{
     const isAksi=h==='Aksi';
     if(isAksi)return`<th>${h}</th>`;
     const dir=ss.col===i?(ss.asc?'↑':'↓'):'⇅';
     return`<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="sortTbl('${id}',${i})">${h} <span style="font-size:9px;opacity:.6">${dir}</span></th>`;
   }).join('');
-  el.innerHTML=`<thead><tr>${thHtml}</tr></thead>`+(rows.length?`<tbody>${rows.join('')}</tbody>`:noR(ths.length));
+
+  // Pagination slice
+  const total=rows.length;
+  const size=ps.size==='all'?total||1:ps.size;
+  const totalPages=Math.max(1,Math.ceil(total/size));
+  if(ps.page>totalPages)ps.page=totalPages;
+  const start=(ps.page-1)*size;
+  const pageRows=ps.size==='all'?rows:rows.slice(start,start+size);
+
+  el.innerHTML=`<thead><tr>${thHtml}</tr></thead>`+(pageRows.length?`<tbody>${pageRows.join('')}</tbody>`:noR(ths.length));
+
+  // Render pagination controls in sibling element
+  renderPager(id,total,totalPages);
+}
+
+function renderPager(id,total,totalPages){
+  const wrap=document.getElementById(id)?.closest('.tw');
+  if(!wrap)return;
+  let pager=wrap.nextElementSibling;
+  if(!pager||!pager.classList.contains('tbl-pager')){
+    pager=document.createElement('div');
+    pager.className='tbl-pager';
+    wrap.insertAdjacentElement('afterend',pager);
+  }
+  const ps=PAGE_STATE[id];
+  if(total===0){pager.innerHTML='';return;}
+  const sizes=[10,50,100,'all'];
+  pager.innerHTML=`
+    <div class="pager-info">Menampilkan ${ps.size==='all'?total:Math.min(ps.size,total-(ps.page-1)*ps.size)} dari ${total} data</div>
+    <div class="pager-controls">
+      <select class="pager-size" onchange="changePageSize('${id}',this.value)">
+        ${sizes.map(s=>`<option value="${s}" ${ps.size==s?'selected':''}>${s==='all'?'Semua':s+' baris'}</option>`).join('')}
+      </select>
+      ${ps.size!=='all'?`
+      <button class="pager-btn" onclick="changePage('${id}',${ps.page-1})" ${ps.page<=1?'disabled':''}>‹</button>
+      <span class="pager-num">${ps.page} / ${totalPages}</span>
+      <button class="pager-btn" onclick="changePage('${id}',${ps.page+1})" ${ps.page>=totalPages?'disabled':''}>›</button>`:''}
+    </div>`;
+}
+
+function changePageSize(id,val){
+  const ps=PAGE_STATE[id]||{size:10,page:1};
+  ps.size=val==='all'?'all':parseInt(val);
+  ps.page=1;
+  PAGE_STATE[id]=ps;
+  if(RENDER_MAP[id])RENDER_MAP[id]();
+}
+function changePage(id,page){
+  const ps=PAGE_STATE[id];if(!ps)return;
+  ps.page=Math.max(1,page);
+  if(RENDER_MAP[id])RENDER_MAP[id]();
 }
 
 function sortTbl(id,col){
   const ss=SORT_STATE[id]||{col:-1,asc:true};
   if(ss.col===col){ss.asc=!ss.asc;}else{ss.col=col;ss.asc=true;}
   SORT_STATE[id]=ss;
-  // Find render function for this table id
-  const map={'t-ca':rCA,'t-ar':rAR,'t-ii':rII,'t-ppe':rPPE,'t-intg':rINTG,'t-inv':rINV};
-  if(map[id])map[id]();
+  if(PAGE_STATE[id])PAGE_STATE[id].page=1;
+  if(RENDER_MAP[id])RENDER_MAP[id]();
 }
 
 function sortArr(arr,id){
@@ -996,7 +1058,7 @@ function getSortVal(r,tid,col){
   // Map column index to data field per table
   const maps={
     't-ca':   [null,'name','category','amount','date',null],
-    't-ar':   [null,'name','amount','paid',r=>(Math.max(0,(+(r.amount||0))-(+(r.paid||0)))),'date','due_date','status',null],
+    't-ar':   [null,'name','amount','paid',r=>(Math.max(0,(+(r.amount||0))-(+(r.paid||0)))),'date','due_date','status',null,null],
     't-ii':   [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date',r=>(+(r.current_price||0))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},r=>r.updated_at||'',null],
     't-ppe':  [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date','depreciation_date',r=>(+(r.current_price||+(r.buy_price||r.amount||0)))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},null],
     't-intg': [null,'name','amount','date',null],
@@ -1026,10 +1088,9 @@ function rCA(){
 
 function rAR(){
   const data=sortArr(DB.ar,'t-ar');
-  mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tanggal Update','Jatuh Tempo','Status','Aksi'],
+  mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tanggal Update','Jatuh Tempo','Status','Detail','Aksi'],
     data.map((r,i)=>{
       const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));
-      const logs=parsePayLogs(r);
       return`<tr>
         <td>${i+1}</td><td>${r.name}</td>
         <td>${fRp(r.amount)}</td>
@@ -1037,10 +1098,10 @@ function rAR(){
         <td><b>${fRp(sisa)}</b></td>
         <td>${r.date}</td><td>${r.due_date||'-'}</td>
         <td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':r.status==='Partial'?'by':'bb'}">${r.status}</span></td>
+        <td><button class="btn-sm" style="background:#ede9fe;color:#7c3aed" onclick="showPayHistory('${r.id}')">📋 Detail</button></td>
         <td style="white-space:nowrap">
           <button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button>
           <button class="btn-sm bd" onclick="delR('ar','${r.id}','${escQ(r.name)}')">Hapus</button>
-          ${logs.length>0?`<button class="btn-sm" style="background:#ede9fe;color:#7c3aed;margin-left:3px" onclick="showPayHistory('${r.id}')">📋 Detail</button>`:''}
         </td>
       </tr>`;
     }));
@@ -1176,7 +1237,7 @@ function buildARFormEdit(r){
   const total=+(r.amount||0);
   const sisa=Math.max(0,total-paid);
   const caNames=DB.ca.map(x=>x.name);
-  const logs=parsePayLogs(r);
+  const logs=getPayHistFor(r.id);
   const historyHTML=logs.length?`
 <div style="margin-top:8px">
   <div style="font-size:9.5px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px">📜 Riwayat Pembayaran</div>
@@ -1190,7 +1251,7 @@ function buildARFormEdit(r){
         <th style="padding:5px 8px;text-align:left;color:var(--mu);font-weight:700">Via</th>
       </tr></thead>
       <tbody>${logs.map(l=>`<tr style="border-top:1px solid var(--bd)">
-        <td style="padding:5px 8px">${l.date}</td>
+        <td style="padding:5px 8px">${l.paid_date}</td>
         <td style="padding:5px 8px;text-align:right;color:var(--ok);font-weight:700">${fRp(l.amount)}</td>
         <td style="padding:5px 8px;text-align:right">${fRp(l.paid_total)}</td>
         <td style="padding:5px 8px;text-align:right;color:var(--er)">${fRp(l.sisa)}</td>
@@ -1257,23 +1318,21 @@ function calcNewPaid(){
   }
 }
 
-// ── PAYMENT LOG HELPERS ──────────────────────────────────────
-function parsePayLogs(r){
-  if(!r||!r.payment_logs)return[];
-  try{return JSON.parse(r.payment_logs)||[];}catch(e){return[];}
+// ── PAYMENT HISTORY — backed by real Supabase table `payment_history` ──
+function getPayHistFor(arId){
+  return DB.payHist.filter(p=>p.ar_id===arId).sort((a,b)=>(a.paid_date||'').localeCompare(b.paid_date||''));
 }
 
 function showPayHistory(arId){
   const r=DB.ar.find(x=>x.id===arId);
   if(!r)return;
-  const logs=parsePayLogs(r);
+  const logs=getPayHistFor(arId);
   const total=+(r.amount||0);
-  // Build popup content
   const rows=logs.map((l,i)=>`<tr style="border-bottom:1px solid var(--bd)">
     <td style="padding:8px 10px">${i+1}</td>
     <td style="padding:8px 10px;font-weight:700">${fRp(total)}</td>
     <td style="padding:8px 10px;color:var(--ok);font-weight:700">${fRp(l.amount)}</td>
-    <td style="padding:8px 10px">${l.date||'—'}</td>
+    <td style="padding:8px 10px">${l.paid_date||'—'}</td>
     <td style="padding:8px 10px;color:var(--er);font-weight:700">${fRp(l.sisa)}</td>
     <td style="padding:8px 10px">${l.via||'—'}</td>
   </tr>`).join('');
@@ -1496,25 +1555,30 @@ async function saveM(){
       if(newPaid>=amount&&amount>0)newStatus='Paid';
       else if(newPaid>0&&newPaid<amount)newStatus='Partial';
 
-      // Build payment_logs
-      const arRec=DB.ar.find(x=>x.id===mId);
-      let logs=parsePayLogs(arRec);
+      pay={name,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null};
+
+      // Insert payment_history record (real table, not JSON)
       if(addPayment>0){
-        logs.push({
-          amount:addPayment,
-          date:payDate,
-          via:via||null,
-          paid_total:newPaid,
-          sisa:Math.max(0,amount-newPaid)
-        });
+        try{
+          await sbI('payment_history',{
+            ar_id:mId,
+            amount:addPayment,
+            paid_date:payDate,
+            via:via||null,
+            paid_total:newPaid,
+            sisa:Math.max(0,amount-newPaid)
+          });
+          DB.payHist=await sbG('payment_history','&order=paid_date.asc');
+        }catch(e){console.warn('payment_history insert failed:',e.message);}
       }
-      pay={name,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null,payment_logs:JSON.stringify(logs)};
+
+      // Update CA balance if via selected
       if(addPayment>0&&via){
         const caItem=DB.ca.find(x=>x.name===via);
         if(caItem){await sbU('current_assets',caItem.id,{amount:(+(caItem.amount||0))+addPayment,date:payDate});DB.ca=await sbG('current_assets');}
       }
     } else {
-      pay={name,amount,date,due_date,status,paid:0,payment_logs:'[]'};
+      pay={name,amount,date,due_date,status,paid:0};
     }
   }
   else if(mType==='ii'){
@@ -1575,7 +1639,12 @@ function delR(type,id,name){
   document.getElementById('cfm-tt').textContent='Hapus '+MLBL_[type]+'?';
   document.getElementById('cfm-mg').textContent=`"${name}" akan dihapus permanen.`;
   cfmCb=async()=>{
-    try{await sbD(TMAP[type],id);DB[DARR[type]]=await sbG(TMAP[type]);doSnap().catch(()=>{});updateAll();reRender();showToast('🗑️ Data dihapus!');}
+    try{
+      await sbD(TMAP[type],id);
+      DB[DARR[type]]=await sbG(TMAP[type]);
+      if(type==='ar')DB.payHist=await sbG('payment_history','&order=paid_date.asc'); // cascade cleanup sync
+      doSnap().catch(()=>{});updateAll();reRender();showToast('🗑️ Data dihapus!');
+    }
     catch(e){showToast('❌ '+e.message);}
   };
   document.getElementById('cfm').classList.add('open');
