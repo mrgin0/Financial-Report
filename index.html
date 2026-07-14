@@ -231,6 +231,7 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
 .btn-filt{width:100%;background:var(--pr);color:#fff;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px}
 /* RINGKASAN SOURCE/CATEGORY CARDS */
 .rgk-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:12px}
+.chart-h{position:relative;height:230px;width:100%}
 .rgk-card{border:1px solid var(--bd);border-radius:10px;padding:11px;background:var(--bg)}
 .rgk-nm{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;margin-bottom:6px}
 .rgk-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -480,7 +481,7 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
           <button class="pb" onclick="setTxPeriod('exp','all',this)">ALL</button>
         </div>
       </div>
-      <canvas id="c-exp-trend" height="230"></canvas>
+      <div class="chart-h"><canvas id="c-exp-trend"></canvas></div>
     </div>
     <div class="card">
       <div class="chd"><div class="ctitle">Pengeluaran berdasarkan Kategori</div><button class="btn-add" style="background:var(--bg);color:var(--txt);border:1px solid var(--bd)" onclick="openCatMgr('exp')">⚙ Kelola Kategori</button></div>
@@ -534,7 +535,7 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
           <button class="pb" onclick="setTxPeriod('inc','all',this)">ALL</button>
         </div>
       </div>
-      <canvas id="c-inc-trend" height="230"></canvas>
+      <div class="chart-h"><canvas id="c-inc-trend"></canvas></div>
     </div>
     <div class="card">
       <div class="chd"><div class="ctitle">Pemasukan berdasarkan Sumber</div><button class="btn-add" style="background:var(--bg);color:var(--txt);border:1px solid var(--bd)" onclick="openCatMgr('inc')">⚙ Kelola Kategori</button></div>
