@@ -231,12 +231,19 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
 .btn-filt{width:100%;background:var(--pr);color:#fff;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px}
 /* RINGKASAN SOURCE/CATEGORY CARDS */
 .rgk-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:12px}
-.chart-h{position:relative;height:230px;width:100%}
 .rgk-card{border:1px solid var(--bd);border-radius:10px;padding:11px;background:var(--bg)}
 .rgk-nm{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;margin-bottom:6px}
 .rgk-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .rgk-val{font-size:13.5px;font-weight:800;margin-bottom:2px}
 .rgk-pct{font-size:9.5px;color:var(--mu)}
+.chart-h{position:relative;height:230px;width:100%}
+.dbadge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.dbadge.aman{background:#d1fae5;color:#059669}
+.dbadge.jt{background:#fee2e2;color:#dc2626}
+.dbadge.lunas{background:#dbeafe;color:#2563eb}
+body.dark .dbadge.aman{background:rgba(16,185,129,.18)}
+body.dark .dbadge.jt{background:rgba(239,68,68,.18)}
+body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
 @media(max-width:1100px){.tx-layout{grid-template-columns:1fr}.rgk-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:600px){.rgk-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:1100px){.sg{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}}
@@ -287,6 +294,7 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
     <div class="sb-it" onclick="nav('ce',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span data-i="cash_equiv">Cash Equivalent</span></div>
     <div class="sb-it" onclick="nav('nc',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span data-i="non_current">Non Current Asset</span></div>
     <div class="sb-it" onclick="nav('inv',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span data-i="investment">Investment</span></div>
+    <div class="sb-it" onclick="nav('hutang',this)" id="nav-hutang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg><span data-i="hutang">Hutang</span></div>
     <div class="sb-it" onclick="nav('exp',this)" id="nav-exp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span data-i="pengeluaran">Pengeluaran</span></div>
     <div class="sb-it" onclick="nav('inc',this)" id="nav-inc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/><path d="M12 3v18"/></svg><span data-i="pemasukan">Pemasukan</span></div>
     <div class="sb-div"></div>
@@ -457,6 +465,60 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
 <div class="page" id="page-inv">
   <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg><span data-i="investment">Investment</span></div>
   <div class="card"><div class="chd"><div class="ctitle" data-i="inv_port">Portofolio Investasi</div><button class="btn-add" onclick="openM('inv')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-inv"></table></div></div>
+</div>
+
+<!-- HUTANG -->
+<div class="page" id="page-hutang">
+  <div class="chd" style="margin-bottom:13px">
+    <div class="ptitle" style="margin-bottom:0">💳 <span>Hutang</span></div>
+    <button class="btn-add" onclick="openM('debt')">+ Tambah Hutang</button>
+  </div>
+  <div class="sg">
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Hutang</div><div class="sc-val" id="sc-debt-total">Rp 0</div><div class="sc-chg neu" id="sc-debt-total-chg">—</div></div><div class="sc-ic ic-o">💳</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Terbayar</div><div class="sc-val" id="sc-debt-paid">Rp 0</div><div class="sc-chg neu" id="sc-debt-paid-chg">—</div></div><div class="sc-ic ic-g">✅</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Sisa Hutang</div><div class="sc-val" id="sc-debt-sisa">Rp 0</div><div class="sc-chg neu" id="sc-debt-sisa-chg">—</div></div><div class="sc-ic ic-p">📄</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Hutang Jatuh Tempo</div><div class="sc-val" id="sc-debt-jt">0</div><div class="sc-chg neu" id="sc-debt-jt-chg">—</div></div><div class="sc-ic ic-b">📅</div></div>
+  </div>
+  <div class="g2r mb12">
+    <div class="card">
+      <div class="chd"><div class="ctitle">Trend Hutang (Sisa Hutang)</div>
+        <div class="pbtns" id="debt-per-btns">
+          <button class="pb active" onclick="setDebtPeriod('7d',this)">7H</button>
+          <button class="pb" onclick="setDebtPeriod('30d',this)">30H</button>
+          <button class="pb" onclick="setDebtPeriod('1y',this)">1T</button>
+          <button class="pb" onclick="setDebtPeriod('all',this)">ALL</button>
+        </div>
+      </div>
+      <div class="chart-h"><canvas id="c-debt-trend"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="chd"><div class="ctitle">Hutang berdasarkan Kreditur</div></div>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <canvas id="c-debt-donut" width="160" height="160" style="max-width:160px"></canvas>
+        <div id="debt-donut-legend" style="flex:1;min-width:160px;font-size:11.5px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:12.5px;border-top:1px solid var(--bd);margin-top:9px;padding-top:8px"><span>Total</span><span id="debt-donut-total">Rp 0</span></div>
+    </div>
+  </div>
+  <div class="tx-layout">
+    <div class="card">
+      <div class="ctitle" style="margin-bottom:9px">Daftar Hutang</div>
+      <div class="tw"><table class="ct" id="t-debt"></table></div>
+    </div>
+    <div class="card">
+      <div class="ctitle" style="margin-bottom:10px">Filter</div>
+      <div class="filt-fg"><label>Periode</label><select id="debt-f-period"><option value="bulan_ini">Bulan Ini</option><option value="bulan_lalu">Bulan Lalu</option><option value="all">Semua</option><option value="custom">Custom</option></select></div>
+      <div class="filt-fg"><label>Dari Tanggal</label><input type="date" id="debt-f-from"></div>
+      <div class="filt-fg"><label>Sampai Tanggal</label><input type="date" id="debt-f-to"></div>
+      <div class="filt-fg"><label>Kreditur</label><select id="debt-f-cred"><option value="">Semua Kreditur</option></select></div>
+      <div class="filt-fg"><label>Status</label><select id="debt-f-status"><option value="">Semua Status</option><option value="Aman">Aman</option><option value="Jatuh Tempo">Jatuh Tempo</option><option value="Lunas">Lunas</option></select></div>
+      <button class="btn-filt" onclick="applyDebtFilter()">🔽 Terapkan Filter</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="ctitle" style="margin-bottom:4px">Ringkasan Hutang berdasarkan Jatuh Tempo</div>
+    <div class="rgk-grid" id="debt-rgk"></div>
+  </div>
 </div>
 
 <!-- PENGELUARAN -->
@@ -645,8 +707,10 @@ async function sbD(t,id){const r=await fetch(`${SB}/${t}?id=eq.${id}`,{method:'D
 // ══════════════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════════════
-let DB={ca:[],ar:[],ii:[],ppe:[],intg:[],inv:[],snaps:[],payHist:[],inc:[],exp:[]};
+let DB={ca:[],ar:[],ii:[],ppe:[],intg:[],inv:[],snaps:[],payHist:[],inc:[],exp:[],debt:[],debtPay:[]};
 let TXP={inc:'7d',exp:'7d'};
+let DEBT_PERIOD='7d';
+let DEBTFILT=null;
 let TXFILT={inc:null,exp:null};
 let catMgrType='inc';
 let CHS={};
@@ -661,8 +725,8 @@ let dashCtx={mode:'month',ym:'',fromYM:'',toYM:'',label:''};
 // I18N — Point 4
 // ══════════════════════════════════════════════════════════════
 const I18={
-  id:{dashboard:'Dashboard',sb_laporan:'Laporan Keuangan',laporan_pos:'Laporan Posisi Keuangan',sb_master:'Master Data',current_asset:'Current Asset',cash_equiv:'Cash Equivalent',non_current:'Non Current Asset',investment:'Investment',pengeluaran:'Pengeluaran',pemasukan:'Pemasukan',total_aset:'Total Aset',total_cur:'Total Current Asset',non_cur:'Non Current Asset',asset_today:'Asset Hari Ini',growth_aset:'History Growth Aset',alokasi_total:'Alokasi Total Asset',growth_recv:'Growth Receivable',inv_chart:'Investment Growth',alokasi_inv:'Alokasi Investment',gain_loss:'Investment Gain/Loss',laporan_detail:'Laporan Detail',ca_desc:'Kas, Bank & Penghasilan Platform',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Portofolio Investasi',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Tambah',btn_cancel:'Batal',btn_save:'Simpan',btn_del:'Hapus',p_1b:'1 Bln',p_6b:'6 Bln',p_1t:'1 Thn',p_5t:'5 Thn',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Laporan Keuangan Pribadi',ls_sub:'Memuat data dari Supabase…'},
-  en:{dashboard:'Dashboard',sb_laporan:'Financial Reports',laporan_pos:'Statement of Financial Position',sb_master:'Master Data',current_asset:'Current Assets',cash_equiv:'Cash Equivalents',non_current:'Non-Current Assets',investment:'Investments',pengeluaran:'Expenses',pemasukan:'Income',total_aset:'Total Assets',total_cur:'Total Current Assets',non_cur:'Non-Current Assets',asset_today:"Today's Assets",growth_aset:'Asset Growth History',alokasi_total:'Total Asset Allocation',growth_recv:'Receivable Growth',inv_chart:'Investment Growth',alokasi_inv:'Investment Allocation',gain_loss:'Investment Gain/Loss',laporan_detail:'Detailed Report',ca_desc:'Cash, Bank & Platform Income',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Investment Portfolio',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Add',btn_cancel:'Cancel',btn_save:'Save',btn_del:'Delete',p_1b:'1 Mo',p_6b:'6 Mo',p_1t:'1 Yr',p_5t:'5 Yr',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Personal Financial Report',ls_sub:'Loading data from Supabase…'}
+  id:{dashboard:'Dashboard',sb_laporan:'Laporan Keuangan',laporan_pos:'Laporan Posisi Keuangan',sb_master:'Master Data',current_asset:'Current Asset',cash_equiv:'Cash Equivalent',non_current:'Non Current Asset',investment:'Investment',hutang:'Hutang',pengeluaran:'Pengeluaran',pemasukan:'Pemasukan',total_aset:'Total Aset',total_cur:'Total Current Asset',non_cur:'Non Current Asset',asset_today:'Asset Hari Ini',growth_aset:'History Growth Aset',alokasi_total:'Alokasi Total Asset',growth_recv:'Growth Receivable',inv_chart:'Investment Growth',alokasi_inv:'Alokasi Investment',gain_loss:'Investment Gain/Loss',laporan_detail:'Laporan Detail',ca_desc:'Kas, Bank & Penghasilan Platform',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Portofolio Investasi',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Tambah',btn_cancel:'Batal',btn_save:'Simpan',btn_del:'Hapus',p_1b:'1 Bln',p_6b:'6 Bln',p_1t:'1 Thn',p_5t:'5 Thn',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Laporan Keuangan Pribadi',ls_sub:'Memuat data dari Supabase…'},
+  en:{dashboard:'Dashboard',sb_laporan:'Financial Reports',laporan_pos:'Statement of Financial Position',sb_master:'Master Data',current_asset:'Current Assets',cash_equiv:'Cash Equivalents',non_current:'Non-Current Assets',investment:'Investments',hutang:'Debts',pengeluaran:'Expenses',pemasukan:'Income',total_aset:'Total Assets',total_cur:'Total Current Assets',non_cur:'Non-Current Assets',asset_today:"Today's Assets",growth_aset:'Asset Growth History',alokasi_total:'Total Asset Allocation',growth_recv:'Receivable Growth',inv_chart:'Investment Growth',alokasi_inv:'Investment Allocation',gain_loss:'Investment Gain/Loss',laporan_detail:'Detailed Report',ca_desc:'Cash, Bank & Platform Income',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Investment Portfolio',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Add',btn_cancel:'Cancel',btn_save:'Save',btn_del:'Delete',p_1b:'1 Mo',p_6b:'6 Mo',p_1t:'1 Yr',p_5t:'5 Yr',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Personal Financial Report',ls_sub:'Loading data from Supabase…'}
 };
 function applyI18n(){
   const d=I18[LANG];
@@ -729,14 +793,15 @@ function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;
 // ══════════════════════════════════════════════════════════════
 async function init(){
   const load=async(t,q='')=>{try{return await sbG(t,q);}catch(e){console.warn(e);return[];}};
-  const [ca,ar,ii,ppe,intg,inv,snaps,payHist,inc,exp]=await Promise.all([
+  const [ca,ar,ii,ppe,intg,inv,snaps,payHist,inc,exp,debt,debtPay]=await Promise.all([
     load('current_assets'),load('accounts_receivable'),load('inventory'),
     load('property_plant_equipment'),load('intangible_assets'),load('investments'),
     load('laporan_snapshots','&order=snapshot_date.asc'),
     load('payment_history','&order=paid_date.asc'),
     load('income'),load('expenses'),
+    load('debts'),load('debt_payments','&order=paid_date.asc'),
   ]);
-  DB={ca,ar,ii,ppe,intg,inv,snaps,payHist,inc,exp};
+  DB={ca,ar,ii,ppe,intg,inv,snaps,payHist,inc,exp,debt,debtPay};
 
   // Fetch FX in background
   fetchFX().catch(()=>{});
@@ -751,6 +816,7 @@ async function init(){
   applyI18n();
   renderIncPage();
   renderExpPage();
+  renderHutangPage();
   hideLS();
   doSnap().catch(()=>{});
 }
@@ -1119,9 +1185,9 @@ function updateAll(){
 // ══════════════════════════════════════════════════════════════
 // CRUD TABLES
 // ══════════════════════════════════════════════════════════════
-const TMAP={ca:'current_assets',ar:'accounts_receivable',ii:'inventory',ppe:'property_plant_equipment',intg:'intangible_assets',inv:'investments',inc:'income',exp:'expenses'};
-const DARR={ca:'ca',ar:'ar',ii:'ii',ppe:'ppe',intg:'intg',inv:'inv',inc:'inc',exp:'exp'};
-const MLBL_={ca:'Current Asset',ar:'Piutang',ii:'Inventory',ppe:'PPE',intg:'Intangible',inv:'Investasi',inc:'Pemasukan',exp:'Pengeluaran'};
+const TMAP={ca:'current_assets',ar:'accounts_receivable',ii:'inventory',ppe:'property_plant_equipment',intg:'intangible_assets',inv:'investments',inc:'income',exp:'expenses',debt:'debts'};
+const DARR={ca:'ca',ar:'ar',ii:'ii',ppe:'ppe',intg:'intg',inv:'inv',inc:'inc',exp:'exp',debt:'debt'};
+const MLBL_={ca:'Current Asset',ar:'Piutang',ii:'Inventory',ppe:'PPE',intg:'Intangible',inv:'Investasi',inc:'Pemasukan',exp:'Pengeluaran',debt:'Hutang'};
 
 // ══════════════════════════════════════════════════════════════
 // PEMASUKAN / PENGELUARAN — kategori custom (localStorage) + helper
@@ -1282,6 +1348,7 @@ function getSortVal(r,tid,col){
     't-inv':  [null,'name','type',r=>+(r.total_buy||r.amount||0),'date',r=>(+(r.current_price||0))*(+(r.qty||0)),r=>r.updated_at||'',r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return ns-tb;},r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return tb>0?((ns-tb)/tb*100):0;},null],
     't-inc':  [null,'date','source','category','description','method',r=>+(r.amount||0),'note',null],
     't-exp':  [null,'date','category','description','method',r=>+(r.amount||0),'note',null],
+    't-debt': ['date','name','purpose',r=>+(r.amount||0),r=>+(r.paid||0),r=>debtSisa(r),'due_date',r=>debtStatus(r),null],
   };
   const m=maps[tid];if(!m||col>=m.length)return'';
   const fn=m[col];
@@ -1410,7 +1477,7 @@ function rINTG(){
 }
 
 function escQ(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
-function reRender(){const p=document.querySelector('.page.active')?.id;if(p==='page-ca')rCA();if(p==='page-ce'){rAR();rII();}if(p==='page-nc'){rPPE();rINTG();}if(p==='page-inv')rINV();if(p==='page-inc')renderIncPage();if(p==='page-exp')renderExpPage();}
+function reRender(){const p=document.querySelector('.page.active')?.id;if(p==='page-ca')rCA();if(p==='page-ce'){rAR();rII();}if(p==='page-nc'){rPPE();rINTG();}if(p==='page-inv')rINV();if(p==='page-inc')renderIncPage();if(p==='page-exp')renderExpPage();if(p==='page-hutang')renderHutangPage();}
 
 // ══════════════════════════════════════════════════════════════
 // PEMASUKAN / PENGELUARAN — filter, tabel, chart, ringkasan
@@ -1621,6 +1688,175 @@ function renderExpPage(){
 }
 
 // ══════════════════════════════════════════════════════════════
+// HUTANG (Accounts Payable)
+// ══════════════════════════════════════════════════════════════
+function debtSisa(r){return Math.max(0,(+(r.amount||0))-(+(r.paid||0)));}
+function debtStatus(r){
+  if(debtSisa(r)<=0&&(+(r.amount||0))>0)return'Lunas';
+  if(r.due_date&&r.due_date<td())return'Jatuh Tempo';
+  return'Aman';
+}
+function debtBadge(s){
+  const cls=s==='Lunas'?'lunas':s==='Jatuh Tempo'?'jt':'aman';
+  return`<span class="dbadge ${cls}">${s}</span>`;
+}
+function debtFiltered(){
+  const f=DEBTFILT;
+  if(!f)return DB.debt;
+  return DB.debt.filter(r=>{
+    if(f.from&&r.date<f.from)return false;
+    if(f.to&&r.date>f.to)return false;
+    if(f.creditor&&r.name!==f.creditor)return false;
+    if(f.status&&debtStatus(r)!==f.status)return false;
+    return true;
+  });
+}
+function rHutang(){
+  let data=debtFiltered().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.created_at||'').localeCompare(a.created_at||''));
+  data=sortArr(data,'t-debt');
+  mkTbl('t-debt',['Tanggal','Kreditur','Tujuan','Total Hutang','Terbayar','Sisa Hutang','Jatuh Tempo','Status','Aksi'],
+    data.map(r=>`<tr>
+      <td>${r.date}</td><td>${esc(r.name)}</td><td>${esc(r.purpose||'—')}</td>
+      <td>${fRp(r.amount)}</td><td style="color:var(--ok)">${fRp(r.paid)}</td>
+      <td><b style="color:var(--er)">${fRp(debtSisa(r))}</b></td><td>${r.due_date||'—'}</td>
+      <td>${debtBadge(debtStatus(r))}</td>
+      <td><button class="btn-sm be" onclick="openE('debt','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('debt','${r.id}','${escQ(r.name)}')">Hapus</button></td>
+    </tr>`));
+}
+RENDER_MAP['t-debt']=()=>rHutang();
+
+function refreshDebtFilterOptions(){
+  const credSel=document.getElementById('debt-f-cred');
+  if(credSel){const cur=credSel.value;const names=[...new Set(DB.debt.map(x=>x.name).filter(Boolean))];credSel.innerHTML='<option value="">Semua Kreditur</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');credSel.value=cur;}
+}
+function applyDebtFilter(){
+  const period=document.getElementById('debt-f-period')?.value||'all';
+  let from=document.getElementById('debt-f-from')?.value||null;
+  let to=document.getElementById('debt-f-to')?.value||null;
+  const now=new Date();
+  if(period==='bulan_ini'){const ym=td().slice(0,7);from=ym+'-01';to=td();}
+  else if(period==='bulan_lalu'){const d=new Date(now.getFullYear(),now.getMonth()-1,1);const ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const lastDay=new Date(now.getFullYear(),now.getMonth(),0).getDate();from=ym+'-01';to=ym+'-'+String(lastDay).padStart(2,'0');}
+  else if(period==='all'){from=null;to=null;}
+  const creditor=document.getElementById('debt-f-cred')?.value||'';
+  const status=document.getElementById('debt-f-status')?.value||'';
+  DEBTFILT={from,to,creditor,status};
+  if(PAGE_STATE['t-debt'])PAGE_STATE['t-debt'].page=1;
+  rHutang();
+  showToast('✅ Filter diterapkan');
+}
+function debtStatsCompare(){
+  const curTotal=DB.debt.reduce((a,x)=>a+(+x.amount||0),0);
+  const curPaid=DB.debt.reduce((a,x)=>a+(+x.paid||0),0);
+  const curSisa=curTotal-curPaid;
+  const now=new Date();
+  const prevD=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const prevYM=prevD.getFullYear()+'-'+String(prevD.getMonth()+1).padStart(2,'0');
+  const prevLastDay=new Date(prevD.getFullYear(),prevD.getMonth()+1,0).toISOString().slice(0,10);
+  const prevTotal=DB.debt.filter(x=>x.date&&x.date<=prevLastDay).reduce((a,x)=>a+(+x.amount||0),0);
+  const prevPaid=DB.debtPay.filter(p=>p.paid_date&&p.paid_date<=prevLastDay).reduce((a,p)=>a+(+p.amount||0),0);
+  const prevSisa=Math.max(0,prevTotal-prevPaid);
+  return{curTotal,curPaid,curSisa,prevTotal,prevPaid,prevSisa,prevLbl:mLbl(prevYM+'-01')};
+}
+function sisaAsOf(dateStr){
+  return DB.debt.filter(x=>x.date&&x.date<=dateStr).reduce((a,x)=>{
+    const paidAsOf=DB.debtPay.filter(p=>p.debt_id===x.id&&p.paid_date&&p.paid_date<=dateStr).reduce((s,p)=>s+(+p.amount||0),0);
+    return a+Math.max(0,(+x.amount||0)-paidAsOf);
+  },0);
+}
+function buildDebtSeries(period){
+  if(period==='7d'||period==='30d'){
+    const n=period==='7d'?7:30;
+    const days=[];
+    for(let i=n-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().slice(0,10));}
+    const data=days.map(d=>sisaAsOf(d));
+    const labels=days.map(d=>{const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short'});});
+    return{labels,data};
+  }
+  let months;
+  if(period==='1y'){
+    months=[];const now=new Date();
+    for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
+  } else {
+    const all=[...new Set(DB.debt.map(x=>ymOf(x.date)))].sort();
+    months=all.length?all:[td().slice(0,7)];
+  }
+  const data=months.map(ym=>{const lastDay=new Date(+ym.slice(0,4),+ym.slice(5,7),0).toISOString().slice(0,10);return sisaAsOf(lastDay);});
+  const labels=months.map(ym=>mLbl(ym+'-01'));
+  return{labels,data};
+}
+function renderDebtTrendChart(){
+  const{labels,data}=buildDebtSeries(DEBT_PERIOD);
+  const canvas=document.getElementById('c-debt-trend');if(!canvas)return;
+  if(CHS.debtTrend)CHS.debtTrend.destroy();
+  CHS.debtTrend=new Chart(canvas.getContext('2d'),{type:'line',data:{labels,datasets:[{data,borderColor:'#8b5cf6',backgroundColor:'#8b5cf622',fill:true,tension:.35,pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fRp(c.parsed.y)}}},scales:SC()}});
+}
+function setDebtPeriod(period,btn){
+  DEBT_PERIOD=period;
+  document.querySelectorAll('#debt-per-btns .pb').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderDebtTrendChart();
+}
+function renderDebtDonut(){
+  const byCred={};
+  DB.debt.forEach(x=>{const k=x.name||'Lainnya';byCred[k]=(byCred[k]||0)+debtSisa(x);});
+  const labels=Object.keys(byCred).filter(l=>byCred[l]>0);
+  const values=labels.map(l=>byCred[l]);
+  const total=values.reduce((a,b)=>a+b,0);
+  const canvas=document.getElementById('c-debt-donut');if(!canvas)return;
+  if(CHS.debtDonut)CHS.debtDonut.destroy();
+  if(!labels.length){
+    const lg=document.getElementById('debt-donut-legend');if(lg)lg.innerHTML='<span style="color:var(--mu)">📭 Belum ada data</span>';
+    setText('debt-donut-total',fRp(0));
+    return;
+  }
+  CHS.debtDonut=new Chart(canvas.getContext('2d'),{type:'doughnut',data:{labels,datasets:[{data:values,backgroundColor:labels.map((_,i)=>CHART_COLORS[i%CHART_COLORS.length]),borderWidth:2,hoverOffset:4}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fRp(c.parsed)}`}}}}});
+  const legend=document.getElementById('debt-donut-legend');
+  if(legend)legend.innerHTML=labels.map((l,i)=>{
+    const v=byCred[l];const pct=total>0?(v/total*100).toFixed(1):'0.0';
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0"><span style="display:flex;align-items:center;gap:6px;min-width:0"><span style="width:8px;height:8px;border-radius:50%;background:${CHART_COLORS[i%CHART_COLORS.length]};display:inline-block;flex-shrink:0"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l}</span></span><span style="white-space:nowrap">${pct}% <b style="margin-left:4px">${fRp(v)}</b></span></div>`;
+  }).join('');
+  setText('debt-donut-total',fRp(total));
+}
+function renderDebtSummary(){
+  const today=td();
+  let belum=0,d1_30=0,dOver60=0,total=0;
+  DB.debt.forEach(x=>{
+    const sisa=debtSisa(x);
+    if(sisa<=0)return;
+    total+=sisa;
+    if(!x.due_date){belum+=sisa;return;}
+    const diffDays=Math.floor((new Date(x.due_date)-new Date(today))/86400000);
+    if(diffDays>=0)belum+=sisa;
+    else if(diffDays>=-30)d1_30+=sisa;
+    else if(diffDays<-60)dOver60+=sisa;
+  });
+  const pct=(v)=>total>0?(v/total*100).toFixed(1):'0.0';
+  const el=document.getElementById('debt-rgk');if(!el)return;
+  el.innerHTML=`
+    <div class="rgk-card"><div class="rgk-nm"><span class="rgk-dot" style="background:#22c55e"></span>Belum Jatuh Tempo</div><div class="rgk-val">${fRp(belum)}</div><div class="rgk-pct">${pct(belum)}% dari total</div></div>
+    <div class="rgk-card"><div class="rgk-nm"><span class="rgk-dot" style="background:#f59e0b"></span>Jatuh Tempo 1 - 30 Hari</div><div class="rgk-val">${fRp(d1_30)}</div><div class="rgk-pct">${pct(d1_30)}% dari total</div></div>
+    <div class="rgk-card"><div class="rgk-nm"><span class="rgk-dot" style="background:#ef4444"></span>Jatuh Tempo &gt; 60 Hari</div><div class="rgk-val">${fRp(dOver60)}</div><div class="rgk-pct">${pct(dOver60)}% dari total</div></div>
+    <div class="rgk-card"><div class="rgk-nm"><span class="rgk-dot" style="background:#2563eb"></span>Total Sisa Hutang</div><div class="rgk-val">${fRp(total)}</div><div class="rgk-pct">100% dari total</div></div>`;
+}
+function renderHutangPage(){
+  const s=debtStatsCompare();
+  setText('sc-debt-total',fRp(s.curTotal));
+  setText('sc-debt-paid',fRp(s.curPaid));
+  setText('sc-debt-sisa',fRp(s.curSisa));
+  setTxChg('sc-debt-total-chg',s.curTotal,s.prevTotal,s.prevLbl);
+  setTxChg('sc-debt-paid-chg',s.curPaid,s.prevPaid,s.prevLbl);
+  setTxChg('sc-debt-sisa-chg',s.curSisa,s.prevSisa,s.prevLbl);
+  const today=td();
+  const in30=new Date();in30.setDate(in30.getDate()+30);
+  const in30Str=in30.toISOString().slice(0,10);
+  const jtCount=DB.debt.filter(x=>debtSisa(x)>0&&x.due_date&&x.due_date>=today&&x.due_date<=in30Str).length;
+  setText('sc-debt-jt',String(jtCount));
+  const jtEl=document.getElementById('sc-debt-jt-chg');
+  if(jtEl){jtEl.className='sc-chg neu';jtEl.textContent=jtCount+' hutang jatuh tempo dalam 30 hari';}
+  renderDebtTrendChart();renderDebtDonut();rHutang();renderDebtSummary();refreshDebtFilterOptions();
+}
+
+// ══════════════════════════════════════════════════════════════
 // MODAL FORMS
 // ══════════════════════════════════════════════════════════════
 function buildCatSelect(cur){
@@ -1737,15 +1973,103 @@ function calcNewPaid(){
   if(el){
     if(add>0){
       el.innerHTML=`✅ Akan terbayar <b style="color:var(--ok)">${fRp(add)}</b> pada <b>${payDate}</b> → Total: <b>${fRp(newTotal)}</b> | Sisa: <b style="color:var(--er)">${fRp(Math.max(0,total-newTotal))}</b>`;
-      if(newTotal>=total)document.getElementById('f-sts').value='Paid';
-      else if(newTotal>0)document.getElementById('f-sts').value='Partial';
+      const stsEl=document.getElementById('f-sts');
+      if(stsEl){
+        if(mType==='debt'){if(newTotal>=total)stsEl.value='Lunas';else stsEl.value='Aman';}
+        else{if(newTotal>=total)stsEl.value='Paid';else if(newTotal>0)stsEl.value='Partial';}
+      }
     } else {
       el.innerHTML='';
     }
   }
 }
 
-// ── PAYMENT HISTORY — backed by real Supabase table `payment_history` ──
+// ── HUTANG FORM — mirror AR tapi arah CA terbalik (bayar hutang = CA berkurang) ──
+function buildDebtFormAdd(){
+  return`
+<div class="fg"><label>Kreditur</label><input id="f-nm" value=""></div>
+<div class="fg"><label>Tujuan</label><input id="f-tujuan" value="" placeholder="cth: Kredit Modal Usaha"></div>
+<div class="fr">
+  <div class="fg"><label>Total Hutang (Rp)</label><input id="f-amt" type="number" min="0" value="0"></div>
+  <div class="fg"><label>Status</label><select id="f-sts"><option>Aman</option><option>Jatuh Tempo</option></select></div>
+</div>
+<div class="fr">
+  <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${td()}"></div>
+  <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value=""></div>
+</div>`;
+}
+function getDebtPayHistFor(debtId){
+  return DB.debtPay.filter(p=>p.debt_id===debtId).sort((a,b)=>(a.paid_date||'').localeCompare(b.paid_date||''));
+}
+function buildDebtFormEdit(r){
+  const paid=+(r.paid||0);
+  const total=+(r.amount||0);
+  const sisa=Math.max(0,total-paid);
+  const caNames=DB.ca.map(x=>x.name);
+  const logs=getDebtPayHistFor(r.id);
+  const historyHTML=logs.length?`
+<div style="margin-top:8px">
+  <div style="font-size:9.5px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px">📜 Riwayat Pembayaran</div>
+  <div style="overflow-x:auto;border-radius:7px;border:1px solid var(--bd)">
+    <table style="width:100%;border-collapse:collapse;font-size:10.5px">
+      <thead><tr style="background:var(--bg)">
+        <th style="padding:5px 8px;text-align:left;color:var(--mu);font-weight:700">Tgl Bayar</th>
+        <th style="padding:5px 8px;text-align:right;color:var(--mu);font-weight:700">Bayar</th>
+        <th style="padding:5px 8px;text-align:right;color:var(--mu);font-weight:700">Total Bayar</th>
+        <th style="padding:5px 8px;text-align:right;color:var(--mu);font-weight:700">Sisa</th>
+        <th style="padding:5px 8px;text-align:left;color:var(--mu);font-weight:700">Via</th>
+      </tr></thead>
+      <tbody>${logs.map(l=>`<tr style="border-top:1px solid var(--bd)">
+        <td style="padding:5px 8px">${l.paid_date}</td>
+        <td style="padding:5px 8px;text-align:right;color:var(--er);font-weight:700">${fRp(l.amount)}</td>
+        <td style="padding:5px 8px;text-align:right">${fRp(l.paid_total)}</td>
+        <td style="padding:5px 8px;text-align:right;color:var(--er)">${fRp(l.sisa)}</td>
+        <td style="padding:5px 8px">${l.via||'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>
+</div>`:'';
+
+  return`
+<div class="fg"><label>Kreditur</label><input id="f-nm" value="${esc(r.name||'')}"></div>
+<div class="fg"><label>Tujuan</label><input id="f-tujuan" value="${esc(r.purpose||'')}" placeholder="cth: Kredit Modal Usaha"></div>
+<div class="fr">
+  <div class="fg"><label>Total Hutang (Rp)</label><input id="f-amt" type="number" min="0" value="${total}"></div>
+  <div class="fg"><label>Status</label><select id="f-sts">
+    ${['Aman','Jatuh Tempo','Lunas'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}
+  </select></div>
+</div>
+<div class="fr">
+  <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r.date||td()}"></div>
+  <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r.due_date||''}"></div>
+</div>
+<div style="background:var(--bg);border-radius:9px;padding:12px;margin-top:4px">
+  <div style="font-size:10px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">💳 Tambah Pembayaran</div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:11.5px;flex-wrap:wrap">
+    <span style="color:var(--mu)">Sudah bayar:</span>
+    <b style="color:var(--ok)">${fRp(paid)}</b>
+    <span style="color:var(--mu)">Sisa:</span>
+    <b style="color:var(--er)">${fRp(sisa)}</b>
+  </div>
+  <div class="fr">
+    <div class="fg"><label>Jumlah Pembayaran (Rp)</label>
+      <input id="f-paid-add" type="number" min="0" placeholder="0" value="0" oninput="calcNewPaid()">
+    </div>
+    <div class="fg"><label>Tanggal Pembayaran</label>
+      <input id="f-pay-date" type="date" value="${td()}">
+    </div>
+  </div>
+  <div class="fg"><label>Bayar Dari (Current Asset)</label>
+    <select id="f-via">
+      <option value="">— Tidak ada —</option>
+      ${caNames.map(n=>`<option value="${n}">${n}</option>`).join('')}
+    </select>
+  </div>
+  <div id="paid-preview" style="font-size:10.5px;color:var(--mu);margin-top:4px;padding:5px 8px;background:var(--card);border-radius:6px;min-height:24px"></div>
+  <input type="hidden" id="f-paid-total" value="${paid}">
+  ${historyHTML}
+</div>`;
+}
 function getPayHistFor(arId){
   return DB.payHist.filter(p=>p.ar_id===arId).sort((a,b)=>(a.paid_date||'').localeCompare(b.paid_date||''));
 }
@@ -1944,6 +2268,7 @@ const MF={
   ppe:r=>buildPPEForm(r,!!r),
   intg:r=>`<div class="fg"><label>Nama Aset Tak Berwujud</label><input id="f-nm" value="${r?esc(r.name):''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
   inv:r=>r?buildInvFormEdit(r):buildInvFormAdd(),
+  debt:r=>r?buildDebtFormEdit(r):buildDebtFormAdd(),
   inc:r=>`
 <div class="fr"><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
 <div class="fg"><label>Sumber</label><select id="f-src">${buildSelectOpts(getIncSources(),r?.source||'Gaji & Bonus')}</select></div></div>
@@ -2031,6 +2356,47 @@ async function saveM(){
       pay={name,amount,date,due_date,status,paid:0};
     }
   }
+  else if(mType==='debt'){
+    const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
+    const status=document.getElementById('f-sts')?.value||'Aman';
+    const due_date=document.getElementById('f-due')?.value||null;
+    const purpose=(document.getElementById('f-tujuan')?.value||'').trim();
+    if(mId){
+      const existingPaid=parseFloat(document.getElementById('f-paid-total')?.value)||0;
+      const addPayment=parseFloat(document.getElementById('f-paid-add')?.value)||0;
+      const via=document.getElementById('f-via')?.value||'';
+      const payDate=document.getElementById('f-pay-date')?.value||td();
+      const newPaid=Math.min(existingPaid+addPayment,amount);
+      let newStatus=status;
+      if(newPaid>=amount&&amount>0)newStatus='Lunas';
+      else if(due_date&&due_date<td())newStatus='Jatuh Tempo';
+
+      pay={name,purpose,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null};
+
+      // Insert debt_payments record (real table)
+      if(addPayment>0){
+        try{
+          await sbI('debt_payments',{
+            debt_id:mId,
+            amount:addPayment,
+            paid_date:payDate,
+            via:via||null,
+            paid_total:newPaid,
+            sisa:Math.max(0,amount-newPaid)
+          });
+          DB.debtPay=await sbG('debt_payments','&order=paid_date.asc');
+        }catch(e){console.warn('debt_payments insert failed:',e.message);}
+      }
+
+      // Bayar hutang = uang keluar dari Current Asset (kebalikan dari AR)
+      if(addPayment>0&&via){
+        const caItem=DB.ca.find(x=>x.name===via);
+        if(caItem){await sbU('current_assets',caItem.id,{amount:(+(caItem.amount||0))-addPayment,date:payDate});DB.ca=await sbG('current_assets');}
+      }
+    } else {
+      pay={name,purpose,amount,date,due_date,status,paid:0};
+    }
+  }
   else if(mType==='ii'){
     const qty=parseFloat(document.getElementById('f-qty')?.value)||0;
     const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
@@ -2098,6 +2464,7 @@ async function saveM(){
       DB.ca=await sbG('current_assets');
       renderIncPage();renderExpPage();
     }
+    if(mType==='debt')renderHutangPage();
     closeM();doSnap().catch(()=>{});updateAll();reRender();
     showToast(mId?'✅ Data diupdate!':'✅ Data ditambahkan!');
   }catch(e){showToast('❌ '+e.message);}
@@ -2118,6 +2485,7 @@ function delR(type,id,name){
       await sbD(TMAP[type],id);
       DB[DARR[type]]=await sbG(TMAP[type]);
       if(type==='ar')DB.payHist=await sbG('payment_history','&order=paid_date.asc'); // cascade cleanup sync
+      if(type==='debt'){DB.debtPay=await sbG('debt_payments','&order=paid_date.asc');renderHutangPage();}
       if(type==='inc'||type==='exp'){renderIncPage();renderExpPage();}
       doSnap().catch(()=>{});updateAll();reRender();showToast('🗑️ Data dihapus!');
     }
@@ -2141,6 +2509,7 @@ function nav(id,el){
   if(window.innerWidth<=768)closeSidebar();
   if(id==='ca')rCA();if(id==='ce'){rAR();rII();}if(id==='nc'){rPPE();rINTG();}if(id==='inv')rINV();
   if(id==='inc')renderIncPage();if(id==='exp')renderExpPage();
+  if(id==='hutang')renderHutangPage();
   if(id==='laporan'){const lym=document.getElementById('lap-pick')?.value||td().slice(0,7);onLapMonth(lym,'nav');}
   window.scrollTo({top:0,behavior:'smooth'});
 }
