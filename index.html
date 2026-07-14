@@ -68,6 +68,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .sb-it.active{background:var(--pl);color:var(--pr);border-left-color:var(--pr);font-weight:600}
 .sb-it svg{width:14px;height:14px;flex-shrink:0}
 .sb-div{height:1px;background:var(--bd);margin:5px 16px}
+.sb-family-office{background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-radius:8px;margin:8px 12px;border:1px solid var(--bd)}
 .sb-usr{padding:12px 18px;border-top:1px solid var(--bd);margin-top:6px}
 .sb-uname{font-size:11.5px;font-weight:700;color:var(--txt);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sb-uemail{font-size:9.5px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -260,6 +261,53 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
     <div class="sb-it" onclick="nav('nc',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span data-i="non_current">Non Current Asset</span></div>
     <div class="sb-it" onclick="nav('inv',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span data-i="investment">Investment</span></div>
     <div class="sb-div"></div>
+    div class="sb-lbl" data-i="sb_transaksi">Transaksi</div>
+
+   
+
+ <div class="sb-it" onclick="nav('pemasukan',this)" id="nav-pemasukan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span data-i="pemasukan">Pemasukan</span></div>
+
+    <div class="sb-it" onclick="nav('pengeluaran',this)" id="nav-pengeluaran"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5v14"/></svg><span data-i="pengeluaran">Pengeluaran</span></div>
+
+    <div class="sb-div"></div>
+
+    <div class="sb-family-office">
+
+      <div style="text-align:center;padding:12px 18px">
+
+        <div style="font-size:32px;margin-bottom:8px">MR</div>
+
+        <div style="font-size:8px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px">MI & RAI CAPITAL</div>
+
+        <div style="font-size:11px;line-height:1.4;color:var(--txt);font-weight:600;margin-bottom:12px">Investing in Today, Building Forever.</div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+
+          <div style="text-align:center">
+
+            <div style="font-size:9px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Nilai Utama</div>
+
+            <div style="display:flex;justify-content:space-around;gap:4px;font-size:10px;font-weight:600">
+
+              <div>🛡️<br>Integrity</div>
+
+              <div>📈<br>Growth</div>
+
+              <div>👥<br>Legacy</div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <a href="https://mrgin0.github.io/dca-tracker-rai/" target="_blank" style="display:inline-block;border:1px solid var(--bd);border-radius:6px;padding:7px 12px;font-size:10px;color:var(--pr);text-decoration:none;font-weight:700;transition:all .2s" onmouseover="this.style.background='var(--pl)'" onmouseout="this.style.background='transparent'">🌐 Kunjungi Website</a>
+
+      </div>
+
+    </div>
+
+    <div class="sb-div"></div>
     <div class="sb-usr"><div class="sb-uname">Raihan Nor Falah</div><div class="sb-uemail">raihan.nor.falah@mhs.politala.ac.id</div></div>
   </div>
 </aside>
@@ -416,6 +464,181 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
   <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg><span data-i="investment">Investment</span></div>
   <div class="card"><div class="chd"><div class="ctitle" data-i="inv_port">Portofolio Investasi</div><button class="btn-add" onclick="openM('inv')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-inv"></table></div></div>
 </div>
+  <!-- PEMASUKAN -->
+
+<div class="page" id="page-pemasukan">
+
+  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span data-i="pemasukan">Pemasukan</span></div>
+
+  <div class="sg" id="pm-stats">
+
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="pm_total">Total Pemasukan</div><div class="sc-val" id="pm-sv-tot">0</div><div class="sc-chg neu" id="pm-sc-tot">—</div></div><div class="sc-ic ic-g">💰</div></div>
+
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="pm_avg">Rata-rata Harian</div><div class="sc-val" id="pm-sv-avg">0</div><div class="sc-chg neu">—</div></div><div class="sc-ic ic-b">📊</div></div>
+
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="pm_trans">Jumlah Transaksi</div><div class="sc-val" id="pm-sv-cnt">0</div><div class="sc-chg neu">—</div></div><div class="sc-ic ic-o">🔢</div></div>
+
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="pm_today">Pemasukan Hari Ini</div><div class="sc-val" id="pm-sv-today">0</div><div class="sc-chg neu">—</div></div><div class="sc-ic ic-p">📅</div></div>
+
+  </div>
+
+  <div class="g2">
+
+    <div class="card">
+
+      <div class="chd"><span class="ctitle" data-i="pm_trend">Tren Pemasukan</span>
+
+        <div class="pbtns" id="pb-pm-trend">
+
+          <button class="pb" onclick="setPeriodPM('trend','7d',this)">7H</button>
+
+          <button class="pb active" onclick="setPeriodPM('trend','30d',this)">30H</button>
+
+          <button class="pb" onclick="setPeriodPM('trend','1m',this)">1T</button>
+
+          <button class="pb" onclick="setPeriodPM('trend','all',this)" data-i="p_all">ALL</button>
+
+        </div>
+
+      </div>
+
+      <div class="chart-wrap"><canvas id="c-pm-trend" height="140"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoomPM('trend')">⟳ Reset</button></div></div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="chd"><span class="ctitle" data-i="pm_cat">Pemasukan Berdasarkan Kategori</span></div>
+
+      <div class="dw"><canvas id="c-pm-cat" class="dc"></canvas><div style="flex:1;min-width:0"><div id="pm-cat-leg"></div><div class="lgtot"><span data-i="total">Total</span><span id="pm-cat-tot">0</span></div></div></div>
+
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="chd">
+
+      <div><div class="ctitle" data-i="pm_history">Riwayat Pemasukan</div></div>
+
+      <button class="btn-add" onclick="openM('pm')" data-i="btn_add">+ Tambah Pemasukan</button>
+
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px;font-size:11px">
+
+      <div><label style="display:block;font-size:9px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Periode</label>
+
+        <input type="month" id="pm-pick" class="mpick" onchange="onPMMonth(this.value)"></div>
+
+      <div><label style="display:block;font-size:9px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Dari Tanggal</label>
+
+        <input type="date" id="pm-date-from" class="mpick" onchange="updatePMFilter()"></div>
+
+      <div><label style="display:block;font-size:9px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Sampai Tanggal</label>
+
+        <input type="date" id="pm-date-to" class="mpick" onchange="updatePMFilter()"></div>
+
+      <div><label style="display:block;font-size:9px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Kategori</label>
+
+        <select id="pm-cat-filter" class="mpick" onchange="updatePMFilter()"><option value="">Semua Kategori</option></select></div>
+
+    </div>
+
+    <div class="tw"><table class="ct" id="t-pm"></table></div>
+
+  </div>
+
+</div>
+
+<!-- PENGELUARAN -->
+
+<div class="page" id="page-pengeluaran">
+
+  <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5v14"/></svg><span data-i="pengeluaran">Pengeluaran</span></div>
+
+  <div class="sg" id="pg-stats">
+
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="pg_total">Total Pengeluaran</div><div class="sc-val" id="pg-sv-tot">0</div><div class="sc-chg neu" id="pg-sc-tot">—</div></div><div class="sc-ic ic-g">💸</div></div>
+
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="pg_avg">Rata-rata Harian</div><div class="sc-val" id="pg-sv-avg">0</div><div class="sc-chg neu">—</div></div><div class="sc-ic ic-b">📊</div></div>
+
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="pg_trans">Jumlah Transaksi</div><div class="sc-val" id="pg-sv-cnt">0</div><div class="sc-chg neu">—</div></div><div class="sc-ic ic-o">🔢</div></div>
+
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="pg_today">Pengeluaran Hari Ini</div><div class="sc-val" id="pg-sv-today">0</div><div class="sc-chg neu">—</div></div><div class="sc-ic ic-p">📅</div></div>
+
+  </div>
+
+  <div class="g2">
+
+    <div class="card">
+
+      <div class="chd"><span class="ctitle" data-i="pg_trend">Tren Pengeluaran</span>
+
+        <div class="pbtns" id="pb-pg-trend">
+
+          <button class="pb" onclick="setPeriodPG('trend','7d',this)">7H</button>
+
+          <button class="pb active" onclick="setPeriodPG('trend','30d',this)">30H</button>
+
+          <button class="pb" onclick="setPeriodPG('trend','1m',this)">1T</button>
+
+          <button class="pb" onclick="setPeriodPG('trend','all',this)" data-i="p_all">ALL</button>
+
+        </div>
+
+      </div>
+
+      <div class="chart-wrap"><canvas id="c-pg-trend" height="140"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoomPG('trend')">⟳ Reset</button></div></div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="chd"><span class="ctitle" data-i="pg_cat">Pengeluaran Berdasarkan Kategori</span></div>
+
+      <div class="dw"><canvas id="c-pg-cat" class="dc"></canvas><div style="flex:1;min-width:0"><div id="pg-cat-leg"></div><div class="lgtot"><span data-i="total">Total</span><span id="pg-cat-tot">0</span></div></div></div>
+
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="chd">
+
+      <div><div class="ctitle" data-i="pg_history">Riwayat Pengeluaran</div></div>
+
+      <button class="btn-add" onclick="openM('pg')" data-i="btn_add">+ Tambah Pengeluaran</button>
+
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px;font-size:11px">
+
+      <div><label style="display:block;font-size:9px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Periode</label>
+
+        <input type="month" id="pg-pick" class="mpick" onchange="onPGMonth(this.value)"></div>
+
+      <div><label style="display:block;font-size:9px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Dari Tanggal</label>
+
+        <input type="date" id="pg-date-from" class="mpick" onchange="updatePGFilter()"></div>
+
+      <div><label style="display:block;font-size:9px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Sampai Tanggal</label>
+
+        <input type="date" id="pg-date-to" class="mpick" onchange="updatePGFilter()"></div>
+
+      <div><label style="display:block;font-size:9px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Kategori</label>
+
+        <select id="pg-cat-filter" class="mpick" onchange="updatePGFilter()"><option value="">Semua Kategori</option></select></div>
+
+    </div>
+
+    <div class="tw"><table class="ct" id="t-pg"></table></div>
+
+  </div>
+
+</div>
 </main>
 </div>
 
@@ -481,11 +704,11 @@ async function sbD(t,id){const r=await fetch(`${SB}/${t}?id=eq.${id}`,{method:'D
 // ══════════════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════════════
-let DB={ca:[],ar:[],ii:[],ppe:[],intg:[],inv:[],snaps:[],payHist:[]};
+let DB={ca:[],ar:[],ii:[],ppe:[],intg:[],inv:[],snaps:[],payHist:[],pm:[],pg:[]};
 let CHS={};
 let mType='',mId=null,cfmCb=null,sbOpen=window.innerWidth>768;
 let LANG='id',CUR='IDR',FX_RATE=16200,FX_UPDATED='';
-const AP={growth:'1m',recv:'1m',invg:'1m',gain:'1m'};
+const AP={growth:'1m',recv:'1m',invg:'1m',gain:'1m','pm-trend':'30d','pg-trend':'30d'};
 // Track current laporan context for PDF
 let lapCtx={mode:'month',ym:'',fromYM:'',toYM:'',label:''};
 let dashCtx={mode:'month',ym:'',fromYM:'',toYM:'',label:''};
@@ -494,8 +717,9 @@ let dashCtx={mode:'month',ym:'',fromYM:'',toYM:'',label:''};
 // I18N — Point 4
 // ══════════════════════════════════════════════════════════════
 const I18={
-  id:{dashboard:'Dashboard',sb_laporan:'Laporan Keuangan',laporan_pos:'Laporan Posisi Keuangan',sb_master:'Master Data',current_asset:'Current Asset',cash_equiv:'Cash Equivalent',non_current:'Non Current Asset',investment:'Investment',total_aset:'Total Aset',total_cur:'Total Current Asset',non_cur:'Non Current Asset',asset_today:'Asset Hari Ini',growth_aset:'History Growth Aset',alokasi_total:'Alokasi Total Asset',growth_recv:'Growth Receivable',inv_chart:'Investment Growth',alokasi_inv:'Alokasi Investment',gain_loss:'Investment Gain/Loss',laporan_detail:'Laporan Detail',ca_desc:'Kas, Bank & Penghasilan Platform',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Portofolio Investasi',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Tambah',btn_cancel:'Batal',btn_save:'Simpan',btn_del:'Hapus',p_1b:'1 Bln',p_6b:'6 Bln',p_1t:'1 Thn',p_5t:'5 Thn',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Laporan Keuangan Pribadi',ls_sub:'Memuat data dari Supabase…'},
-  en:{dashboard:'Dashboard',sb_laporan:'Financial Reports',laporan_pos:'Statement of Financial Position',sb_master:'Master Data',current_asset:'Current Assets',cash_equiv:'Cash Equivalents',non_current:'Non-Current Assets',investment:'Investments',total_aset:'Total Assets',total_cur:'Total Current Assets',non_cur:'Non-Current Assets',asset_today:"Today's Assets",growth_aset:'Asset Growth History',alokasi_total:'Total Asset Allocation',growth_recv:'Receivable Growth',inv_chart:'Investment Growth',alokasi_inv:'Investment Allocation',gain_loss:'Investment Gain/Loss',laporan_detail:'Detailed Report',ca_desc:'Cash, Bank & Platform Income',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Investment Portfolio',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Add',btn_cancel:'Cancel',btn_save:'Save',btn_del:'Delete',p_1b:'1 Mo',p_6b:'6 Mo',p_1t:'1 Yr',p_5t:'5 Yr',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Personal Financial Report',ls_sub:'Loading data from Supabase…'}
+id:{dashboard:'Dashboard',sb_laporan:'Laporan Keuangan',laporan_pos:'Laporan Posisi Keuangan',sb_master:'Master Data',current_asset:'Current Asset',cash_equiv:'Cash Equivalent',non_current:'Non Current Asset',investment:'Investment',total_aset:'Total Aset',total_cur:'Total Current Asset',non_cur:'Non Current Asset',asset_today:'Asset Hari Ini',growth_aset:'History Growth Aset',alokasi_total:'Alokasi Total Asset',growth_recv:'Growth Receivable',inv_chart:'Investment Growth',alokasi_inv:'Alokasi Investment',gain_loss:'Investment Gain/Loss',laporan_detail:'Laporan Detail',ca_desc:'Kas, Bank & Penghasilan Platform',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Portofolio Investasi',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Tambah',btn_cancel:'Batal',btn_save:'Simpan',btn_del:'Hapus',p_1b:'1 Bln',p_6b:'6 Bln',p_1t:'1 Thn',p_5t:'5 Thn',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Laporan Keuangan Pribadi',ls_sub:'Memuat data dari Supabase…',sb_transaksi:'Transaksi',pemasukan:'Pemasukan',pengeluaran:'Pengeluaran',pm_total:'Total Pemasukan',pm_avg:'Rata-rata Harian',pm_trans:'Jumlah Transaksi',pm_today:'Pemasukan Hari Ini',pm_trend:'Tren Pemasukan',pm_cat:'Pemasukan Berdasarkan Kategori',pm_history:'Riwayat Pemasukan',pg_total:'Total Pengeluaran',pg_avg:'Rata-rata Harian',pg_trans:'Jumlah Transaksi',pg_today:'Pengeluaran Hari Ini',pg_trend:'Tren Pengeluaran',pg_cat:'Pengeluaran Berdasarkan Kategori',pg_history:'Riwayat Pengeluaran'},
+
+  en:{dashboard:'Dashboard',sb_laporan:'Financial Reports',laporan_pos:'Statement of Financial Position',sb_master:'Master Data',current_asset:'Current Assets',cash_equiv:'Cash Equivalents',non_current:'Non-Current Assets',investment:'Investments',total_aset:'Total Assets',total_cur:'Total Current Assets',non_cur:'Non-Current Assets',asset_today:"Today's Assets",growth_aset:'Asset Growth History',alokasi_total:'Total Asset Allocation',growth_recv:'Receivable Growth',inv_chart:'Investment Growth',alokasi_inv:'Investment Allocation',gain_loss:'Investment Gain/Loss',laporan_detail:'Detailed Report',ca_desc:'Cash, Bank & Platform Income',ar_title:'Accounts Receivable',inv_title:'Inventory',ppe_title:'Property, Plant & Equipment',intg_title:'Intangible Assets',inv_port:'Investment Portfolio',btn_pdf:'📄 Download PDF',btn_detail:'📋 Detail',btn_add:'+ Add',btn_cancel:'Cancel',btn_save:'Save',btn_del:'Delete',p_1b:'1 Mo',p_6b:'6 Mo',p_1t:'1 Yr',p_5t:'5 Yr',p_all:'All',zoom_hint:'Scroll to zoom · Drag to pan',total:'Total',gain:'Gain',loss:'Loss',logo_sub:'Personal Finance Tracker',ls_title:'Personal Financial Report',ls_sub:'Loading data from Supabase…',sb_transaksi:'Transactions',pemasukan:'Income',pengeluaran:'Expenses',pm_total:'Total Income',pm_avg:'Daily Average',pm_trans:'Number of Transactions',pm_today:"Today's Income",pm_trend:'Income Trend',pm_cat:'Income by Category',pm_history:'Income History',pg_total:'Total Expenses',pg_avg:'Daily Average',pg_trans:'Number of Transactions',pg_today:"Today's Expenses",pg_trend:'Expense Trend',pg_cat:'Expenses by Category',pg_history:'Expense History'}
 };
 function applyI18n(){
   const d=I18[LANG];
@@ -562,13 +786,15 @@ function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;
 // ══════════════════════════════════════════════════════════════
 async function init(){
   const load=async(t,q='')=>{try{return await sbG(t,q);}catch(e){console.warn(e);return[];}};
-  const [ca,ar,ii,ppe,intg,inv,snaps,payHist]=await Promise.all([
+  const [ca,ar,ii,ppe,intg,inv,snaps,payHist,pm,pg]=await Promise.all([
     load('current_assets'),load('accounts_receivable'),load('inventory'),
     load('property_plant_equipment'),load('intangible_assets'),load('investments'),
     load('laporan_snapshots','&order=snapshot_date.asc'),
     load('payment_history','&order=paid_date.asc'),
+    load('pemasukan'),load('pengeluaran'),
   ]);
   DB={ca,ar,ii,ppe,intg,inv,snaps,payHist};
+  DB={ca,ar,ii,ppe,intg,inv,snaps,payHist,pm,pg};
 
   // Fetch FX in background
   fetchFX().catch(()=>{});
@@ -580,6 +806,14 @@ async function init(){
   onLapMonth(curYM,'init');
   updateStats();
   initCharts();
+  initPMCharts();
+  initPGCharts();
+  updatePMStats();
+  updatePGStats();
+  populatePMCategories();
+  populatePGCategories();
+  renderPM();
+  renderPG();
   applyI18n();
   hideLS();
   doSnap().catch(()=>{});
@@ -1700,7 +1934,861 @@ function tickClocks(){
     el.textContent=now.toLocaleTimeString('id-ID',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit'})+' · '+now.toLocaleDateString('id-ID',{timeZone:tz,day:'2-digit',month:'short',year:'numeric'});
   });
 }
+// PEMASUKAN & PENGELUARAN
 
+// ══════════════════════════════════════════════════════════════
+
+const sPM=()=>DB.pm.reduce((a,x)=>a+(+x.amount),0);
+
+const sPG=()=>DB.pg.reduce((a,x)=>a+(+x.amount),0);
+
+function getPMCategories(){
+
+  const base=['Gaji','Bonus','Freelance','Bisnis'];
+
+  const custom=[...new Set(DB.pm.map(x=>x.category).filter(c=>c&&!base.includes(c)))];
+
+  return[...base,...custom,'Lainnya'];
+
+}
+
+function getPGCategories(){
+
+  const base=['Makanan & Minuman','Transportasi','Kebutuhan Rumah','Hiburan','Kesehatan'];
+
+  const custom=[...new Set(DB.pg.map(x=>x.category).filter(c=>c&&!base.includes(c)))];
+
+  return[...base,...custom,'Lainnya'];
+
+}
+
+function populatePMCategories(){
+
+  const sel=document.getElementById('pm-cat-filter');if(!sel)return;
+
+  const cats=getPMCategories();
+
+  sel.innerHTML='<option value="">Semua Kategori</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+
+}
+
+function populatePGCategories(){
+
+  const sel=document.getElementById('pg-cat-filter');if(!sel)return;
+
+  const cats=getPGCategories();
+
+  sel.innerHTML='<option value="">Semua Kategori</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+
+}
+
+function updatePMStats(){
+
+  const tot=sPM();
+
+  const cnt=DB.pm.length;
+
+  const today=td();
+
+  const todayAmt=DB.pm.filter(x=>x.date===today).reduce((a,x)=>a+(+x.amount),0);
+
+  const daysActive=[...new Set(DB.pm.map(x=>x.date).filter(Boolean))].length||1;
+
+  setText('pm-sv-tot',fRp(tot));
+
+  setText('pm-sv-cnt',cnt.toString());
+
+  setText('pm-sv-today',fRp(todayAmt));
+
+  setText('pm-sv-avg',fRp(tot/daysActive));
+
+  refreshPMCharts();
+
+}
+
+function updatePGStats(){
+
+  const tot=sPG();
+
+  const cnt=DB.pg.length;
+
+  const today=td();
+
+  const todayAmt=DB.pg.filter(x=>x.date===today).reduce((a,x)=>a+(+x.amount),0);
+
+  const daysActive=[...new Set(DB.pg.map(x=>x.date).filter(Boolean))].length||1;
+
+  setText('pg-sv-tot',fRp(tot));
+
+  setText('pg-sv-cnt',cnt.toString());
+
+  setText('pg-sv-today',fRp(todayAmt));
+
+  setText('pg-sv-avg',fRp(tot/daysActive));
+
+  refreshPGCharts();
+
+}
+
+function initPMCharts(){
+
+  const tc=document.getElementById('c-pm-trend');
+
+  if(tc)CHS['pm-trend']=new Chart(tc.getContext('2d'),{type:'line',data:{labels:[],datasets:[{label:'Pemasukan',data:[],borderColor:CHART_COLORS[1],backgroundColor:'rgba(34,197,94,.08)',tension:.4,pointRadius:3,fill:true,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:9},boxWidth:7,color:'#94a3b8'}},tooltip:TT,zoom:zoomPlugin},scales:SC()}});
+
+  const cc=document.getElementById('c-pm-cat');
+
+  if(cc)CHS['pm-cat']=new Chart(cc.getContext('2d'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:2,hoverOffset:4}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fRp(c.parsed)}`}}}}});
+
+}
+
+function initPGCharts(){
+
+  const tc=document.getElementById('c-pg-trend');
+
+  if(tc)CHS['pg-trend']=new Chart(tc.getContext('2d'),{type:'line',data:{labels:[],datasets:[{label:'Pengeluaran',data:[],borderColor:CHART_COLORS[0],backgroundColor:'rgba(37,99,235,.08)',tension:.4,pointRadius:3,fill:true,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:true,position:'bottom',labels:{usePointStyle:true,font:{size:9},boxWidth:7,color:'#94a3b8'}},tooltip:TT,zoom:zoomPlugin},scales:SC()}});
+
+  const cc=document.getElementById('c-pg-cat');
+
+  if(cc)CHS['pg-cat']=new Chart(cc.getContext('2d'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:2,hoverOffset:4}]},options:{responsive:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fRp(c.parsed)}`}}}}});
+
+}
+
+function getDateRangePM(period){
+
+  const now=new Date();
+
+  let fromDate=new Date();
+
+  if(period==='7d')fromDate.setDate(now.getDate()-7);
+
+  else if(period==='30d')fromDate.setDate(now.getDate()-30);
+
+  else if(period==='1m')fromDate.setMonth(now.getMonth()-1);
+
+  else if(period==='all')fromDate=new Date('1970-01-01');
+
+  return{from:fromDate.toISOString().slice(0,10),to:now.toISOString().slice(0,10)};
+
+}
+
+function getDateRangePG(period){
+
+  const now=new Date();
+
+  let fromDate=new Date();
+
+  if(period==='7d')fromDate.setDate(now.getDate()-7);
+
+  else if(period==='30d')fromDate.setDate(now.getDate()-30);
+
+  else if(period==='1m')fromDate.setMonth(now.getMonth()-1);
+
+  else if(period==='all')fromDate=new Date('1970-01-01');
+
+  return{from:fromDate.toISOString().slice(0,10),to:now.toISOString().slice(0,10)};
+
+}
+
+function buildPMTrendData(period){
+
+  const {from,to}=getDateRangePM(period);
+
+  const filtered=DB.pm.filter(x=>x.date>=from&&x.date<=to);
+
+  const byDate={};
+
+  filtered.forEach(x=>{
+
+    const d=x.date;
+
+    byDate[d]=(byDate[d]||0)+(+x.amount);
+
+  });
+
+  const dates=Object.keys(byDate).sort();
+
+  const labels=dates.map(d=>new Date(d+'T00:00:00').toLocaleDateString('id-ID',{month:'short',day:'numeric'}));
+
+  return{labels,data:dates.map(d=>byDate[d])};
+
+}
+
+function buildPGTrendData(period){
+
+  const {from,to}=getDateRangePG(period);
+
+  const filtered=DB.pg.filter(x=>x.date>=from&&x.date<=to);
+
+  const byDate={};
+
+  filtered.forEach(x=>{
+
+    const d=x.date;
+
+    byDate[d]=(byDate[d]||0)+(+x.amount);
+
+  });
+
+  const dates=Object.keys(byDate).sort();
+
+  const labels=dates.map(d=>new Date(d+'T00:00:00').toLocaleDateString('id-ID',{month:'short',day:'numeric'}));
+
+  return{labels,data:dates.map(d=>byDate[d])};
+
+}
+
+function updatePMCatChart(){
+
+  const bycat={};
+
+  DB.pm.forEach(x=>{bycat[x.category]=(bycat[x.category]||0)+(+x.amount);});
+
+  const items=Object.entries(bycat).map(([n,v],i)=>({l:n,v,c:CHART_COLORS[i%CHART_COLORS.length]})).filter(x=>x.v>0);
+
+  const tot=items.reduce((a,x)=>a+x.v,0);
+
+  setText('pm-cat-tot',fRp(tot));
+
+  const el=document.getElementById('pm-cat-leg');
+
+  if(el)el.innerHTML=items.map(d=>`<div class="lgrow"><div class="lgdot" style="background:${d.c}"></div><span class="lgnm">${d.l}</span><span class="lgpct">${tot?((d.v/tot)*100).toFixed(1):0}%</span><span class="lgval">${fRp(d.v)}</span></div>`).join('');
+
+  if(CHS['pm-cat']){
+
+    CHS['pm-cat'].data.labels=items.map(d=>d.l);
+
+    CHS['pm-cat'].data.datasets[0].data=items.map(d=>d.v);
+
+    CHS['pm-cat'].data.datasets[0].backgroundColor=items.map(d=>d.c);
+
+    CHS['pm-cat'].update();
+
+  }
+
+}
+
+function updatePGCatChart(){
+
+  const bycat={};
+
+  DB.pg.forEach(x=>{bycat[x.category]=(bycat[x.category]||0)+(+x.amount);});
+
+  const items=Object.entries(bycat).map(([n,v],i)=>({l:n,v,c:CHART_COLORS[i%CHART_COLORS.length]})).filter(x=>x.v>0);
+
+  const tot=items.reduce((a,x)=>a+x.v,0);
+
+  setText('pg-cat-tot',fRp(tot));
+
+  const el=document.getElementById('pg-cat-leg');
+
+  if(el)el.innerHTML=items.map(d=>`<div class="lgrow"><div class="lgdot" style="background:${d.c}"></div><span class="lgnm">${d.l}</span><span class="lgpct">${tot?((d.v/tot)*100).toFixed(1):0}%</span><span class="lgval">${fRp(d.v)}</span></div>`).join('');
+
+  if(CHS['pg-cat']){
+
+    CHS['pg-cat'].data.labels=items.map(d=>d.l);
+
+    CHS['pg-cat'].data.datasets[0].data=items.map(d=>d.v);
+
+    CHS['pg-cat'].data.datasets[0].backgroundColor=items.map(d=>d.c);
+
+    CHS['pg-cat'].update();
+
+  }
+
+}
+
+function setPeriodPM(type,period,btn){
+
+  AP[type]=period;
+
+  if(btn){document.querySelectorAll('#pb-pm-'+type+' .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+
+  const {labels,data}=buildPMTrendData(period);
+
+  if(type==='trend'&&CHS['pm-trend']){
+
+    CHS['pm-trend'].data.labels=labels;
+
+    CHS['pm-trend'].data.datasets[0].data=data;
+
+    CHS['pm-trend'].update();
+
+  }
+
+}
+
+function setPeriodPG(type,period,btn){
+
+  AP[type]=period;
+
+  if(btn){document.querySelectorAll('#pb-pg-'+type+' .pb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+
+  const {labels,data}=buildPGTrendData(period);
+
+  if(type==='trend'&&CHS['pg-trend']){
+
+    CHS['pg-trend'].data.labels=labels;
+
+    CHS['pg-trend'].data.datasets[0].data=data;
+
+    CHS['pg-trend'].update();
+
+  }
+
+}
+
+function resetZoomPM(type){if(CHS['pm-'+type])CHS['pm-'+type].resetZoom();}
+
+function resetZoomPG(type){if(CHS['pg-'+type])CHS['pg-'+type].resetZoom();}
+
+function refreshPMCharts(){
+
+  setPeriodPM('trend',AP['pm-trend'],null);
+
+  updatePMCatChart();
+
+}
+
+function refreshPGCharts(){
+
+  setPeriodPG('trend',AP['pg-trend'],null);
+
+  updatePGCatChart();
+
+}
+
+function onPMMonth(ym){
+
+  document.getElementById('pm-pick').value=ym;
+
+  document.getElementById('pm-date-from').value='';
+
+  document.getElementById('pm-date-to').value='';
+
+  renderPM();
+
+}
+
+function onPGMonth(ym){
+
+  document.getElementById('pg-pick').value=ym;
+
+  document.getElementById('pg-date-from').value='';
+
+  document.getElementById('pg-date-to').value='';
+
+  renderPG();
+
+}
+
+function updatePMFilter(){
+
+  const month=document.getElementById('pm-pick').value;
+
+  const from=document.getElementById('pm-date-from').value;
+
+  const to=document.getElementById('pm-date-to').value;
+
+  if(month)return;
+
+  renderPM();
+
+}
+
+function updatePGFilter(){
+
+  const month=document.getElementById('pg-pick').value;
+
+  const from=document.getElementById('pg-date-from').value;
+
+  const to=document.getElementById('pg-date-to').value;
+
+  if(month)return;
+
+  renderPG();
+
+}
+
+function filterPMData(){
+
+  const month=document.getElementById('pm-pick').value;
+
+  const from=document.getElementById('pm-date-from').value;
+
+  const to=document.getElementById('pm-date-to').value;
+
+  const cat=document.getElementById('pm-cat-filter').value;
+
+  let data=DB.pm;
+
+  if(month){
+
+    const ym=month;
+
+    data=data.filter(x=>x.date.slice(0,7)===ym);
+
+  }else{
+
+    if(from)data=data.filter(x=>x.date>=from);
+
+    if(to)data=data.filter(x=>x.date<=to);
+
+  }
+
+  if(cat)data=data.filter(x=>x.category===cat);
+
+  return data;
+
+}
+
+function filterPGData(){
+
+  const month=document.getElementById('pg-pick').value;
+
+  const from=document.getElementById('pg-date-from').value;
+
+  const to=document.getElementById('pg-date-to').value;
+
+  const cat=document.getElementById('pg-cat-filter').value;
+
+  let data=DB.pg;
+
+  if(month){
+
+    const ym=month;
+
+    data=data.filter(x=>x.date.slice(0,7)===ym);
+
+  }else{
+
+    if(from)data=data.filter(x=>x.date>=from);
+
+    if(to)data=data.filter(x=>x.date<=to);
+
+  }
+
+  if(cat)data=data.filter(x=>x.category===cat);
+
+  return data;
+
+}
+
+function renderPM(){
+
+  const data=filterPMData().sort((a,b)=>b.date.localeCompare(a.date));
+
+  mkTbl('t-pm',['#','Tanggal','Deskripsi','Kategori','Metode','Jumlah','Aksi'],
+
+    data.map((r,i)=>`<tr>
+
+      <td>${i+1}</td><td>${r.date}</td><td>${r.description}</td>
+
+      <td><span class="badge bb">${r.category}</span></td>
+
+      <td>${r.payment_method}</td>
+
+      <td><b>${fRp(r.amount)}</b></td>
+
+      <td><button class="btn-sm be" onclick="openE('pm','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('pm','${r.id}','${escQ(r.description)}')">Hapus</button></td>
+
+    </tr>`));
+
+}
+
+function renderPG(){
+
+  const data=filterPGData().sort((a,b)=>b.date.localeCompare(a.date));
+
+  mkTbl('t-pg',['#','Tanggal','Deskripsi','Kategori','Metode','Jumlah','Aksi'],
+
+    data.map((r,i)=>`<tr>
+
+      <td>${i+1}</td><td>${r.date}</td><td>${r.description}</td>
+
+      <td><span class="badge bb">${r.category}</span></td>
+
+      <td>${r.payment_method}</td>
+
+      <td><b>${fRp(r.amount)}</b></td>
+
+      <td><button class="btn-sm be" onclick="openE('pg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('pg','${r.id}','${escQ(r.description)}')">Hapus</button></td>
+
+    </tr>`));
+
+}
+
+function getCANames(){
+
+  return DB.ca.map(x=>x.name);
+
+}
+
+function openFormPM(id=null){
+
+  const r=id?DB.pm.find(x=>x.id===id):null;
+
+  const cats=getPMCategories();
+
+  const methods=getCANames();
+
+  mType='pm';mId=id;
+
+  const html=`<div class="fr">
+
+    <div class="fg"><label>Tanggal</label><input type="date" id="m-date" value="${r?.date||td()}"></div>
+
+    <div class="fg"><label>Deskripsi</label><input type="text" id="m-desc" value="${r?.description||''}"></div>
+
+    <div class="fg"><label>Kategori</label><select id="m-cat">${cats.map(c=>`<option ${r?.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+
+    <div class="fg"><label>Metode Pembayaran</label><select id="m-method">${methods.map(m=>`<option ${r?.payment_method===m?'selected':''}>${m}</option>`).join('')}</select></div>
+
+    <div class="fg"><label>Jumlah</label><input type="number" id="m-amount" value="${r?.amount||0}"></div>
+
+  </div>`;
+
+  document.getElementById('m-title').textContent=r?'Edit Pemasukan':'Tambah Pemasukan';
+
+  document.getElementById('m-body').innerHTML=html;
+
+  document.getElementById('mo').classList.add('open');
+
+}
+
+function openFormPG(id=null){
+
+  const r=id?DB.pg.find(x=>x.id===id):null;
+
+  const cats=getPGCategories();
+
+  const methods=getCANames();
+
+  mType='pg';mId=id;
+
+  const html=`<div class="fr">
+
+    <div class="fg"><label>Tanggal</label><input type="date" id="m-date" value="${r?.date||td()}"></div>
+
+    <div class="fg"><label>Deskripsi</label><input type="text" id="m-desc" value="${r?.description||''}"></div>
+
+    <div class="fg"><label>Kategori</label><select id="m-cat">${cats.map(c=>`<option ${r?.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+
+    <div class="fg"><label>Metode Pembayaran</label><select id="m-method">${methods.map(m=>`<option ${r?.payment_method===m?'selected':''}>${m}</option>`).join('')}</select></div>
+
+    <div class="fg"><label>Jumlah</label><input type="number" id="m-amount" value="${r?.amount||0}"></div>
+
+  </div>`;
+
+  document.getElementById('m-title').textContent=r?'Edit Pengeluaran':'Tambah Pengeluaran';
+
+  document.getElementById('m-body').innerHTML=html;
+
+  document.getElementById('mo').classList.add('open');
+
+}
+
+function openM(type){
+
+  if(type==='pm')openFormPM();
+
+  else if(type==='pg')openFormPG();
+
+  else{
+
+    const MFORMS={
+
+      ca:{title:'Tambah Current Asset',fields:[['name','Nama'],['category','Kategori',()=>getCategories()],['amount','Jumlah'],['date','Tanggal']]},
+
+      ar:{title:'Tambah Piutang',fields:[['name','Nama Penghutang'],['amount','Jumlah'],['paid','Terbayar'],['date','Tanggal Transaksi'],['due_date','Jatuh Tempo'],['status','Status',()=>['Pending','Partial','Paid','Overdue']]]},
+
+      ii:{title:'Tambah Inventory',fields:[['name','Nama'],['qty','Qty'],['buy_price','Harga Beli'],['current_price','Harga Sekarang'],['date','Tanggal Beli']]},
+
+      ppe:{title:'Tambah PPE',fields:[['name','Nama Aset'],['qty','Qty'],['buy_price','Harga Beli'],['current_price','Harga Sekarang'],['date','Tanggal Beli'],['depreciation_date','Tgl Update Depresiasi']]},
+
+      intg:{title:'Tambah Intangible',fields:[['name','Nama'],['amount','Nilai'],['date','Tanggal']]},
+
+      inv:{title:'Tambah Investasi',fields:[['name','Nama Investasi'],['type','Tipe',()=>['Saham','Reksadana','Cryptocurrency','Emas','Obligasi','Lainnya']],['total_buy','Nilai Beli'],['qty','Qty'],['current_price','Harga Sekarang'],['date','Tanggal Beli'],['gain','Gain/Loss']]},
+
+    };
+
+    const cfg=MFORMS[type];if(!cfg)return;
+
+    let html='<div class="fr">';
+
+    cfg.fields.forEach(([fld,lbl,opts])=>{
+
+      const v=mId&&DB[DARR[type]]?DB[DARR[type]].find(x=>x.id===mId):null;
+
+      const val=v?v[fld]:'';
+
+      if(opts){
+
+        const optList=typeof opts==='function'?opts():opts;
+
+        html+=`<div class="fg"><label>${lbl}</label><select id="m-${fld}">${optList.map(o=>`<option ${val===o?'selected':''}>${o}</option>`).join('')}</select></div>`;
+
+      }else{
+
+        html+=`<div class="fg"><label>${lbl}</label><input type="${fld.includes('date')?'date':fld.includes('price')||fld.includes('amount')||fld.includes('qty')||fld.includes('paid')||fld.includes('buy')||fld.includes('gain')?'number':'text'}" id="m-${fld}" value="${val}"></div>`;
+
+      }
+
+    });
+
+    html+='</div>';
+
+    mType=type;
+
+    document.getElementById('m-title').textContent=cfg.title;
+
+    document.getElementById('m-body').innerHTML=html;
+
+    document.getElementById('mo').classList.add('open');
+
+  }
+
+}
+
+function openE(type,id){mId=id;openM(type);}
+
+function closeM(){document.getElementById('mo').classList.remove('open');mId=null;mType='';}
+
+async function saveM(){
+
+  if(!mType)return;
+
+  if(mType==='pm'){
+
+    const date=document.getElementById('m-date').value;
+
+    const desc=document.getElementById('m-desc').value;
+
+    const cat=document.getElementById('m-cat').value;
+
+    const method=document.getElementById('m-method').value;
+
+    const amt=document.getElementById('m-amount').value;
+
+    if(!date||!desc||!cat||!method||!amt){showToast('❌ Isi semua field');return;}
+
+    const data={date,description:desc,category:cat,payment_method:method,amount:+amt};
+
+    const caItem=DB.ca.find(x=>x.name===method);
+
+    if(mId){
+
+      const old=DB.pm.find(x=>x.id===mId);
+
+      const oldCA=DB.ca.find(x=>x.name===old.payment_method);
+
+      await sbU('pemasukan',mId,data);
+
+      const idx=DB.pm.findIndex(x=>x.id===mId);
+
+      if(idx>=0)DB.pm[idx]={...DB.pm[idx],...data};
+
+      if(oldCA)await sbU('current_assets',oldCA.id,{amount:(+oldCA.amount)-(+old.amount)});
+
+      if(caItem)await sbU('current_assets',caItem.id,{amount:(+caItem.amount)+(+amt)});
+
+    }else{
+
+      const r=await sbI('pemasukan',data);
+
+      const rec=Array.isArray(r)?r[0]:r;
+
+      if(rec)DB.pm.push(rec);
+
+      if(caItem)await sbU('current_assets',caItem.id,{amount:(+caItem.amount)+(+amt)});
+
+    }
+
+    closeM();
+
+    updatePMStats();
+
+    renderPM();
+
+    updateAll();
+
+    doSnap().catch(()=>{});
+
+    showToast('✅ Pemasukan tersimpan');
+
+  }else if(mType==='pg'){
+
+    const date=document.getElementById('m-date').value;
+
+    const desc=document.getElementById('m-desc').value;
+
+    const cat=document.getElementById('m-cat').value;
+
+    const method=document.getElementById('m-method').value;
+
+    const amt=document.getElementById('m-amount').value;
+
+    if(!date||!desc||!cat||!method||!amt){showToast('❌ Isi semua field');return;}
+
+    const data={date,description:desc,category:cat,payment_method:method,amount:+amt};
+
+    const caItem=DB.ca.find(x=>x.name===method);
+
+    if(mId){
+
+      const old=DB.pg.find(x=>x.id===mId);
+
+      const oldCA=DB.ca.find(x=>x.name===old.payment_method);
+
+      await sbU('pengeluaran',mId,data);
+
+      const idx=DB.pg.findIndex(x=>x.id===mId);
+
+      if(idx>=0)DB.pg[idx]={...DB.pg[idx],...data};
+
+      if(oldCA)await sbU('current_assets',oldCA.id,{amount:(+oldCA.amount)+(+old.amount)});
+
+      if(caItem)await sbU('current_assets',caItem.id,{amount:(+caItem.amount)-(+amt)});
+
+    }else{
+
+      const r=await sbI('pengeluaran',data);
+
+      const rec=Array.isArray(r)?r[0]:r;
+
+      if(rec)DB.pg.push(rec);
+
+      if(caItem)await sbU('current_assets',caItem.id,{amount:(+caItem.amount)-(+amt)});
+
+    }
+
+    closeM();
+
+    updatePGStats();
+
+    renderPG();
+
+    updateAll();
+
+    doSnap().catch(()=>{});
+
+    showToast('✅ Pengeluaran tersimpan');
+
+  }else{
+
+    // Handle existing types (ca, ar, ii, etc)
+
+    const MFORMS={ca:'current_assets',ar:'accounts_receivable',ii:'inventory',ppe:'property_plant_equipment',intg:'intangible_assets',inv:'investments'};
+
+    const tbl=MFORMS[mType];if(!tbl)return;
+
+    const arr=DARR[mType];
+
+    const fields=['name','category','amount','date','qty','buy_price','current_price','due_date','status','depreciation_date','paid','type','total_buy','gain'];
+
+    const data={};
+
+    fields.forEach(f=>{
+
+      const el=document.getElementById('m-'+f);
+
+      if(el)data[f]=el.value;
+
+    });
+
+    if(!data.name){showToast('❌ Nama required');return;}
+
+    if(mId){
+
+      await sbU(tbl,mId,data);
+
+      const idx=DB[arr].findIndex(x=>x.id===mId);
+
+      if(idx>=0)DB[arr][idx]={...DB[arr][idx],...data};
+
+    }else{
+
+      const r=await sbI(tbl,data);
+
+      const rec=Array.isArray(r)?r[0]:r;
+
+      if(rec)DB[arr].push(rec);
+
+    }
+
+    closeM();
+
+    if(RENDER_MAP['t-'+mType])RENDER_MAP['t-'+mType]();
+
+    updateAll();
+
+    showToast('✅ Data tersimpan');
+
+  }
+
+}
+
+async function delR(type,id,name){
+
+  cfmCb=async()=>{
+
+    const tbl={ca:'current_assets',ar:'accounts_receivable',ii:'inventory',ppe:'property_plant_equipment',intg:'intangible_assets',inv:'investments',pm:'pemasukan',pg:'pengeluaran'}[type];
+
+    const arr=DARR[type]||type;
+
+    if(type==='pm'||type==='pg'){
+
+      const rec=DB[arr].find(x=>x.id===id);
+
+      if(rec&&type==='pm'){
+
+        const ca=DB.ca.find(x=>x.name===rec.payment_method);
+
+        if(ca)await sbU('current_assets',ca.id,{amount:(+ca.amount)-(+rec.amount)});
+
+      }else if(rec&&type==='pg'){
+
+        const ca=DB.ca.find(x=>x.name===rec.payment_method);
+
+        if(ca)await sbU('current_assets',ca.id,{amount:(+ca.amount)+(+rec.amount)});
+
+      }
+
+    }
+
+    await sbD(tbl,id);
+
+    const idx=DB[arr].findIndex(x=>x.id===id);
+
+    if(idx>=0)DB[arr].splice(idx,1);
+
+    closeCfm();
+
+    if(type==='pm'){updatePMStats();renderPM();}else if(type==='pg'){updatePGStats();renderPG();}else if(RENDER_MAP['t-'+type]){RENDER_MAP['t-'+type]();}
+
+    updateAll();
+
+    doSnap().catch(()=>{});
+
+    showToast('✅ Data dihapus');
+
+  };
+
+  document.getElementById('cfm-tt').textContent='Hapus '+name+'?';
+
+  document.getElementById('cfm-mg').textContent='Data akan dihapus permanen.';
+
+  document.getElementById('cfm').classList.add('open');
+
+}
+
+function closeCfm(){document.getElementById('cfm').classList.remove('open');cfmCb=null;}
+
+function runCfm(){if(cfmCb)cfmCb();}
+
+function escQ(s){return(s||'').replace(/'/g,"\\'");}
+
+// ══════════════════════════════════════════════════════════════
 // ══════════════════════════════════════════════════════════════
 // BOOT
 // ══════════════════════════════════════════════════════════════
