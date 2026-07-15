@@ -86,6 +86,8 @@ function applyTxFilter(type){
 }
 function computeTxStats(type){
   const arr=DB[type]||[];
+  const f=TXFILT[type];
+  const curArr = f ? txFiltered(type) : arr.filter(x=>ymOf(x.date)===td().slice(0,7));
   const curYM=td().slice(0,7);
   const now=new Date();
   const prevD=new Date(now.getFullYear(),now.getMonth()-1,1);
