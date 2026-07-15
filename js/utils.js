@@ -18,13 +18,16 @@ async function fetchFX(){
     }
   }catch(e){document.getElementById('fx-rate').textContent='1 USD = Rp '+FX_RATE.toLocaleString('id-ID');document.getElementById('fx-note').textContent='Kurs default (offline)';}
 }
+
 function toggleCurrency(){
   CUR=CUR==='IDR'?'USD':'IDR';
   document.getElementById('cur-lbl').textContent=CUR;
-  const btn=document.getElementById('btn-cur');
-  btn.classList.toggle('active-toggle',CUR==='USD');
+  document.getElementById('btn-cur').classList.toggle('active-toggle',CUR==='USD');
   updateAll();
+  reRender();
+  if(document.getElementById('page-laporan'))applyLaporanFilter();
 }
+
 function fRp(v){
   const n=Math.abs(+v);
   if(CUR==='USD'){return'$'+(n/FX_RATE).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
