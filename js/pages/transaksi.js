@@ -3,6 +3,7 @@
 function txFiltered(type){
   const arr=DB[type]||[];
   const f=TXFILT[type];
+  const curArr = f ? txFiltered(type) : arr.filter(x=>ymOf(x.date)===td().slice(0,7));
   if(!f)return arr;
   return arr.filter(r=>{
     if(f.from&&r.date<f.from)return false;
@@ -69,7 +70,7 @@ function applyTxFilter(type){
     TXFILT.exp={from,to,category,method};
   }
   if(PAGE_STATE['t-'+type])PAGE_STATE['t-'+type].page=1;
-  if(type==='inc')rInc();else rExp();
+  if(type==='inc')renderIncPage();else renderExpPage();
   showToast('✅ Filter diterapkan');
 }
 function computeTxStats(type){
