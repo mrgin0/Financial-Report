@@ -34,7 +34,7 @@
     <button class="btn-ic" id="btn-cur" onclick="toggleCurrency()" title="Toggle IDR/USD">🏦 <span id="cur-lbl">IDR</span></button>
     <button class="btn-ic" id="btn-lang" onclick="toggleLang()" title="Toggle Language">🌐 <span id="lang-lbl">ID</span></button>
     <button class="btn-ic" onclick="toggleDark()">🌙 <span id="dk-lbl">Dark</span></button>
-    <div class="avatar" id="hdr-avatar">R</div>
+    <div class="avatar" id="hdr-avatar" onclick="openProfileModal()" style="cursor:pointer" title="Profile">R</div>
   </div>
 </header>
 
@@ -99,7 +99,45 @@
     <div class="mbtns"><button class="mb-c" onclick="closeCatMgr()">Tutup</button></div>
   </div>
 </div>
+<!-- PROFILE -->
+<div class="mo" id="profile-mo" onclick="if(event.target===this)closeProfileModal()">
+  <div class="modal" style="max-width:560px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h3 style="margin-bottom:0">👤 Profile</h3>
+      <button onclick="closeProfileModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mu);line-height:1">×</button>
+    </div>
 
+    <div class="fg" style="margin-top:14px"><label>Nama Aplikasi</label><input id="set-app-name" placeholder="Lap. Keuangan Pribadi"></div>
+    <div class="fg"><label>Deskripsi Aplikasi</label><input id="set-app-desc" placeholder="Personal Finance Tracker"></div>
+
+    <div class="fg"><label>Nama Akun</label><input id="set-acc-name" placeholder="Raihan Nor Falah"></div>
+    <div class="fg"><label>Email Akun</label><input id="set-acc-email" placeholder="nama@email.com"></div>
+
+    <div class="fg">
+      <label>Foto Profil (Header)</label>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="set-avatar-preview" style="width:48px;height:48px;border-radius:50%;background:var(--pr);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;overflow:hidden;flex-shrink:0">R</div>
+        <input type="file" id="set-avatar-file" accept="image/*" onchange="previewSettingImage('set-avatar-file','set-avatar-preview')">
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Logo Family Office (Sidebar)</label>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="set-fologo-preview" style="width:70px;height:70px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:9px;text-align:center;overflow:hidden;flex-shrink:0">Belum ada</div>
+        <input type="file" id="set-fologo-file" accept="image/*" onchange="previewSettingImage('set-fologo-file','set-fologo-preview')">
+      </div>
+      <div style="font-size:10px;color:var(--mu);margin-top:5px">Jika diisi, logo ini otomatis menggantikan teks "MI&amp;RAI CAPITAL" di sidebar.</div>
+    </div>
+
+    <div class="mbtns">
+      <button class="mb-c" onclick="resetAppSettings()">↺ Reset ke Default</button>
+      <button class="mb-s" onclick="saveAppSettings()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
 <!-- CONFIRM -->
 <div class="cfm-mo" id="cfm" onclick="if(event.target===this)closeCfm()">
   <div class="cfm-box">
