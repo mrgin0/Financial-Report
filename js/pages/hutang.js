@@ -38,6 +38,15 @@ function refreshDebtFilterOptions(){
   const credSel=document.getElementById('debt-f-cred');
   if(credSel){const cur=credSel.value;const names=[...new Set(DB.debt.map(x=>x.name).filter(Boolean))];credSel.innerHTML='<option value="">Semua Kreditur</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');credSel.value=cur;}
 }
+function applyDebtTopFilter(){
+  const period=document.getElementById('debt-top-period')?.value;
+  const from=document.getElementById('debt-top-from')?.value;
+  const to=document.getElementById('debt-top-to')?.value;
+  const pOld=document.getElementById('debt-f-period');if(pOld)pOld.value=period;
+  const fOld=document.getElementById('debt-f-from');if(fOld)fOld.value=from;
+  const tOld=document.getElementById('debt-f-to');if(tOld)tOld.value=to;
+  applyDebtFilter();
+}
 function applyDebtFilter(){
   const period=document.getElementById('debt-f-period')?.value||'all';
   let from=document.getElementById('debt-f-from')?.value||null;
