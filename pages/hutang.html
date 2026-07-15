@@ -3,6 +3,29 @@
     <div class="ptitle" style="margin-bottom:0">💳 <span>Hutang</span></div>
     <button class="btn-add" onclick="openM('debt')">+ Tambah Hutang</button>
   </div>
+  <div class="card mb12">
+  <div class="fr" style="grid-template-columns:1fr 1fr 1fr;align-items:end">
+    <div class="filt-fg" style="margin-bottom:0">
+      <label>Periode</label>
+      <select id="debt-top-period" onchange="applyDebtTopFilter()">
+        <option value="bulan_ini">Bulan Ini</option>
+        <option value="bulan_lalu">Bulan Lalu</option>
+        <option value="all">Semua</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="filt-fg" style="margin-bottom:0">
+      <label>Dari Tanggal</label>
+      <input type="date" id="debt-top-from" onchange="applyDebtTopFilter()">
+    </div>
+    <div class="filt-fg" style="margin-bottom:0">
+      <label>Sampai Tanggal</label>
+      <input type="date" id="debt-top-to" onchange="applyDebtTopFilter()">
+    </div>
+  </div>
+</div>
+
+<div class="sg">
   <div class="sg">
     <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Hutang</div><div class="sc-val" id="sc-debt-total">Rp 0</div><div class="sc-chg neu" id="sc-debt-total-chg">—</div></div><div class="sc-ic ic-o">💳</div></div>
     <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Terbayar</div><div class="sc-val" id="sc-debt-paid">Rp 0</div><div class="sc-chg neu" id="sc-debt-paid-chg">—</div></div><div class="sc-ic ic-g">✅</div></div>
