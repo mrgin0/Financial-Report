@@ -74,7 +74,6 @@ async function nav(id,el){
   if(id==='inc')renderIncPage();
   if(id==='exp')renderExpPage();
   if(id==='hutang')renderHutangPage();
-  if(id==='settings')fillSettingsForm();
   if(id==='laporan')applyLaporanFilter();
   if(id==='dashboard'){
     const ym=td().slice(0,7);
