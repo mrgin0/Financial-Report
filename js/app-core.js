@@ -2,9 +2,9 @@
 
 // Peta id halaman -> nama file di folder /pages
 const PAGE_FILES = {
-  dashboard:'dashboard', laporan:'laporan-posisi', labarugi:'laporan-labarugi', aruskas:'laporan-aruskas',
+  dashboard:'dashboard', laporan:'laporan',
   ca:'current-asset', ce:'cash-equivalent', nc:'non-current-asset', inv:'investment',
-  hutang:'hutang', exp:'pengeluaran', inc:'pemasukan', settings:'settings'
+  hutang:'hutang', exp:'pengeluaran', inc:'pemasukan'
 };
 
 async function init(){
