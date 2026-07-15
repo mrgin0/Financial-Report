@@ -50,12 +50,13 @@ function applyDebtFilter(){
   const status=document.getElementById('debt-f-status')?.value||'';
   DEBTFILT={from,to,creditor,status};
   if(PAGE_STATE['t-debt'])PAGE_STATE['t-debt'].page=1;
-  rHutang();
+  renderHutangPage();
   showToast('✅ Filter diterapkan');
 }
 function debtStatsCompare(){
-  const curTotal=DB.debt.reduce((a,x)=>a+(+x.amount||0),0);
-  const curPaid=DB.debt.reduce((a,x)=>a+(+x.paid||0),0);
+  const data = DEBTFILT ? debtFiltered() : DB.debt;   // ← BARIS BARU: pilih data sesuai filter aktif
+  const curTotal=data.reduce((a,x)=>a+(+x.amount||0),0);   // ganti DB.debt → data
+  const curPaid=data.reduce((a,x)=>a+(+x.paid||0),0);       // ganti DB.debt → data
   const curSisa=curTotal-curPaid;
   const now=new Date();
   const prevD=new Date(now.getFullYear(),now.getMonth()-1,1);
