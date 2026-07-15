@@ -231,12 +231,17 @@ body.dark .toast{background:#f1f5f9;color:#0f172a}
 .btn-filt{width:100%;background:var(--pr);color:#fff;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px}
 /* RINGKASAN SOURCE/CATEGORY CARDS */
 .rgk-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:12px}
-.rgk-card{border:1px solid var(--bd);border-radius:10px;padding:11px;background:var(--bg)}
-.rgk-nm{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;margin-bottom:6px}
-.rgk-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.rgk-val{font-size:13.5px;font-weight:800;margin-bottom:2px}
-.rgk-pct{font-size:9.5px;color:var(--mu)}
+.rgk-card{position:relative;overflow:hidden;border-radius:14px;padding:14px 14px 12px;background:linear-gradient(135deg,color-mix(in srgb,var(--ac,#2563eb) 16%,var(--card)) 0%,var(--card) 75%);border:1px solid color-mix(in srgb,var(--ac,#2563eb) 30%,var(--bd))}
+.rgk-card::after{content:'';position:absolute;top:-35%;right:-18%;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,var(--ac,#2563eb) 0%,transparent 72%);opacity:.28;filter:blur(4px);pointer-events:none}
+.rgk-card::before{content:'';position:absolute;inset:0;opacity:.05;background-image:radial-gradient(circle at 20% 30%,#fff 0,transparent 1px),radial-gradient(circle at 70% 60%,#fff 0,transparent 1px),radial-gradient(circle at 40% 80%,#fff 0,transparent 1px);background-size:26px 26px;pointer-events:none}
+.rgk-nm{position:relative;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--ac,var(--txt));margin-bottom:8px;z-index:1}
+.rgk-dot{width:8px;height:8px;border-radius:50%;background:var(--ac,#2563eb);box-shadow:0 0 8px var(--ac,#2563eb);flex-shrink:0}
+.rgk-val{position:relative;font-size:15.5px;font-weight:800;color:var(--ac,var(--txt));margin-bottom:2px;z-index:1}
+.rgk-pct{position:relative;font-size:9.5px;color:var(--mu);z-index:1}
 .chart-h{position:relative;height:230px;width:100%}
+.chart-2col{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;align-items:center}
+.chart-2col .donut-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
+@media(max-width:900px){.chart-2col{grid-template-columns:1fr}}
 .dbadge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
 .dbadge.aman{background:#d1fae5;color:#059669}
 .dbadge.jt{background:#fee2e2;color:#dc2626}
@@ -259,7 +264,7 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
 <header class="hdr">
   <div class="hl">
     <button class="btn-ham" onclick="toggleSidebar()"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-    <div class="logo"><div class="logo-ic">📊</div><div class="logo-tx">Lap. Keuangan Pribadi<small id="logo-sub">Personal Finance Tracker</small></div></div>
+    <div class="logo"><div class="logo-ic" id="app-logo-ic">📊</div><div class="logo-tx"><span id="app-name-txt">Lap. Keuangan Pribadi</span><small id="logo-sub">Personal Finance Tracker</small></div></div>
     <div class="wclocks">
       <div class="wck"><span class="wck-flag">🇮🇩</span><div class="wck-info"><span class="wck-lbl">Indonesia (WITA)</span><span class="wck-time" id="wc-id">—</span></div></div>
       <div class="wck"><span class="wck-flag">🇬🇧</span><div class="wck-info"><span class="wck-lbl">London (LSE)</span><span class="wck-time" id="wc-uk">—</span></div></div>
@@ -276,7 +281,7 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
     <button class="btn-ic" id="btn-cur" onclick="toggleCurrency()" title="Toggle IDR/USD">🏦 <span id="cur-lbl">IDR</span></button>
     <button class="btn-ic" id="btn-lang" onclick="toggleLang()" title="Toggle Language">🌐 <span id="lang-lbl">ID</span></button>
     <button class="btn-ic" onclick="toggleDark()">🌙 <span id="dk-lbl">Dark</span></button>
-    <div class="avatar">R</div>
+    <div class="avatar" id="hdr-avatar">R</div>
   </div>
 </header>
 
@@ -288,6 +293,8 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
     <div class="sb-div"></div>
     <div class="sb-lbl" data-i="sb_laporan">Laporan Keuangan</div>
     <div class="sb-it" onclick="nav('laporan',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span data-i="laporan_pos">Laporan Posisi Keuangan</span></div>
+    <div class="sb-it" onclick="nav('labarugi',this)" id="nav-labarugi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>Laporan Laba Rugi</span></div>
+    <div class="sb-it" onclick="nav('aruskas',this)" id="nav-aruskas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Laporan Arus Kas</span></div>
     <div class="sb-div"></div>
     <div class="sb-lbl" data-i="sb_master">Master Data</div>
     <div class="sb-it" onclick="nav('ca',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span data-i="current_asset">Current Asset</span></div>
@@ -298,11 +305,16 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
     <div class="sb-it" onclick="nav('exp',this)" id="nav-exp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span data-i="pengeluaran">Pengeluaran</span></div>
     <div class="sb-it" onclick="nav('inc',this)" id="nav-inc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/><path d="M12 3v18"/></svg><span data-i="pemasukan">Pemasukan</span></div>
     <div class="sb-div"></div>
+    <div class="sb-lbl">Pengaturan</div>
+    <div class="sb-it" onclick="nav('settings',this)" id="nav-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Setting</span></div>
+    <div class="sb-div"></div>
     <div class="fo-card">
-      <div class="fo-lbl">— FAMILY OFFICE —</div>
-      <div class="fo-logo">MI<span>&amp;</span>RAI</div>
-      <div class="fo-cap">CAPITAL</div>
-      <div class="fo-tag">Investing in Today,<br>Building Forever.</div>
+      <div id="fo-logo-block">
+        <div class="fo-lbl">— FAMILY OFFICE —</div>
+        <div class="fo-logo">MI<span>&amp;</span>RAI</div>
+        <div class="fo-cap">CAPITAL</div>
+        <div class="fo-tag">Investing in Today,<br>Building Forever.</div>
+      </div>
       <div class="fo-vals">
         <div class="fo-v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6z"/></svg><span>Integrity</span></div>
         <div class="fo-v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span>Growth</span></div>
@@ -310,7 +322,7 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
       </div>
       <a class="fo-btn" href="https://mrgin0.github.io/dca-tracker-rai/" target="_blank" rel="noopener">Kunjungi Website Family Office →</a>
     </div>
-    <div class="sb-usr"><div class="sb-uname">Raihan Nor Falah</div><div class="sb-uemail">raihan.nor.falah@mhs.politala.ac.id</div></div>
+    <div class="sb-usr"><div class="sb-uname" id="sb-uname-txt">Raihan Nor Falah</div><div class="sb-uemail" id="sb-uemail-txt">raihan.nor.falah@mhs.politala.ac.id</div></div>
   </div>
 </aside>
 
@@ -418,11 +430,19 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
 <!-- LAPORAN -->
 <div class="page" id="page-laporan">
   <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span data-i="laporan_pos">Laporan Posisi Keuangan</span></div>
+  <div class="card mb12">
+    <div class="ctitle" style="margin-bottom:9px">Filter Periode</div>
+    <div class="fr" style="grid-template-columns:1fr 1fr 1fr;align-items:end">
+      <div class="filt-fg" style="margin-bottom:0"><label>Periode Bulan</label><input type="month" id="lap-pick" class="mpick" style="width:100%" onchange="onLapMonth(this.value)"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Dari Tanggal</label><input type="date" id="lap-f-from"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Sampai Tanggal</label><input type="date" id="lap-f-to"></div>
+    </div>
+    <button class="btn-filt" style="margin-top:9px;max-width:220px" onclick="lapDateFilter()">🔽 Terapkan Filter Tanggal</button>
+  </div>
   <div class="card">
     <div class="chd">
       <div><div class="ctitle" data-i="laporan_detail">Laporan Detail</div><div class="cmonth" id="lap-month">—</div></div>
       <div class="dwrap">
-        <input type="month" id="lap-pick" class="mpick" onchange="onLapMonth(this.value)">
         <div class="pbtns">
           <button class="pb" onclick="lapRange('1m',this)" data-i="p_1b">1 Bln</button>
           <button class="pb" onclick="lapRange('6m',this)" data-i="p_6b">6 Bln</button>
@@ -434,6 +454,60 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
     </div>
     <div id="fin-lap"></div>
     <div class="btn-row"><button class="btn btn-do" onclick="downloadPDF('lap')" data-i="btn_pdf">📄 Download PDF</button></div>
+  </div>
+</div>
+
+<!-- LABA RUGI -->
+<div class="page" id="page-labarugi">
+  <div class="ptitle">📈 <span>Laporan Laba Rugi</span></div>
+  <div class="card mb12">
+    <div class="ctitle" style="margin-bottom:9px">Filter Periode</div>
+    <div class="fr" style="grid-template-columns:1fr 1fr 1fr;align-items:end">
+      <div class="filt-fg" style="margin-bottom:0"><label>Periode Bulan</label><input type="month" id="lr-pick" class="mpick" style="width:100%" onchange="onLRMonth(this.value)"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Dari Tanggal</label><input type="date" id="lr-f-from"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Sampai Tanggal</label><input type="date" id="lr-f-to"></div>
+    </div>
+    <button class="btn-filt" style="margin-top:9px;max-width:220px" onclick="lrDateFilter()">🔽 Terapkan Filter Tanggal</button>
+  </div>
+  <div class="card">
+    <div class="chd">
+      <div><div class="ctitle">Laba Rugi Detail</div><div class="cmonth" id="lr-month">—</div></div>
+      <div class="dwrap"><div class="pbtns">
+        <button class="pb" onclick="lrRange('1m',this)">1 Bln</button>
+        <button class="pb" onclick="lrRange('6m',this)">6 Bln</button>
+        <button class="pb" onclick="lrRange('1y',this)">1 Thn</button>
+        <button class="pb" onclick="lrRange('5y',this)">5 Thn</button>
+        <button class="pb" onclick="lrRange('all',this)">All</button>
+      </div></div>
+    </div>
+    <div id="fin-lr"></div>
+  </div>
+</div>
+
+<!-- ARUS KAS -->
+<div class="page" id="page-aruskas">
+  <div class="ptitle">💵 <span>Laporan Arus Kas</span></div>
+  <div class="card mb12">
+    <div class="ctitle" style="margin-bottom:9px">Filter Periode</div>
+    <div class="fr" style="grid-template-columns:1fr 1fr 1fr;align-items:end">
+      <div class="filt-fg" style="margin-bottom:0"><label>Periode Bulan</label><input type="month" id="ak-pick" class="mpick" style="width:100%" onchange="onAKMonth(this.value)"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Dari Tanggal</label><input type="date" id="ak-f-from"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Sampai Tanggal</label><input type="date" id="ak-f-to"></div>
+    </div>
+    <button class="btn-filt" style="margin-top:9px;max-width:220px" onclick="akDateFilter()">🔽 Terapkan Filter Tanggal</button>
+  </div>
+  <div class="card">
+    <div class="chd">
+      <div><div class="ctitle">Arus Kas Detail</div><div class="cmonth" id="ak-month">—</div></div>
+      <div class="dwrap"><div class="pbtns">
+        <button class="pb" onclick="akRange('1m',this)">1 Bln</button>
+        <button class="pb" onclick="akRange('6m',this)">6 Bln</button>
+        <button class="pb" onclick="akRange('1y',this)">1 Thn</button>
+        <button class="pb" onclick="akRange('5y',this)">5 Thn</button>
+        <button class="pb" onclick="akRange('all',this)">All</button>
+      </div></div>
+    </div>
+    <div id="fin-ak"></div>
   </div>
 </div>
 
@@ -479,25 +553,22 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
     <div class="sc"><div class="sc-inf"><div class="sc-lbl">Sisa Hutang</div><div class="sc-val" id="sc-debt-sisa">Rp 0</div><div class="sc-chg neu" id="sc-debt-sisa-chg">—</div></div><div class="sc-ic ic-p">📄</div></div>
     <div class="sc"><div class="sc-inf"><div class="sc-lbl">Hutang Jatuh Tempo</div><div class="sc-val" id="sc-debt-jt">0</div><div class="sc-chg neu" id="sc-debt-jt-chg">—</div></div><div class="sc-ic ic-b">📅</div></div>
   </div>
-  <div class="g2r mb12">
-    <div class="card">
-      <div class="chd"><div class="ctitle">Trend Hutang (Sisa Hutang)</div>
-        <div class="pbtns" id="debt-per-btns">
-          <button class="pb active" onclick="setDebtPeriod('7d',this)">7H</button>
-          <button class="pb" onclick="setDebtPeriod('30d',this)">30H</button>
-          <button class="pb" onclick="setDebtPeriod('1y',this)">1T</button>
-          <button class="pb" onclick="setDebtPeriod('all',this)">ALL</button>
-        </div>
+  <div class="card mb12">
+    <div class="chd"><div class="ctitle">Analisis Hutang — Trend &amp; Kreditur</div>
+      <div class="pbtns" id="debt-per-btns">
+        <button class="pb active" onclick="setDebtPeriod('7d',this)">7H</button>
+        <button class="pb" onclick="setDebtPeriod('30d',this)">30H</button>
+        <button class="pb" onclick="setDebtPeriod('1y',this)">1T</button>
+        <button class="pb" onclick="setDebtPeriod('all',this)">ALL</button>
       </div>
-      <div class="chart-h"><canvas id="c-debt-trend"></canvas></div>
     </div>
-    <div class="card">
-      <div class="chd"><div class="ctitle">Hutang berdasarkan Kreditur</div></div>
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-        <canvas id="c-debt-donut" width="160" height="160" style="max-width:160px"></canvas>
-        <div id="debt-donut-legend" style="flex:1;min-width:160px;font-size:11.5px"></div>
+    <div class="chart-2col">
+      <div class="chart-h"><canvas id="c-debt-trend"></canvas></div>
+      <div class="donut-wrap">
+        <canvas id="c-debt-donut" width="170" height="170" style="max-width:170px"></canvas>
+        <div id="debt-donut-legend" style="width:100%;font-size:11.5px"></div>
+        <div style="display:flex;justify-content:space-between;width:100%;font-weight:700;font-size:12.5px;border-top:1px solid var(--bd);margin-top:2px;padding-top:8px"><span>Total Sisa</span><span id="debt-donut-total">Rp 0</span></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:12.5px;border-top:1px solid var(--bd);margin-top:9px;padding-top:8px"><span>Total</span><span id="debt-donut-total">Rp 0</span></div>
     </div>
   </div>
   <div class="tx-layout">
@@ -533,26 +604,24 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
     <div class="sc"><div class="sc-inf"><div class="sc-lbl">Transaksi</div><div class="sc-val" id="sc-exp-count">0</div><div class="sc-chg neu" id="sc-exp-count-chg">—</div></div><div class="sc-ic ic-g">📋</div></div>
     <div class="sc"><div class="sc-inf"><div class="sc-lbl">Pengeluaran Hari Ini</div><div class="sc-val" id="sc-exp-today">Rp 0</div><div class="sc-chg neu" id="sc-exp-today-chg">—</div></div><div class="sc-ic ic-b">📄</div></div>
   </div>
-  <div class="g2r mb12">
-    <div class="card">
-      <div class="chd"><div class="ctitle">Trend Pengeluaran</div>
-        <div class="pbtns" id="exp-per-btns">
-          <button class="pb active" onclick="setTxPeriod('exp','7d',this)">7H</button>
-          <button class="pb" onclick="setTxPeriod('exp','30d',this)">30H</button>
-          <button class="pb" onclick="setTxPeriod('exp','1y',this)">1T</button>
-          <button class="pb" onclick="setTxPeriod('exp','all',this)">ALL</button>
-        </div>
+  <div class="card mb12">
+    <div class="chd"><div class="ctitle">Analisis Pengeluaran — Trend &amp; Kategori</div>
+      <div class="pbtns" id="exp-per-btns">
+        <button class="pb active" onclick="setTxPeriod('exp','7d',this)">7H</button>
+        <button class="pb" onclick="setTxPeriod('exp','30d',this)">30H</button>
+        <button class="pb" onclick="setTxPeriod('exp','1y',this)">1T</button>
+        <button class="pb" onclick="setTxPeriod('exp','all',this)">ALL</button>
       </div>
+    </div>
+    <div class="chart-2col">
       <div class="chart-h"><canvas id="c-exp-trend"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="chd"><div class="ctitle">Pengeluaran berdasarkan Kategori</div><button class="btn-add" style="background:var(--bg);color:var(--txt);border:1px solid var(--bd)" onclick="openCatMgr('exp')">⚙ Kelola Kategori</button></div>
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-        <canvas id="c-exp-donut" width="160" height="160" style="max-width:160px"></canvas>
-        <div id="exp-donut-legend" style="flex:1;min-width:160px;font-size:11.5px"></div>
+      <div class="donut-wrap">
+        <canvas id="c-exp-donut" width="170" height="170" style="max-width:170px"></canvas>
+        <div id="exp-donut-legend" style="width:100%;font-size:11.5px"></div>
+        <div style="display:flex;justify-content:space-between;width:100%;font-weight:700;font-size:12.5px;border-top:1px solid var(--bd);margin-top:2px;padding-top:8px"><span>Total</span><span id="exp-donut-total">Rp 0</span></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:12.5px;border-top:1px solid var(--bd);margin-top:9px;padding-top:8px"><span>Total</span><span id="exp-donut-total">Rp 0</span></div>
     </div>
+    <div style="text-align:right;margin-top:6px"><button class="btn-add" style="background:var(--bg);color:var(--txt);border:1px solid var(--bd)" onclick="openCatMgr('exp')">⚙ Kelola Kategori</button></div>
   </div>
   <div class="tx-layout">
     <div class="card">
@@ -587,26 +656,24 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
     <div class="sc"><div class="sc-inf"><div class="sc-lbl">Transaksi</div><div class="sc-val" id="sc-inc-count">0</div><div class="sc-chg neu" id="sc-inc-count-chg">—</div></div><div class="sc-ic ic-g">📋</div></div>
     <div class="sc"><div class="sc-inf"><div class="sc-lbl">Pemasukan Hari Ini</div><div class="sc-val" id="sc-inc-today">Rp 0</div><div class="sc-chg neu" id="sc-inc-today-chg">—</div></div><div class="sc-ic ic-o">📄</div></div>
   </div>
-  <div class="g2r mb12">
-    <div class="card">
-      <div class="chd"><div class="ctitle">Trend Pemasukan</div>
-        <div class="pbtns" id="inc-per-btns">
-          <button class="pb active" onclick="setTxPeriod('inc','7d',this)">7H</button>
-          <button class="pb" onclick="setTxPeriod('inc','30d',this)">30H</button>
-          <button class="pb" onclick="setTxPeriod('inc','1y',this)">1T</button>
-          <button class="pb" onclick="setTxPeriod('inc','all',this)">ALL</button>
-        </div>
+  <div class="card mb12">
+    <div class="chd"><div class="ctitle">Analisis Pemasukan — Trend &amp; Sumber</div>
+      <div class="pbtns" id="inc-per-btns">
+        <button class="pb active" onclick="setTxPeriod('inc','7d',this)">7H</button>
+        <button class="pb" onclick="setTxPeriod('inc','30d',this)">30H</button>
+        <button class="pb" onclick="setTxPeriod('inc','1y',this)">1T</button>
+        <button class="pb" onclick="setTxPeriod('inc','all',this)">ALL</button>
       </div>
+    </div>
+    <div class="chart-2col">
       <div class="chart-h"><canvas id="c-inc-trend"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="chd"><div class="ctitle">Pemasukan berdasarkan Sumber</div><button class="btn-add" style="background:var(--bg);color:var(--txt);border:1px solid var(--bd)" onclick="openCatMgr('inc')">⚙ Kelola Kategori</button></div>
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-        <canvas id="c-inc-donut" width="160" height="160" style="max-width:160px"></canvas>
-        <div id="inc-donut-legend" style="flex:1;min-width:160px;font-size:11.5px"></div>
+      <div class="donut-wrap">
+        <canvas id="c-inc-donut" width="170" height="170" style="max-width:170px"></canvas>
+        <div id="inc-donut-legend" style="width:100%;font-size:11.5px"></div>
+        <div style="display:flex;justify-content:space-between;width:100%;font-weight:700;font-size:12.5px;border-top:1px solid var(--bd);margin-top:2px;padding-top:8px"><span>Total</span><span id="inc-donut-total">Rp 0</span></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:12.5px;border-top:1px solid var(--bd);margin-top:9px;padding-top:8px"><span>Total</span><span id="inc-donut-total">Rp 0</span></div>
     </div>
+    <div style="text-align:right;margin-top:6px"><button class="btn-add" style="background:var(--bg);color:var(--txt);border:1px solid var(--bd)" onclick="openCatMgr('inc')">⚙ Kelola Kategori</button></div>
   </div>
   <div class="tx-layout">
     <div class="card">
@@ -627,6 +694,42 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
   <div class="card" style="margin-top:12px">
     <div class="ctitle" style="margin-bottom:4px">Ringkasan Pemasukan berdasarkan Sumber</div>
     <div class="rgk-grid" id="inc-rgk"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="ptitle">⚙️ <span>Setting</span></div>
+  <div class="card" style="max-width:560px">
+    <div class="ctitle" style="margin-bottom:14px">Profil &amp; Tampilan Aplikasi</div>
+
+    <div class="fg"><label>Nama Aplikasi</label><input id="set-app-name" placeholder="Lap. Keuangan Pribadi"></div>
+    <div class="fg"><label>Deskripsi Aplikasi</label><input id="set-app-desc" placeholder="Personal Finance Tracker"></div>
+
+    <div class="fg"><label>Nama Akun</label><input id="set-acc-name" placeholder="Raihan Nor Falah"></div>
+    <div class="fg"><label>Email Akun</label><input id="set-acc-email" placeholder="nama@email.com"></div>
+
+    <div class="fg">
+      <label>Foto Profil (Header)</label>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="set-avatar-preview" style="width:48px;height:48px;border-radius:50%;background:var(--pr);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;overflow:hidden;flex-shrink:0">R</div>
+        <input type="file" id="set-avatar-file" accept="image/*" onchange="previewSettingImage('set-avatar-file','set-avatar-preview')">
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Logo Family Office (Sidebar)</label>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="set-fologo-preview" style="width:70px;height:70px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:9px;text-align:center;overflow:hidden;flex-shrink:0">Belum ada</div>
+        <input type="file" id="set-fologo-file" accept="image/*" onchange="previewSettingImage('set-fologo-file','set-fologo-preview')">
+      </div>
+      <div style="font-size:10px;color:var(--mu);margin-top:5px">Jika diisi, logo ini otomatis menggantikan teks "MI&amp;RAI CAPITAL" di sidebar.</div>
+    </div>
+
+    <div class="mbtns" style="justify-content:flex-start;margin-top:8px">
+      <button class="mb-s" onclick="saveAppSettings()">💾 Simpan Pengaturan</button>
+      <button class="mb-c" onclick="resetAppSettings()">↺ Reset ke Default</button>
+    </div>
   </div>
 </div>
 </main>
@@ -873,14 +976,18 @@ function calcT(ym){
   const f=(arr)=>arr.filter(x=>!ym||ymOf(x.date)===ym).reduce((a,x)=>a+(+x.amount),0);
   const farr=(arr)=>!ym?arr:arr.filter(x=>ymOf(x.date)===ym);
   const ca=f(DB.ca),ar=DB.ar.filter(x=>!ym||ymOf(x.date)===ym).reduce((a,x)=>a+(+(x.amount||0))-(+(x.paid||0)),0),ii=f(DB.ii),ppe=f(DB.ppe),intg=f(DB.intg),inv=f(DB.inv);
-  return{ca,ar,ii,ppe,intg,inv,cur:ca+ar+ii,nc:ppe+intg+inv,tot:ca+ar+ii+ppe+intg+inv,caI:farr(DB.ca),arI:farr(DB.ar),iiI:farr(DB.ii),ppeI:farr(DB.ppe),intgI:farr(DB.intg),invI:farr(DB.inv)};
+  const debtI=farr(DB.debt);const liab=debtI.reduce((a,x)=>a+debtSisa(x),0);
+  const tot=ca+ar+ii+ppe+intg+inv;
+  return{ca,ar,ii,ppe,intg,inv,cur:ca+ar+ii,nc:ppe+intg+inv,tot,liab,debtI,equity:tot-liab,caI:farr(DB.ca),arI:farr(DB.ar),iiI:farr(DB.ii),ppeI:farr(DB.ppe),intgI:farr(DB.intg),invI:farr(DB.inv)};
 }
 function calcRange(fym,tym){
   const f=(arr)=>arr.filter(x=>x.date&&(!fym||ymOf(x.date)>=fym)&&(!tym||ymOf(x.date)<=tym));
   const s=(a)=>a.reduce((t,x)=>t+(+x.amount),0);
   const fca=f(DB.ca),far=f(DB.ar),fii=f(DB.ii),fppe=f(DB.ppe),fintg=f(DB.intg),finv=f(DB.inv);
   const ca=s(fca),ar=far.reduce((a,x)=>a+(+(x.amount||0))-(+(x.paid||0)),0),ii=s(fii),ppe=s(fppe),intg=s(fintg),inv=s(finv);
-  return{ca,ar,ii,ppe,intg,inv,cur:ca+ar+ii,nc:ppe+intg+inv,tot:ca+ar+ii+ppe+intg+inv,caI:fca,arI:far,iiI:fii,ppeI:fppe,intgI:fintg,invI:finv};
+  const debtI=f(DB.debt);const liab=debtI.reduce((a,x)=>a+debtSisa(x),0);
+  const tot=ca+ar+ii+ppe+intg+inv;
+  return{ca,ar,ii,ppe,intg,inv,cur:ca+ar+ii,nc:ppe+intg+inv,tot,liab,debtI,equity:tot-liab,caI:fca,arI:far,iiI:fii,ppeI:fppe,intgI:fintg,invI:finv};
 }
 function buildFin(T,lbl,det){
   const d=(arr,fn)=>det&&arr.length?arr.map(fn).join(''):'';
@@ -903,6 +1010,12 @@ ${d(T.invI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r
 ${d(T.intgI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">${r.name}</span><span class="fv">${fRp(r.amount)}</span></div>`)}
 <div class="fin-row sub"><span class="fn"><b>9.</b></span><span class="fl"><b>Total Non-current Asset</b></span><span class="fv">${fRp(T.nc)}</span></div>
 <div class="fin-row tot"><span class="fn">10.</span><span class="fl"><b>TOTAL ASSET — ${lbl}</b></span><span class="fv"><b>${fRp(T.tot)}</b></span></div>
+<div class="fin-sec">C. Liabilities (Hutang)</div>
+${d(T.debtI,r=>`<div class="fin-det"><span class="fn"></span><span class="fl">— ${r.name}${r.purpose?' ('+r.purpose+')':''}</span><span class="fv">${fRp(debtSisa(r))}</span></div>`)}
+<div class="fin-row sub"><span class="fn"><b>11.</b></span><span class="fl"><b>Total Liabilities</b></span><span class="fv">${fRp(T.liab)}</span></div>
+<div class="fin-sec">D. Equity</div>
+<div class="fin-row"><span class="fn">12.</span><span class="fl">Modal / Retained Earnings (Aset − Liabilities)</span><span class="fv">${fRp(T.equity)}</span></div>
+<div class="fin-row tot"><span class="fn">13.</span><span class="fl"><b>TOTAL LIABILITIES + EQUITY — ${lbl}</b></span><span class="fv"><b>${fRp(T.liab+T.equity)}</b></span></div>
 </div>`;
 }
 
@@ -947,6 +1060,148 @@ function rangeCalc(r){
   else{lbl=LANG==='id'?'Semua Periode':'All Periods';}
   return{fym,tym,lbl};
 }
+function lapDateFilter(){
+  const from=document.getElementById('lap-f-from')?.value;
+  const to=document.getElementById('lap-f-to')?.value;
+  if(!from||!to){showToast('⚠️ Isi Dari Tanggal dan Sampai Tanggal');return;}
+  document.querySelectorAll('#page-laporan .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  const pick=document.getElementById('lap-pick');if(pick)pick.value='';
+  const fym=from.slice(0,7),tym=to.slice(0,7);
+  const lbl=from+' s/d '+to;
+  const el=document.getElementById('lap-month');if(el)el.textContent=(LANG==='id'?'Laporan ':'Report: ')+lbl;
+  const f=document.getElementById('fin-lap');if(f)f.innerHTML=buildFin(calcRange(fym,tym),lbl,true);
+  lapCtx={mode:'range',ym:'',fromYM:fym,toYM:tym,label:lbl};
+  showToast('✅ Filter tanggal diterapkan');
+}
+
+// ══════════════════════════════════════════════════════════════
+// LAPORAN LABA RUGI (Pendapatan − Beban) — dinamis dari data Pemasukan/Pengeluaran
+// ══════════════════════════════════════════════════════════════
+let lrCtx={mode:'month',ym:'',fromYM:'',toYM:'',label:''};
+function calcLabaRugi(fym,tym){
+  const inRange=(d)=>{if(!d)return false;const ym=ymOf(d);return(!fym||ym>=fym)&&(!tym||ym<=tym);};
+  const incArr=DB.inc.filter(x=>inRange(x.date));
+  const expArr=DB.exp.filter(x=>inRange(x.date));
+  const bySrc={};incArr.forEach(x=>{const k=x.source||'Lainnya';bySrc[k]=(bySrc[k]||0)+(+x.amount||0);});
+  const byCat={};expArr.forEach(x=>{const k=x.category||'Lainnya';byCat[k]=(byCat[k]||0)+(+x.amount||0);});
+  const totalPendapatan=Object.values(bySrc).reduce((a,b)=>a+b,0);
+  const totalBeban=Object.values(byCat).reduce((a,b)=>a+b,0);
+  return{bySrc,byCat,totalPendapatan,totalBeban,laba:totalPendapatan-totalBeban};
+}
+function buildLabaRugiHTML(T,lbl){
+  const srcRows=Object.keys(T.bySrc).map((k,i)=>`<div class="fin-det"><span class="fn"></span><span class="fl">— ${k}</span><span class="fv">${fRp(T.bySrc[k])}</span></div>`).join('');
+  const catRows=Object.keys(T.byCat).map((k,i)=>`<div class="fin-det"><span class="fn"></span><span class="fl">— ${k}</span><span class="fv">${fRp(T.byCat[k])}</span></div>`).join('');
+  const isProfit=T.laba>=0;
+  return`<div class="fin">
+<div class="fin-sec">A. Pendapatan</div>
+${srcRows||'<div class="fin-det"><span class="fn"></span><span class="fl">— Tidak ada data</span><span class="fv">Rp 0</span></div>'}
+<div class="fin-row sub"><span class="fn"><b>1.</b></span><span class="fl"><b>Total Pendapatan</b></span><span class="fv">${fRp(T.totalPendapatan)}</span></div>
+<div class="fin-sec">B. Beban</div>
+${catRows||'<div class="fin-det"><span class="fn"></span><span class="fl">— Tidak ada data</span><span class="fv">Rp 0</span></div>'}
+<div class="fin-row sub"><span class="fn"><b>2.</b></span><span class="fl"><b>Total Beban</b></span><span class="fv">${fRp(T.totalBeban)}</span></div>
+<div class="fin-row tot"><span class="fn">3.</span><span class="fl"><b>${isProfit?'LABA':'RUGI'} BERSIH — ${lbl}</b></span><span class="fv"><b style="color:${isProfit?'var(--ok)':'var(--er)'}">${isProfit?'':'-'}${fRp(Math.abs(T.laba))}</b></span></div>
+</div>`;
+}
+function onLRMonth(ym,mode){
+  if(mode!=='init')document.querySelectorAll('#page-labarugi .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('lr-month');if(el)el.textContent=mLbl(ym+'-01');
+  const f=document.getElementById('fin-lr');if(f)f.innerHTML=buildLabaRugiHTML(calcLabaRugi(ym,ym),mLbl(ym+'-01'));
+  lrCtx={mode:'month',ym,fromYM:'',toYM:'',label:mLbl(ym+'-01')};
+}
+function lrRange(r,btn){
+  document.querySelectorAll('#page-labarugi .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');const pick=document.getElementById('lr-pick');if(pick)pick.value='';
+  const{fym,tym,lbl}=rangeCalc(r);
+  const el=document.getElementById('lr-month');if(el)el.textContent=lbl;
+  const f=document.getElementById('fin-lr');if(f)f.innerHTML=buildLabaRugiHTML(calcLabaRugi(fym,tym),lbl);
+  lrCtx={mode:'range',ym:'',fromYM:fym,toYM:tym,label:lbl};
+}
+function lrDateFilter(){
+  const from=document.getElementById('lr-f-from')?.value;
+  const to=document.getElementById('lr-f-to')?.value;
+  if(!from||!to){showToast('⚠️ Isi Dari Tanggal dan Sampai Tanggal');return;}
+  document.querySelectorAll('#page-labarugi .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  const pick=document.getElementById('lr-pick');if(pick)pick.value='';
+  const fym=from.slice(0,7),tym=to.slice(0,7),lbl=from+' s/d '+to;
+  const el=document.getElementById('lr-month');if(el)el.textContent=lbl;
+  const f=document.getElementById('fin-lr');if(f)f.innerHTML=buildLabaRugiHTML(calcLabaRugi(fym,tym),lbl);
+  lrCtx={mode:'range',ym:'',fromYM:fym,toYM:tym,label:lbl};
+  showToast('✅ Filter tanggal diterapkan');
+}
+
+// ══════════════════════════════════════════════════════════════
+// LAPORAN ARUS KAS — dinamis dari Pemasukan/Pengeluaran/Hutang/Piutang
+// ══════════════════════════════════════════════════════════════
+let akCtx={mode:'month',ym:'',fromYM:'',toYM:'',label:''};
+function calcArusKas(fym,tym){
+  const inRange=(d)=>{if(!d)return false;const ym=ymOf(d);return(!fym||ym>=fym)&&(!tym||ym<=tym);};
+  const pemasukan=DB.inc.filter(x=>inRange(x.date)).reduce((a,x)=>a+(+x.amount||0),0);
+  const pengeluaran=DB.exp.filter(x=>inRange(x.date)).reduce((a,x)=>a+(+x.amount||0),0);
+  const danaHutangBaru=DB.debt.filter(x=>inRange(x.date)&&x.fund_to).reduce((a,x)=>a+(+x.amount||0),0);
+  const bayarHutang=DB.debtPay.filter(p=>inRange(p.paid_date)).reduce((a,p)=>a+(+p.amount||0),0);
+  const terimaPiutang=DB.payHist.filter(p=>inRange(p.paid_date)).reduce((a,p)=>a+(+p.amount||0),0);
+  const kasMasuk=pemasukan+danaHutangBaru+terimaPiutang;
+  const kasKeluar=pengeluaran+bayarHutang;
+  const kasBersih=kasMasuk-kasKeluar;
+  const saldoAkhir=sCA();
+  const saldoAwal=saldoAkhir-kasBersih;
+  return{pemasukan,pengeluaran,danaHutangBaru,bayarHutang,terimaPiutang,kasMasuk,kasKeluar,kasBersih,saldoAwal,saldoAkhir};
+}
+function buildArusKasHTML(T,lbl){
+  const isUp=T.kasBersih>=0;
+  return`<div class="fin">
+<div class="fin-sec">A. Arus Kas Masuk</div>
+<div class="fin-det"><span class="fn"></span><span class="fl">— Pemasukan</span><span class="fv">${fRp(T.pemasukan)}</span></div>
+<div class="fin-det"><span class="fn"></span><span class="fl">— Dana Masuk dari Hutang Baru</span><span class="fv">${fRp(T.danaHutangBaru)}</span></div>
+<div class="fin-det"><span class="fn"></span><span class="fl">— Penerimaan Pembayaran Piutang</span><span class="fv">${fRp(T.terimaPiutang)}</span></div>
+<div class="fin-row sub"><span class="fn"><b>1.</b></span><span class="fl"><b>Total Kas Masuk</b></span><span class="fv">${fRp(T.kasMasuk)}</span></div>
+<div class="fin-sec">B. Arus Kas Keluar</div>
+<div class="fin-det"><span class="fn"></span><span class="fl">— Pengeluaran</span><span class="fv">${fRp(T.pengeluaran)}</span></div>
+<div class="fin-det"><span class="fn"></span><span class="fl">— Pembayaran Hutang</span><span class="fv">${fRp(T.bayarHutang)}</span></div>
+<div class="fin-row sub"><span class="fn"><b>2.</b></span><span class="fl"><b>Total Kas Keluar</b></span><span class="fv">${fRp(T.kasKeluar)}</span></div>
+<div class="fin-row tot"><span class="fn">3.</span><span class="fl"><b>Kenaikan/(Penurunan) Kas Bersih — ${lbl}</b></span><span class="fv"><b style="color:${isUp?'var(--ok)':'var(--er)'}">${isUp?'+':'-'}${fRp(Math.abs(T.kasBersih))}</b></span></div>
+<div class="fin-row"><span class="fn">4.</span><span class="fl">Saldo Kas Awal (estimasi)</span><span class="fv">${fRp(T.saldoAwal)}</span></div>
+<div class="fin-row tot"><span class="fn">5.</span><span class="fl"><b>Saldo Kas Akhir (Current Asset saat ini)</b></span><span class="fv"><b>${fRp(T.saldoAkhir)}</b></span></div>
+</div>`;
+}
+function onAKMonth(ym,mode){
+  if(mode!=='init')document.querySelectorAll('#page-aruskas .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('ak-month');if(el)el.textContent=mLbl(ym+'-01');
+  const f=document.getElementById('fin-ak');if(f)f.innerHTML=buildArusKasHTML(calcArusKas(ym,ym),mLbl(ym+'-01'));
+  akCtx={mode:'month',ym,fromYM:'',toYM:'',label:mLbl(ym+'-01')};
+}
+function akRange(r,btn){
+  document.querySelectorAll('#page-aruskas .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');const pick=document.getElementById('ak-pick');if(pick)pick.value='';
+  const{fym,tym,lbl}=rangeCalc(r);
+  const el=document.getElementById('ak-month');if(el)el.textContent=lbl;
+  const f=document.getElementById('fin-ak');if(f)f.innerHTML=buildArusKasHTML(calcArusKas(fym,tym),lbl);
+  akCtx={mode:'range',ym:'',fromYM:fym,toYM:tym,label:lbl};
+}
+function akDateFilter(){
+  const from=document.getElementById('ak-f-from')?.value;
+  const to=document.getElementById('ak-f-to')?.value;
+  if(!from||!to){showToast('⚠️ Isi Dari Tanggal dan Sampai Tanggal');return;}
+  document.querySelectorAll('#page-aruskas .pbtns .pb').forEach(b=>b.classList.remove('active'));
+  const pick=document.getElementById('ak-pick');if(pick)pick.value='';
+  const fym=from.slice(0,7),tym=to.slice(0,7),lbl=from+' s/d '+to;
+  const el=document.getElementById('ak-month');if(el)el.textContent=lbl;
+  const f=document.getElementById('fin-ak');if(f)f.innerHTML=buildArusKasHTML(calcArusKas(fym,tym),lbl);
+  akCtx={mode:'range',ym:'',fromYM:fym,toYM:tym,label:lbl};
+  showToast('✅ Filter tanggal diterapkan');
+}
+function refreshLRAK(){
+  if(document.getElementById('page-labarugi')?.classList.contains('active')){
+    if(lrCtx.mode==='range')lrRange2(lrCtx.fromYM,lrCtx.toYM,lrCtx.label);
+    else{const ym=document.getElementById('lr-pick')?.value||td().slice(0,7);onLRMonth(ym,'sync');}
+  }
+  if(document.getElementById('page-aruskas')?.classList.contains('active')){
+    if(akCtx.mode==='range')akRange2(akCtx.fromYM,akCtx.toYM,akCtx.label);
+    else{const ym=document.getElementById('ak-pick')?.value||td().slice(0,7);onAKMonth(ym,'sync');}
+  }
+}
+function lrRange2(fym,tym,lbl){const f=document.getElementById('fin-lr');if(f)f.innerHTML=buildLabaRugiHTML(calcLabaRugi(fym,tym),lbl);}
+function akRange2(fym,tym,lbl){const f=document.getElementById('fin-ak');if(f)f.innerHTML=buildArusKasHTML(calcArusKas(fym,tym),lbl);}
 
 // ══════════════════════════════════════════════════════════════
 // PDF — Point 12: use active context
@@ -967,7 +1222,11 @@ function downloadPDF(src){
 <tr style="font-weight:700;background:#f8fafc;border-top:2px solid #e2e8f0"><td style="padding:7px 10px"><b>5. Total Current Asset</b></td><td style="text-align:right;padding:7px 10px"><b>${fRp(T.cur)}</b></td></tr>
 <tr class="sh"><td colspan="2">B. NON CURRENT ASSET</td></tr>${rw('6','Property, Plant & Equipment',T.ppe)}${T.ppeI.map(r=>dr(r.name,r.amount)).join('')}${rw('7','Investment',T.inv)}${T.invI.map(r=>dr(r.name+' ('+r.type+')',r.amount)).join('')}${rw('8','Intangible Assets',T.intg)}${T.intgI.map(r=>dr(r.name,r.amount)).join('')}
 <tr style="font-weight:700;background:#f8fafc;border-top:2px solid #e2e8f0"><td style="padding:7px 10px"><b>9. Total Non-current Asset</b></td><td style="text-align:right;padding:7px 10px"><b>${fRp(T.nc)}</b></td></tr>
-<tr class="tot"><td>10. TOTAL ASSET — ${lbl}</td><td style="text-align:right">${fRp(T.tot)}</td></tr></table>
+<tr class="tot"><td>10. TOTAL ASSET — ${lbl}</td><td style="text-align:right">${fRp(T.tot)}</td></tr>
+<tr class="sh"><td colspan="2">C. LIABILITIES (HUTANG)</td></tr>${(T.debtI||[]).map(r=>dr(r.name+(r.purpose?' ('+r.purpose+')':''),debtSisa(r))).join('')}
+<tr style="font-weight:700;background:#f8fafc;border-top:2px solid #e2e8f0"><td style="padding:7px 10px"><b>11. Total Liabilities</b></td><td style="text-align:right;padding:7px 10px"><b>${fRp(T.liab||0)}</b></td></tr>
+<tr class="sh"><td colspan="2">D. EQUITY</td></tr>${rw('12','Modal / Retained Earnings',T.equity||0)}
+<tr class="tot"><td>13. TOTAL LIABILITIES + EQUITY — ${lbl}</td><td style="text-align:right">${fRp((T.liab||0)+(T.equity||0))}</td></tr></table>
 <div class="ft">© 2026 Laporan Keuangan Pribadi — raihan.nor.falah@mhs.politala.ac.id | Kurs: 1 USD = Rp ${FX_RATE.toLocaleString('id-ID')}</div>
 <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script></body></html>`;
   const w=window.open('','_blank','width=760,height=960');if(!w){showToast('❌ Aktifkan popup browser');return;}w.document.write(html);w.document.close();
@@ -1180,6 +1439,7 @@ function updateRecvPieChart(){
 function updateAll(){
   updateStats();updateAlokasiChart();updateInvDChart();updateRecvPieChart();refreshCharts();
   const dym=document.getElementById('dash-pick')?.value;if(dym)onDashMonth(dym,'update');
+  refreshLRAK();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1194,33 +1454,52 @@ const MLBL_={ca:'Current Asset',ar:'Piutang',ii:'Inventory',ppe:'PPE',intg:'Inta
 // ══════════════════════════════════════════════════════════════
 const INC_BASE=['Gaji & Bonus','Bisnis','Investasi','Freelance','Sewa','Lainnya'];
 const EXP_BASE=['Makanan & Minuman','Transportasi','Kebutuhan Rumah','Hiburan','Kesehatan','Lainnya'];
-function getIncSources(){const extra=JSON.parse(localStorage.getItem('incSources')||'[]');return[...INC_BASE.filter(c=>c!=='Lainnya'),...extra.filter(c=>!INC_BASE.includes(c)),'Lainnya'];}
-function getExpCats(){const extra=JSON.parse(localStorage.getItem('expCats')||'[]');return[...EXP_BASE.filter(c=>c!=='Lainnya'),...extra.filter(c=>!EXP_BASE.includes(c)),'Lainnya'];}
+function getIncSources(){
+  const removed=JSON.parse(localStorage.getItem('incSourcesRemoved')||'[]');
+  const extra=JSON.parse(localStorage.getItem('incSources')||'[]');
+  return[...INC_BASE.filter(c=>!removed.includes(c)),...extra.filter(c=>!INC_BASE.includes(c)&&!removed.includes(c))];
+}
+function getExpCats(){
+  const removed=JSON.parse(localStorage.getItem('expCatsRemoved')||'[]');
+  const extra=JSON.parse(localStorage.getItem('expCats')||'[]');
+  return[...EXP_BASE.filter(c=>!removed.includes(c)),...extra.filter(c=>!EXP_BASE.includes(c)&&!removed.includes(c))];
+}
 function addCatMgr(){
   const inp=document.getElementById('catmgr-input');const v=(inp.value||'').trim();if(!v)return;
-  const key=catMgrType==='inc'?'incSources':'expCats';const base=catMgrType==='inc'?INC_BASE:EXP_BASE;
+  const key=catMgrType==='inc'?'incSources':'expCats';
+  const removedKey=catMgrType==='inc'?'incSourcesRemoved':'expCatsRemoved';
+  const base=catMgrType==='inc'?INC_BASE:EXP_BASE;
+  if(base.includes(v)){
+    const removed=JSON.parse(localStorage.getItem(removedKey)||'[]').filter(c=>c!==v);
+    localStorage.setItem(removedKey,JSON.stringify(removed));
+    inp.value='';renderCatMgrList();refreshTxFilterOptions();showToast('✅ Kategori dipulihkan');return;
+  }
   const extra=JSON.parse(localStorage.getItem(key)||'[]');
-  if(base.includes(v)||extra.includes(v)){showToast('⚠️ Kategori sudah ada');return;}
+  if(extra.includes(v)){showToast('⚠️ Kategori sudah ada');return;}
   extra.push(v);localStorage.setItem(key,JSON.stringify(extra));
-  inp.value='';renderCatMgrList();showToast('✅ Kategori ditambahkan');
+  inp.value='';renderCatMgrList();refreshTxFilterOptions();showToast('✅ Kategori ditambahkan');
 }
 function delCatMgr(name){
   const key=catMgrType==='inc'?'incSources':'expCats';
-  const extra=JSON.parse(localStorage.getItem(key)||'[]').filter(c=>c!==name);
-  localStorage.setItem(key,JSON.stringify(extra));
-  renderCatMgrList();showToast('🗑️ Kategori dihapus');
+  const removedKey=catMgrType==='inc'?'incSourcesRemoved':'expCatsRemoved';
+  const base=catMgrType==='inc'?INC_BASE:EXP_BASE;
+  if(base.includes(name)){
+    const removed=JSON.parse(localStorage.getItem(removedKey)||'[]');
+    if(!removed.includes(name)){removed.push(name);localStorage.setItem(removedKey,JSON.stringify(removed));}
+  } else {
+    const extra=JSON.parse(localStorage.getItem(key)||'[]').filter(c=>c!==name);
+    localStorage.setItem(key,JSON.stringify(extra));
+  }
+  renderCatMgrList();refreshTxFilterOptions();showToast('🗑️ Kategori dihapus');
 }
 function renderCatMgrList(){
-  const base=catMgrType==='inc'?INC_BASE:EXP_BASE;
   const list=catMgrType==='inc'?getIncSources():getExpCats();
   const el=document.getElementById('catmgr-list');
-  el.innerHTML=list.map(c=>{
-    const locked=base.includes(c);
-    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1px solid var(--bd);border-radius:8px;font-size:12px">
-      <span>${c}${locked?' <span style="color:var(--mu);font-size:9.5px">(bawaan)</span>':''}</span>
-      ${locked?'':`<button class="btn-sm bd" onclick="delCatMgr('${escQ(c)}')">Hapus</button>`}
-    </div>`;
-  }).join('');
+  if(!list.length){el.innerHTML='<span style="color:var(--mu);font-size:11.5px">Semua kategori terhapus. Tambahkan minimal satu di atas.</span>';return;}
+  el.innerHTML=list.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1px solid var(--bd);border-radius:8px;font-size:12px">
+    <span>${c}</span>
+    <button class="btn-sm bd" onclick="delCatMgr('${escQ(c)}')">Hapus</button>
+  </div>`).join('');
 }
 function openCatMgr(type){
   catMgrType=type;
@@ -1340,12 +1619,12 @@ function sortArr(arr,id){
 function getSortVal(r,tid,col){
   // Map column index to data field per table
   const maps={
-    't-ca':   [null,'name','category','amount','date',null],
-    't-ar':   [null,'name','amount','paid',r=>(Math.max(0,(+(r.amount||0))-(+(r.paid||0)))),'date','due_date','status',null,null],
-    't-ii':   [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date',r=>(+(r.current_price||0))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},r=>r.updated_at||'',null],
-    't-ppe':  [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date','depreciation_date',r=>(+(r.current_price||+(r.buy_price||r.amount||0)))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},null],
-    't-intg': [null,'name','amount','date',null],
-    't-inv':  [null,'name','type',r=>+(r.total_buy||r.amount||0),'date',r=>(+(r.current_price||0))*(+(r.qty||0)),r=>r.updated_at||'',r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return ns-tb;},r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return tb>0?((ns-tb)/tb*100):0;},null],
+    't-ca':   [null,'name','category','amount','date','note',null],
+    't-ar':   [null,'name','amount','paid',r=>(Math.max(0,(+(r.amount||0))-(+(r.paid||0)))),'date','due_date','status',null,'note',null],
+    't-ii':   [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date',r=>(+(r.current_price||0))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},r=>r.updated_at||'','note',null],
+    't-ppe':  [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date','depreciation_date',r=>(+(r.current_price||+(r.buy_price||r.amount||0)))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},'note',null],
+    't-intg': [null,'name','amount','date','note',null],
+    't-inv':  [null,'name','type',r=>+(r.total_buy||r.amount||0),'date',r=>(+(r.current_price||0))*(+(r.qty||0)),r=>r.updated_at||'',r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return ns-tb;},r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return tb>0?((ns-tb)/tb*100):0;},'note',null],
     't-inc':  [null,'date','source','category','description','method',r=>+(r.amount||0),'note',null],
     't-exp':  [null,'date','category','description','method',r=>+(r.amount||0),'note',null],
     't-debt': ['date','name','purpose',r=>+(r.amount||0),r=>+(r.paid||0),r=>debtSisa(r),'due_date',r=>debtStatus(r),null],
@@ -1360,21 +1639,23 @@ function getSortVal(r,tid,col){
 // ══════════════════════════════════════════════════════════════
 // TABLE RENDERS
 // ══════════════════════════════════════════════════════════════
+function noteCell(n){return`<td style="max-width:130px"><span title="${esc(n||'')}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mu);font-size:11px">${n?esc(n):'—'}</span></td>`;}
 function rCA(){
   const data=sortArr(DB.ca,'t-ca');
-  mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal Update','Aksi'],
+  mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal Update','Note','Aksi'],
     data.map((r,i)=>`<tr>
       <td>${i+1}</td><td>${r.name}</td>
       <td><span class="badge bb">${r.category}</span></td>
       <td><b>${fRp(r.amount)}</b></td>
       <td>${r.date}</td>
+      ${noteCell(r.note)}
       <td><button class="btn-sm be" onclick="openE('ca','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ca','${r.id}','${escQ(r.name)}')">Hapus</button></td>
     </tr>`));
 }
 
 function rAR(){
   const data=sortArr(DB.ar,'t-ar');
-  mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tanggal Update','Jatuh Tempo','Status','Detail','Aksi'],
+  mkTbl('t-ar',['#','Penghutang','Tagihan','Terbayar','Sisa','Tanggal Update','Jatuh Tempo','Status','Detail','Note','Aksi'],
     data.map((r,i)=>{
       const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));
       return`<tr>
@@ -1385,6 +1666,7 @@ function rAR(){
         <td>${r.date}</td><td>${r.due_date||'-'}</td>
         <td><span class="badge ${r.status==='Paid'?'bg_':r.status==='Overdue'?'br':r.status==='Partial'?'by':'bb'}">${r.status}</span></td>
         <td><button class="btn-sm" style="background:#ede9fe;color:#7c3aed" onclick="showPayHistory('${r.id}')">📋 Detail</button></td>
+        ${noteCell(r.note)}
         <td style="white-space:nowrap">
           <button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button>
           <button class="btn-sm bd" onclick="delR('ar','${r.id}','${escQ(r.name)}')">Hapus</button>
@@ -1395,7 +1677,7 @@ function rAR(){
 
 function rII(){
   const data=sortArr(DB.ii,'t-ii');
-  mkTbl('t-ii',['#','Nama','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Pertumbuhan (Rp)','Pertumbuhan (%)','Tanggal Update','Aksi'],
+  mkTbl('t-ii',['#','Nama','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Pertumbuhan (Rp)','Pertumbuhan (%)','Tanggal Update','Note','Aksi'],
     data.map((r,i)=>{
       const bp=+(r.buy_price||r.amount||0);
       const sp=+(r.current_price||bp);
@@ -1412,6 +1694,7 @@ function rII(){
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'↑ +':'↓ -'}${fRp(Math.abs(tumbuhRp))}</td>
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${tumbuhPct}%</td>
         <td>${updAt}</td>
+        ${noteCell(r.note)}
         <td><button class="btn-sm be" onclick="openE('ii','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ii','${r.id}','${escQ(r.name)}')">Hapus</button></td>
       </tr>`;
     }));
@@ -1419,7 +1702,7 @@ function rII(){
 
 function rPPE(){
   const data=sortArr(DB.ppe,'t-ppe');
-  mkTbl('t-ppe',['#','Nama Aset','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Tgl Update Depresiasi','Pertumbuhan (Rp)','Pertumbuhan (%)','Aksi'],
+  mkTbl('t-ppe',['#','Nama Aset','Qty','Harga Beli','Harga Sekarang','Tgl Beli','Tgl Update Depresiasi','Pertumbuhan (Rp)','Pertumbuhan (%)','Note','Aksi'],
     data.map((r,i)=>{
       const bp=+(r.buy_price||r.amount||0);
       const sp=+(r.current_price||bp);
@@ -1434,6 +1717,7 @@ function rPPE(){
         <td>${r.date}</td><td>${r.depreciation_date||'—'}</td>
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'↑ +':'↓ -'}${fRp(Math.abs(tumbuhRp))}</td>
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${tumbuhPct}%</td>
+        ${noteCell(r.note)}
         <td><button class="btn-sm be" onclick="openE('ppe','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ppe','${r.id}','${escQ(r.name)}')">Hapus</button></td>
       </tr>`;
     }));
@@ -1442,7 +1726,7 @@ function rPPE(){
 function rINV(){
   const data=sortArr(DB.inv,'t-inv');
   mkTbl('t-inv',
-    ['#','Nama Investasi','Tipe','Nilai Beli','Tgl Beli','Harga Sekarang','Tgl Update','Unrealized Gain/Loss','Gain/Loss %','Aksi'],
+    ['#','Nama Investasi','Tipe','Nilai Beli','Tgl Beli','Harga Sekarang','Tgl Update','Unrealized Gain/Loss','Gain/Loss %','Note','Aksi'],
     data.map((r,i)=>{
       const totalBuy=+(r.total_buy||r.amount||0);
       const curPrice=+(r.current_price||0);
@@ -1461,6 +1745,7 @@ function rINV(){
         <td>${updAt}</td>
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'↑ +':'↓ -'}${fRp(Math.abs(unrealized))}</td>
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${pct}%</td>
+        ${noteCell(r.note)}
         <td><button class="btn-sm be" onclick="openE('inv','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('inv','${r.id}','${escQ(r.name)}')">Hapus</button></td>
       </tr>`;
     }));
@@ -1468,16 +1753,82 @@ function rINV(){
 
 function rINTG(){
   const data=sortArr(DB.intg,'t-intg');
-  mkTbl('t-intg',['#','Nama Aset','Nilai','Tanggal','Aksi'],
+  mkTbl('t-intg',['#','Nama Aset','Nilai','Tanggal','Note','Aksi'],
     data.map((r,i)=>`<tr>
       <td>${i+1}</td><td>${r.name}</td>
       <td><b>${fRp(r.amount)}</b></td><td>${r.date}</td>
+      ${noteCell(r.note)}
       <td><button class="btn-sm be" onclick="openE('intg','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('intg','${r.id}','${escQ(r.name)}')">Hapus</button></td>
     </tr>`));
 }
 
 function escQ(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
 function reRender(){const p=document.querySelector('.page.active')?.id;if(p==='page-ca')rCA();if(p==='page-ce'){rAR();rII();}if(p==='page-nc'){rPPE();rINTG();}if(p==='page-inv')rINV();if(p==='page-inc')renderIncPage();if(p==='page-exp')renderExpPage();if(p==='page-hutang')renderHutangPage();}
+
+// ══════════════════════════════════════════════════════════════
+// SETTINGS — nama app, deskripsi, akun, avatar header, logo Family Office
+// ══════════════════════════════════════════════════════════════
+let APPSET={};
+function loadAppSettings(){
+  try{APPSET=JSON.parse(localStorage.getItem('appSettings')||'{}');}catch(e){APPSET={};}
+  applyAppSettings();
+}
+function applyAppSettings(){
+  const nameTxt=document.getElementById('app-name-txt');if(nameTxt)nameTxt.textContent=APPSET.appName||'Lap. Keuangan Pribadi';
+  const descTxt=document.getElementById('logo-sub');if(descTxt)descTxt.textContent=APPSET.appDesc||'Personal Finance Tracker';
+  const unameTxt=document.getElementById('sb-uname-txt');if(unameTxt)unameTxt.textContent=APPSET.accName||'Raihan Nor Falah';
+  const uemailTxt=document.getElementById('sb-uemail-txt');if(uemailTxt)uemailTxt.textContent=APPSET.accEmail||'raihan.nor.falah@mhs.politala.ac.id';
+  const hdrAv=document.getElementById('hdr-avatar');
+  if(hdrAv){
+    if(APPSET.avatar)hdrAv.innerHTML=`<img src="${APPSET.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    else hdrAv.textContent=((APPSET.accName||'Raihan Nor Falah').trim().charAt(0)||'R').toUpperCase();
+  }
+  const foBlock=document.getElementById('fo-logo-block');
+  if(foBlock){
+    if(APPSET.foLogo)foBlock.innerHTML=`<img src="${APPSET.foLogo}" style="max-width:100%;max-height:110px;object-fit:contain;margin:0 auto 8px;display:block">`;
+    else foBlock.innerHTML=`<div class="fo-lbl">— FAMILY OFFICE —</div><div class="fo-logo">MI<span>&amp;</span>RAI</div><div class="fo-cap">CAPITAL</div><div class="fo-tag">Investing in Today,<br>Building Forever.</div>`;
+  }
+}
+function previewSettingImage(fileId,previewId){
+  const f=document.getElementById(fileId)?.files?.[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const el=document.getElementById(previewId);
+    if(el){el.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;el.dataset.value=e.target.result;}
+  };
+  reader.readAsDataURL(f);
+}
+function fillSettingsForm(){
+  const sv=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+  sv('set-app-name',APPSET.appName||'Lap. Keuangan Pribadi');
+  sv('set-app-desc',APPSET.appDesc||'Personal Finance Tracker');
+  sv('set-acc-name',APPSET.accName||'Raihan Nor Falah');
+  sv('set-acc-email',APPSET.accEmail||'raihan.nor.falah@mhs.politala.ac.id');
+  const avP=document.getElementById('set-avatar-preview');
+  if(avP){avP.innerHTML=APPSET.avatar?`<img src="${APPSET.avatar}" style="width:100%;height:100%;object-fit:cover">`:((APPSET.accName||'R').trim().charAt(0)||'R').toUpperCase();avP.dataset.value=APPSET.avatar||'';}
+  const foP=document.getElementById('set-fologo-preview');
+  if(foP){foP.innerHTML=APPSET.foLogo?`<img src="${APPSET.foLogo}" style="width:100%;height:100%;object-fit:contain">`:'Belum ada';foP.dataset.value=APPSET.foLogo||'';}
+}
+function saveAppSettings(){
+  APPSET.appName=(document.getElementById('set-app-name')?.value||'').trim()||'Lap. Keuangan Pribadi';
+  APPSET.appDesc=(document.getElementById('set-app-desc')?.value||'').trim()||'Personal Finance Tracker';
+  APPSET.accName=(document.getElementById('set-acc-name')?.value||'').trim()||'Raihan Nor Falah';
+  APPSET.accEmail=(document.getElementById('set-acc-email')?.value||'').trim()||'raihan.nor.falah@mhs.politala.ac.id';
+  const avVal=document.getElementById('set-avatar-preview')?.dataset.value;
+  if(avVal)APPSET.avatar=avVal;
+  const foVal=document.getElementById('set-fologo-preview')?.dataset.value;
+  if(foVal)APPSET.foLogo=foVal;
+  try{localStorage.setItem('appSettings',JSON.stringify(APPSET));}
+  catch(e){showToast('❌ Gagal simpan — gambar terlalu besar');return;}
+  applyAppSettings();
+  showToast('✅ Pengaturan disimpan');
+}
+function resetAppSettings(){
+  APPSET={};
+  localStorage.removeItem('appSettings');
+  applyAppSettings();fillSettingsForm();
+  showToast('↺ Pengaturan direset ke default');
+}
 
 // ══════════════════════════════════════════════════════════════
 // PEMASUKAN / PENGELUARAN — filter, tabel, chart, ringkasan
@@ -1612,16 +1963,28 @@ function renderTxTrendChart(type){
   if(CHS[key])CHS[key].destroy();
   CHS[key]=new Chart(canvas.getContext('2d'),{type:'line',data:{labels,datasets:[{data,borderColor:color,backgroundColor:color+'22',fill:true,tension:.35,pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fRp(c.parsed.y)}}},scales:SC()}});
 }
+function periodRange(period){
+  const today=td();
+  if(period==='7d'||period==='30d'){
+    const n=period==='7d'?7:30;const d=new Date();d.setDate(d.getDate()-(n-1));
+    return{from:d.toISOString().slice(0,10),to:today};
+  }
+  if(period==='1y'){
+    const now=new Date();const d=new Date(now.getFullYear(),now.getMonth()-11,1);
+    return{from:d.toISOString().slice(0,10),to:today};
+  }
+  return{from:null,to:null};
+}
 function setTxPeriod(type,period,btn){
   TXP[type]=period;
   document.querySelectorAll('#'+type+'-per-btns .pb').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  renderTxTrendChart(type);
+  renderTxTrendChart(type);renderTxDonut(type);
 }
 function renderTxDonut(type){
   const arr=DB[type]||[];
-  const curYM=td().slice(0,7);
-  const curArr=arr.filter(x=>ymOf(x.date)===curYM);
+  const{from,to}=periodRange(TXP[type]);
+  const curArr=arr.filter(x=>(!from||x.date>=from)&&(!to||x.date<=to));
   const dim=type==='inc'?'source':'category';
   const byCat={};
   curArr.forEach(x=>{const k=x[dim]||'Lainnya';byCat[k]=(byCat[k]||0)+(+x.amount||0);});
@@ -1632,7 +1995,7 @@ function renderTxDonut(type){
   const key=type+'Donut';
   if(CHS[key])CHS[key].destroy();
   if(!labels.length){
-    const lg=document.getElementById(type+'-donut-legend');if(lg)lg.innerHTML='<span style="color:var(--mu)">📭 Belum ada data bulan ini</span>';
+    const lg=document.getElementById(type+'-donut-legend');if(lg)lg.innerHTML='<span style="color:var(--mu)">📭 Belum ada data pada periode ini</span>';
     setText(type+'-donut-total',fRp(0));
     return;
   }
@@ -1657,7 +2020,7 @@ function renderTxSummary(type){
   if(!labels.length){el.innerHTML='<span style="color:var(--mu);font-size:11.5px">📭 Belum ada data bulan ini</span>';return;}
   el.innerHTML=labels.map((l,i)=>{
     const v=byCat[l];const pct=total>0?(v/total*100).toFixed(1):'0.0';
-    return`<div class="rgk-card"><div class="rgk-nm"><span class="rgk-dot" style="background:${CHART_COLORS[i%CHART_COLORS.length]}"></span>${l}</div><div class="rgk-val">${fRp(v)}</div><div class="rgk-pct">${pct}% dari total</div></div>`;
+    return`<div class="rgk-card" style="--ac:${CHART_COLORS[i%CHART_COLORS.length]}"><div class="rgk-nm"><span class="rgk-dot"></span>${l}</div><div class="rgk-val">${fRp(v)}</div><div class="rgk-pct">${pct}% dari total</div></div>`;
   }).join('');
 }
 function renderIncPage(){
@@ -1794,12 +2157,20 @@ function setDebtPeriod(period,btn){
   DEBT_PERIOD=period;
   document.querySelectorAll('#debt-per-btns .pb').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  renderDebtTrendChart();
+  renderDebtTrendChart();renderDebtDonut();
 }
 function renderDebtDonut(){
+  const{to}=periodRange(DEBT_PERIOD);
+  const asOf=to||td();
   const byCred={};
-  DB.debt.forEach(x=>{const k=x.name||'Lainnya';byCred[k]=(byCred[k]||0)+debtSisa(x);});
-  const labels=Object.keys(byCred).filter(l=>byCred[l]>0);
+  DB.debt.forEach(x=>{
+    if(x.date&&x.date>asOf)return;
+    const paidAsOf=DB.debtPay.filter(p=>p.debt_id===x.id&&p.paid_date&&p.paid_date<=asOf).reduce((s,p)=>s+(+p.amount||0),0);
+    const sisa=Math.max(0,(+(x.amount||0))-paidAsOf);
+    if(sisa<=0)return;
+    const k=x.name||'Lainnya';byCred[k]=(byCred[k]||0)+sisa;
+  });
+  const labels=Object.keys(byCred);
   const values=labels.map(l=>byCred[l]);
   const total=values.reduce((a,b)=>a+b,0);
   const canvas=document.getElementById('c-debt-donut');if(!canvas)return;
@@ -1833,10 +2204,10 @@ function renderDebtSummary(){
   const pct=(v)=>total>0?(v/total*100).toFixed(1):'0.0';
   const el=document.getElementById('debt-rgk');if(!el)return;
   el.innerHTML=`
-    <div class="rgk-card"><div class="rgk-nm"><span class="rgk-dot" style="background:#22c55e"></span>Belum Jatuh Tempo</div><div class="rgk-val">${fRp(belum)}</div><div class="rgk-pct">${pct(belum)}% dari total</div></div>
-    <div class="rgk-card"><div class="rgk-nm"><span class="rgk-dot" style="background:#f59e0b"></span>Jatuh Tempo 1 - 30 Hari</div><div class="rgk-val">${fRp(d1_30)}</div><div class="rgk-pct">${pct(d1_30)}% dari total</div></div>
-    <div class="rgk-card"><div class="rgk-nm"><span class="rgk-dot" style="background:#ef4444"></span>Jatuh Tempo &gt; 60 Hari</div><div class="rgk-val">${fRp(dOver60)}</div><div class="rgk-pct">${pct(dOver60)}% dari total</div></div>
-    <div class="rgk-card"><div class="rgk-nm"><span class="rgk-dot" style="background:#2563eb"></span>Total Sisa Hutang</div><div class="rgk-val">${fRp(total)}</div><div class="rgk-pct">100% dari total</div></div>`;
+    <div class="rgk-card" style="--ac:#22c55e"><div class="rgk-nm"><span class="rgk-dot"></span>Belum Jatuh Tempo</div><div class="rgk-val">${fRp(belum)}</div><div class="rgk-pct">${pct(belum)}% dari total</div></div>
+    <div class="rgk-card" style="--ac:#f59e0b"><div class="rgk-nm"><span class="rgk-dot"></span>Jatuh Tempo 1 - 30 Hari</div><div class="rgk-val">${fRp(d1_30)}</div><div class="rgk-pct">${pct(d1_30)}% dari total</div></div>
+    <div class="rgk-card" style="--ac:#ef4444"><div class="rgk-nm"><span class="rgk-dot"></span>Jatuh Tempo &gt; 60 Hari</div><div class="rgk-val">${fRp(dOver60)}</div><div class="rgk-pct">${pct(dOver60)}% dari total</div></div>
+    <div class="rgk-card" style="--ac:#8b5cf6"><div class="rgk-nm"><span class="rgk-dot"></span>Total Sisa Hutang</div><div class="rgk-val">${fRp(total)}</div><div class="rgk-pct">100% dari total</div></div>`;
 }
 function renderHutangPage(){
   const s=debtStatsCompare();
@@ -1891,7 +2262,8 @@ function buildARFormAdd(){
 <div class="fr">
   <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${td()}"></div>
   <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value=""></div>
-</div>`;
+</div>
+<div class="fg"><label>Note (opsional)</label><input id="f-note" value="" placeholder="Catatan tambahan..."></div>`;
 }
 
 // AR FORM — EDIT: with partial payment + payment date + via pembayaran
@@ -1961,7 +2333,8 @@ function buildARFormEdit(r){
   <div id="paid-preview" style="font-size:10.5px;color:var(--mu);margin-top:4px;padding:5px 8px;background:var(--card);border-radius:6px;min-height:24px"></div>
   <input type="hidden" id="f-paid-total" value="${paid}">
   ${historyHTML}
-</div>`;
+</div>
+<div class="fg" style="margin-top:9px"><label>Note (opsional)</label><input id="f-note" value="${esc(r.note||'')}" placeholder="Catatan tambahan..."></div>`;
 }
 function calcNewPaid(){
   const add=parseFloat(document.getElementById('f-paid-add')?.value)||0;
@@ -1996,7 +2369,9 @@ function buildDebtFormAdd(){
 <div class="fr">
   <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${td()}"></div>
   <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value=""></div>
-</div>`;
+</div>
+<div class="fg"><label>Dana Masuk Ke (Current Asset)</label>${buildMethodSelect('','f-fund')}</div>
+<div class="fg"><label>Note (opsional)</label><input id="f-note" value="" placeholder="Catatan tambahan..."></div>`;
 }
 function getDebtPayHistFor(debtId){
   return DB.debtPay.filter(p=>p.debt_id===debtId).sort((a,b)=>(a.paid_date||'').localeCompare(b.paid_date||''));
@@ -2043,6 +2418,8 @@ function buildDebtFormEdit(r){
   <div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r.date||td()}"></div>
   <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r.due_date||''}"></div>
 </div>
+<div class="fg"><label>Dana Masuk Ke</label><input value="${esc(r.fund_to||'—')}" disabled style="opacity:.65;cursor:not-allowed"></div>
+<div class="fg"><label>Note (opsional)</label><input id="f-note" value="${esc(r.note||'')}" placeholder="Catatan tambahan..."></div>
 <div style="background:var(--bg);border-radius:9px;padding:12px;margin-top:4px">
   <div style="font-size:10px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">💳 Tambah Pembayaran</div>
   <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:11.5px;flex-wrap:wrap">
@@ -2136,6 +2513,7 @@ function buildInvFormAdd(){
   <div id="total-buy-note" style="font-size:10px;color:var(--mu);margin-top:2px">Dihitung otomatis dari Harga × Qty</div>
 </div>
 <div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${td()}"></div>
+<div class="fg"><label>Note (opsional)</label><input id="f-note" value="" placeholder="Catatan tambahan..."></div>
 <input type="hidden" id="f-manual-total" value="0">`;
 }
 
@@ -2196,6 +2574,7 @@ function buildInvFormEdit(r){
 <div style="font-size:10.5px;margin-top:-5px;margin-bottom:5px;padding:6px 10px;background:var(--bg);border-radius:6px">
   <span id="gain-formula-txt">Nilai Skrg ${fRp(nilaiSkrg)} − Beli ${fRp(totalBuy)} = <b style="color:${unrealized>=0?'var(--ok)':'var(--er)'}">${unrealized>=0?'+':''}${fRp(unrealized)} (${unrealized>=0?'+':''}${pct}%)</b></span>
 </div>
+<div class="fg"><label>Note (opsional)</label><input id="f-note" value="${esc(r.note||'')}" placeholder="Catatan tambahan..."></div>
 <input type="hidden" id="f-manual-total" value="0">`;
 }
 
@@ -2235,7 +2614,8 @@ function buildPPEForm(r,isEdit){
 <div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
 ${isEdit?`
 <div class="fg"><label>Harga Sekarang per Unit (Rp)</label><input id="f-cur-price" type="number" min="0" value="${curPrice}"></div>
-<div class="fg"><label>Tanggal Update Depresiasi</label><input id="f-dep-dt" type="date" value="${r&&r.depreciation_date?r.depreciation_date:''}"></div>`:''}`;
+<div class="fg"><label>Tanggal Update Depresiasi</label><input id="f-dep-dt" type="date" value="${r&&r.depreciation_date?r.depreciation_date:''}"></div>`:''}
+<div class="fg"><label>Note (opsional)</label><input id="f-note" value="${r?esc(r.note||''):''}" placeholder="Catatan tambahan..."></div>`;
 }
 function syncPPEAmount(){
   const p=parseFloat(document.getElementById('f-buy-price')?.value)||0;
@@ -2256,17 +2636,20 @@ function buildIIForm(r,isEdit){
   <div class="fg"><label>Harga Beli per Unit (Rp)</label><input id="f-buy-price" type="number" min="0" value="${buyPrice}"></div>
 </div>
 <div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
-${isEdit?`<div class="fg"><label>Harga Sekarang per Unit (Rp)</label><input id="f-cur-price" type="number" min="0" value="${curPrice}"></div>`:''}`;
+${isEdit?`<div class="fg"><label>Harga Sekarang per Unit (Rp)</label><input id="f-cur-price" type="number" min="0" value="${curPrice}"></div>`:''}
+<div class="fg"><label>Note (opsional)</label><input id="f-note" value="${r?esc(r.note||''):''}" placeholder="Catatan tambahan..."></div>`;
 }
 
 const MF={
   ca:r=>`<div class="fg"><label>Nama</label><input id="f-nm" value="${r?esc(r.name):''}"></div>
 <div class="fg"><label>Kategori</label>${buildCatSelect(r?.category)}</div>
-<div class="fr"><div class="fg"><label>Jumlah (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
+<div class="fr"><div class="fg"><label>Jumlah (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>
+<div class="fg"><label>Note (opsional)</label><input id="f-note" value="${r?esc(r.note||''):''}" placeholder="Catatan tambahan..."></div>`,
   ar:r=>r?buildARFormEdit(r):buildARFormAdd(),
   ii:r=>buildIIForm(r,!!r),
   ppe:r=>buildPPEForm(r,!!r),
-  intg:r=>`<div class="fg"><label>Nama Aset Tak Berwujud</label><input id="f-nm" value="${r?esc(r.name):''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>`,
+  intg:r=>`<div class="fg"><label>Nama Aset Tak Berwujud</label><input id="f-nm" value="${r?esc(r.name):''}"></div><div class="fr"><div class="fg"><label>Nilai (Rp)</label><input id="f-amt" type="number" min="0" value="${r?+(r.amount||0):0}"></div><div class="fg"><label>Tanggal</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div></div>
+<div class="fg"><label>Note (opsional)</label><input id="f-note" value="${r?esc(r.note||''):''}" placeholder="Catatan tambahan..."></div>`,
   inv:r=>r?buildInvFormEdit(r):buildInvFormAdd(),
   debt:r=>r?buildDebtFormEdit(r):buildDebtFormAdd(),
   inc:r=>`
@@ -2308,13 +2691,14 @@ async function applyAssetDelta(assetName,delta){
 async function saveM(){
   const name=(document.getElementById('f-nm')?.value||'').trim();
   const date=document.getElementById('f-dt')?.value||td();
+  const noteVal=(document.getElementById('f-note')?.value||'').trim();
   if(!name){showToast('⚠️ Nama tidak boleh kosong');return;}
   let pay={};
   let oldTxRec=null;
 
   if(mType==='ca'){
     const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
-    pay={name,category:getCatValue(),amount,date};
+    pay={name,category:getCatValue(),amount,date,note:noteVal};
   }
   else if(mType==='ar'){
     const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
@@ -2330,7 +2714,7 @@ async function saveM(){
       if(newPaid>=amount&&amount>0)newStatus='Paid';
       else if(newPaid>0&&newPaid<amount)newStatus='Partial';
 
-      pay={name,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null};
+      pay={name,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null,note:noteVal};
 
       // Insert payment_history record (real table, not JSON)
       if(addPayment>0){
@@ -2353,7 +2737,7 @@ async function saveM(){
         if(caItem){await sbU('current_assets',caItem.id,{amount:(+(caItem.amount||0))+addPayment,date:payDate});DB.ca=await sbG('current_assets');}
       }
     } else {
-      pay={name,amount,date,due_date,status,paid:0};
+      pay={name,amount,date,due_date,status,paid:0,note:noteVal};
     }
   }
   else if(mType==='debt'){
@@ -2371,7 +2755,7 @@ async function saveM(){
       if(newPaid>=amount&&amount>0)newStatus='Lunas';
       else if(due_date&&due_date<td())newStatus='Jatuh Tempo';
 
-      pay={name,purpose,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null};
+      pay={name,purpose,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null,note:noteVal};
 
       // Insert debt_payments record (real table)
       if(addPayment>0){
@@ -2394,7 +2778,8 @@ async function saveM(){
         if(caItem){await sbU('current_assets',caItem.id,{amount:(+(caItem.amount||0))-addPayment,date:payDate});DB.ca=await sbG('current_assets');}
       }
     } else {
-      pay={name,purpose,amount,date,due_date,status,paid:0};
+      const fundTo=document.getElementById('f-fund')?.value||'';
+      pay={name,purpose,amount,date,due_date,status,paid:0,fund_to:fundTo||null,note:noteVal};
     }
   }
   else if(mType==='ii'){
@@ -2402,13 +2787,13 @@ async function saveM(){
     const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
     const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||buyPrice;
     const amount=buyPrice*qty||0;
-    pay={name,qty,buy_price:buyPrice,current_price:curPrice,amount,date};
+    pay={name,qty,buy_price:buyPrice,current_price:curPrice,amount,date,note:noteVal};
   }
   else if(mType==='ppe'){
     const qty=parseFloat(document.getElementById('f-qty')?.value)||1;
     const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
     const amount=buyPrice*qty;
-    pay={name,qty,buy_price:buyPrice,amount,date};
+    pay={name,qty,buy_price:buyPrice,amount,date,note:noteVal};
     if(mId){
       const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||buyPrice;
       const depDt=document.getElementById('f-dep-dt')?.value||null;
@@ -2418,7 +2803,7 @@ async function saveM(){
   }
   else if(mType==='intg'){
     const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
-    pay={name,amount,date};
+    pay={name,amount,date,note:noteVal};
   }
   else if(mType==='inv'){
     const typ=getInvTypValue();
@@ -2432,10 +2817,10 @@ async function saveM(){
       const unrealized=parseFloat(document.getElementById('f-unrealized')?.value)||0;
       pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:curPrice,
            unrealized_gain:unrealized,amount:totalBuy,gain:unrealized,date,
-           updated_at:priceDt?new Date(priceDt).toISOString():nowIso};
+           updated_at:priceDt?new Date(priceDt).toISOString():nowIso,note:noteVal};
     } else {
       pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:buyPrice,
-           unrealized_gain:0,amount:totalBuy,gain:0,date,updated_at:nowIso};
+           unrealized_gain:0,amount:totalBuy,gain:0,date,updated_at:nowIso,note:noteVal};
     }
   }
   else if(mType==='inc'||mType==='exp'){
@@ -2463,6 +2848,10 @@ async function saveM(){
       await applyAssetDelta(pay.method,sign*(+pay.amount||0));
       DB.ca=await sbG('current_assets');
       renderIncPage();renderExpPage();
+    }
+    if(mType==='debt'&&!mId&&pay.fund_to){
+      await applyAssetDelta(pay.fund_to,+(pay.amount||0));
+      DB.ca=await sbG('current_assets');
     }
     if(mType==='debt')renderHutangPage();
     closeM();doSnap().catch(()=>{});updateAll();reRender();
@@ -2510,7 +2899,10 @@ function nav(id,el){
   if(id==='ca')rCA();if(id==='ce'){rAR();rII();}if(id==='nc'){rPPE();rINTG();}if(id==='inv')rINV();
   if(id==='inc')renderIncPage();if(id==='exp')renderExpPage();
   if(id==='hutang')renderHutangPage();
+  if(id==='settings')fillSettingsForm();
   if(id==='laporan'){const lym=document.getElementById('lap-pick')?.value||td().slice(0,7);onLapMonth(lym,'nav');}
+  if(id==='labarugi'){const lym=document.getElementById('lr-pick')?.value||td().slice(0,7);onLRMonth(lym,'nav');}
+  if(id==='aruskas'){const lym=document.getElementById('ak-pick')?.value||td().slice(0,7);onAKMonth(lym,'nav');}
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -2552,6 +2944,7 @@ function tickClocks(){
 // ══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded',()=>{
   if(window.innerWidth<=768){const m=document.getElementById('main');if(m)m.classList.add('full');}
+  loadAppSettings();
   tickClocks();setInterval(tickClocks,1000);
   // Refresh FX every 5 minutes
   setInterval(fetchFX,5*60*1000);
