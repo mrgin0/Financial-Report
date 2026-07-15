@@ -75,9 +75,7 @@ async function nav(id,el){
   if(id==='exp')renderExpPage();
   if(id==='hutang')renderHutangPage();
   if(id==='settings')fillSettingsForm();
-  if(id==='laporan'){const lym=document.getElementById('lap-pick')?.value||td().slice(0,7);onLapMonth(lym,'nav');}
-  if(id==='labarugi'){const lym=document.getElementById('lr-pick')?.value||td().slice(0,7);onLRMonth(lym,'nav');}
-  if(id==='aruskas'){const lym=document.getElementById('ak-pick')?.value||td().slice(0,7);onAKMonth(lym,'nav');}
+  if(id==='laporan')applyLaporanFilter();
   if(id==='dashboard'){
     const ym=td().slice(0,7);
     const dp=document.getElementById('dash-pick');if(dp)dp.value=ym;
