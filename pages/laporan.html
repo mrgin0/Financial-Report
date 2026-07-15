@@ -1,0 +1,19 @@
+<div class="page active" id="page-laporan">
+  <div class="ptitle">📊 <span>Laporan Keuangan</span></div>
+
+  <div class="card mb12">
+    <div class="ctitle" style="margin-bottom:9px">Filter Periode (berlaku utk semua laporan)</div>
+    <div class="fr" style="grid-template-columns:1fr 1fr 1fr;align-items:end">
+      <div class="filt-fg" style="margin-bottom:0"><label>Periode Bulan</label><input type="month" id="lap-pick" class="mpick" style="width:100%" onchange="applyLaporanFilter()"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Dari Tanggal</label><input type="date" id="lap-f-from"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Sampai Tanggal</label><input type="date" id="lap-f-to"></div>
+    </div>
+    <button class="btn-filt" style="margin-top:9px;max-width:220px" onclick="applyLaporanFilter()">🔽 Terapkan Filter</button>
+  </div>
+
+  <div class="card mb12"><div class="ctitle">Laporan Posisi Keuangan</div><div class="cmonth" id="lap-month">—</div><div id="fin-lap"></div></div>
+  <div class="card mb12"><div class="ctitle">Laporan Laba Rugi</div><div id="fin-lr"></div></div>
+  <div class="card mb12"><div class="ctitle">Laporan Arus Kas</div><div id="fin-ak"></div></div>
+
+  <div class="btn-row"><button class="btn btn-do" onclick="downloadAllPDF()">📄 Download PDF</button></div>
+</div>
