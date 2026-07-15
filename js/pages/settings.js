@@ -60,3 +60,12 @@ function resetAppSettings(){
   applyAppSettings();fillSettingsForm();
   showToast('↺ Pengaturan direset ke default');
 }
+
+function openProfileModal(){
+  fillSettingsForm();
+  document.getElementById('profile-mo').classList.add('open');
+}
+function closeProfileModal(){
+  document.getElementById('profile-mo').classList.remove('open');
+}
+
