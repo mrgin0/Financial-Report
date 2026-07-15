@@ -69,10 +69,23 @@ function applyTxFilter(type){
     TXFILT.exp={from,to,category,method};
   }
   if(PAGE_STATE['t-'+type])PAGE_STATE['t-'+type].page=1;
-  if(type==='inc')rInc();else rExp();
+  if(type==='inc')renderIncPage();else renderExpPage();
   showToast('✅ Filter diterapkan');
 }
+function getEffectiveRange(type){
+  const f=TXFILT[type];
+  if(f&&(f.from||f.to))return{from:f.from||null,to:f.to||null,filtered:true};
+  return{from:null,to:null,filtered:false};
+}
 function computeTxStats(type){
+  const eff=getEffectiveRange(type);
+  const todayTotal=(DB[type]||[]).filter(x=>x.date===td()).reduce((a,x)=>a+(+x.amount||0),0);
+  if(eff.filtered){
+    const arr=txFiltered(type);
+    const total=arr.reduce((a,x)=>a+(+x.amount||0),0);
+    const days=[...new Set(arr.map(x=>x.date))].length||1;
+    return{filtered:true,curTotal:total,curAvg:total/days,curCount:arr.length,todayTotal};
+  }
   const arr=DB[type]||[];
   const curYM=td().slice(0,7);
   const now=new Date();
@@ -88,8 +101,7 @@ function computeTxStats(type){
   const daysInPrevM=new Date(py,pm,0).getDate();
   const curAvg=curTotal/daysInCurM,prevAvg=prevTotal/daysInPrevM;
   const curCount=curArr.length,prevCount=prevArr.length;
-  const todayTotal=arr.filter(x=>x.date===td()).reduce((a,x)=>a+(+x.amount||0),0);
-  return{curTotal,prevTotal,curAvg,prevAvg,curCount,prevCount,todayTotal,prevLbl:mLbl(prevYM+'-01')};
+  return{filtered:false,curTotal,prevTotal,curAvg,prevAvg,curCount,prevCount,todayTotal,prevLbl:mLbl(prevYM+'-01')};
 }
 function setTxChg(id,cur,prev,lbl){
   const el=document.getElementById(id);if(!el)return;
@@ -148,7 +160,8 @@ function setTxPeriod(type,period,btn){
 }
 function renderTxDonut(type){
   const arr=DB[type]||[];
-  const{from,to}=periodRange(TXP[type]);
+  const eff=getEffectiveRange(type);
+  const{from,to}=eff.filtered?eff:periodRange(TXP[type]);
   const curArr=arr.filter(x=>(!from||x.date>=from)&&(!to||x.date<=to));
   const dim=type==='inc'?'source':'category';
   const byCat={};
@@ -174,8 +187,9 @@ function renderTxDonut(type){
 }
 function renderTxSummary(type){
   const arr=DB[type]||[];
+  const eff=getEffectiveRange(type);
   const curYM=td().slice(0,7);
-  const curArr=arr.filter(x=>ymOf(x.date)===curYM);
+  const curArr=eff.filtered?arr.filter(x=>(!eff.from||x.date>=eff.from)&&(!eff.to||x.date<=eff.to)):arr.filter(x=>ymOf(x.date)===curYM);
   const dim=type==='inc'?'source':'category';
   const byCat={};
   curArr.forEach(x=>{const k=x[dim]||'Lainnya';byCat[k]=(byCat[k]||0)+(+x.amount||0);});
@@ -194,9 +208,13 @@ function renderIncPage(){
   setText('sc-inc-avg',fRp(s.curAvg));
   setText('sc-inc-count',String(s.curCount));
   setText('sc-inc-today',fRp(s.todayTotal));
-  setTxChg('sc-inc-total-chg',s.curTotal,s.prevTotal,s.prevLbl);
-  setTxChg('sc-inc-avg-chg',s.curAvg,s.prevAvg,s.prevLbl);
-  setTxChg('sc-inc-count-chg',s.curCount,s.prevCount,s.prevLbl);
+  if(s.filtered){
+    ['sc-inc-total-chg','sc-inc-avg-chg','sc-inc-count-chg'].forEach(id=>{const el=document.getElementById(id);if(el){el.className='sc-chg neu';el.textContent='📊 Sesuai filter aktif';}});
+  } else {
+    setTxChg('sc-inc-total-chg',s.curTotal,s.prevTotal,s.prevLbl);
+    setTxChg('sc-inc-avg-chg',s.curAvg,s.prevAvg,s.prevLbl);
+    setTxChg('sc-inc-count-chg',s.curCount,s.prevCount,s.prevLbl);
+  }
   const elToday=document.getElementById('sc-inc-today-chg');
   if(elToday){elToday.className='sc-chg neu';elToday.textContent='Update: '+new Date().toLocaleString('id-ID',{timeZone:'Asia/Makassar',hour:'2-digit',minute:'2-digit'})+' WITA';}
   renderTxTrendChart('inc');renderTxDonut('inc');rInc();renderTxSummary('inc');refreshTxFilterOptions();
@@ -207,9 +225,13 @@ function renderExpPage(){
   setText('sc-exp-avg',fRp(s.curAvg));
   setText('sc-exp-count',String(s.curCount));
   setText('sc-exp-today',fRp(s.todayTotal));
-  setTxChg('sc-exp-total-chg',s.curTotal,s.prevTotal,s.prevLbl);
-  setTxChg('sc-exp-avg-chg',s.curAvg,s.prevAvg,s.prevLbl);
-  setTxChg('sc-exp-count-chg',s.curCount,s.prevCount,s.prevLbl);
+  if(s.filtered){
+    ['sc-exp-total-chg','sc-exp-avg-chg','sc-exp-count-chg'].forEach(id=>{const el=document.getElementById(id);if(el){el.className='sc-chg neu';el.textContent='📊 Sesuai filter aktif';}});
+  } else {
+    setTxChg('sc-exp-total-chg',s.curTotal,s.prevTotal,s.prevLbl);
+    setTxChg('sc-exp-avg-chg',s.curAvg,s.prevAvg,s.prevLbl);
+    setTxChg('sc-exp-count-chg',s.curCount,s.prevCount,s.prevLbl);
+  }
   const elToday=document.getElementById('sc-exp-today-chg');
   if(elToday){elToday.className='sc-chg neu';elToday.textContent='Update: '+new Date().toLocaleString('id-ID',{timeZone:'Asia/Makassar',hour:'2-digit',minute:'2-digit'})+' WITA';}
   renderTxTrendChart('exp');renderTxDonut('exp');rExp();renderTxSummary('exp');refreshTxFilterOptions();

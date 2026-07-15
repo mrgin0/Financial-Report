@@ -213,5 +213,5 @@ function updateRecvPieChart(){
 function updateAll(){
   updateStats();updateAlokasiChart();updateInvDChart();updateRecvPieChart();refreshCharts();
   const dym=document.getElementById('dash-pick')?.value;if(dym)onDashMonth(dym,'update');
-  refreshLRAK();
+  reRender();
 }

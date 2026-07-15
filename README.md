@@ -30,18 +30,19 @@ site/
 │     └─ settings.js
 └─ pages/                     ← FRAGMENT html (bukan file HTML lengkap), di-fetch oleh router
    ├─ dashboard.html
-   ├─ laporan-posisi.html
-   ├─ laporan-labarugi.html
-   ├─ laporan-aruskas.html
+   ├─ laporan-posisi.html      (berisi 3 card: Posisi Keuangan + Laba Rugi + Arus Kas, 1 filter, 1 tombol PDF)
    ├─ current-asset.html
    ├─ cash-equivalent.html
    ├─ non-current-asset.html
    ├─ investment.html
    ├─ hutang.html
    ├─ pengeluaran.html
-   ├─ pemasukan.html
-   └─ settings.html
+   └─ pemasukan.html
 ```
+
+> Catatan: menu Setting sudah dipindah jadi popup **Profile** (klik foto profil di kanan atas
+> header) — bukan halaman/sidebar terpisah lagi. Logic-nya tetap di `js/pages/settings.js`,
+> cuma dipanggil lewat modal, bukan `nav()`.
 
 ## Cara Kerja
 

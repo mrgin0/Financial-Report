@@ -50,10 +50,18 @@ function applyDebtFilter(){
   const status=document.getElementById('debt-f-status')?.value||'';
   DEBTFILT={from,to,creditor,status};
   if(PAGE_STATE['t-debt'])PAGE_STATE['t-debt'].page=1;
-  rHutang();
+  renderHutangPage();
   showToast('✅ Filter diterapkan');
 }
 function debtStatsCompare(){
+  const f=DEBTFILT;
+  if(f&&(f.from||f.to||f.creditor||f.status)){
+    const arr=debtFiltered();
+    const curTotal=arr.reduce((a,x)=>a+(+x.amount||0),0);
+    const curPaid=arr.reduce((a,x)=>a+(+x.paid||0),0);
+    const curSisa=curTotal-curPaid;
+    return{filtered:true,curTotal,curPaid,curSisa};
+  }
   const curTotal=DB.debt.reduce((a,x)=>a+(+x.amount||0),0);
   const curPaid=DB.debt.reduce((a,x)=>a+(+x.paid||0),0);
   const curSisa=curTotal-curPaid;
@@ -64,7 +72,7 @@ function debtStatsCompare(){
   const prevTotal=DB.debt.filter(x=>x.date&&x.date<=prevLastDay).reduce((a,x)=>a+(+x.amount||0),0);
   const prevPaid=DB.debtPay.filter(p=>p.paid_date&&p.paid_date<=prevLastDay).reduce((a,p)=>a+(+p.amount||0),0);
   const prevSisa=Math.max(0,prevTotal-prevPaid);
-  return{curTotal,curPaid,curSisa,prevTotal,prevPaid,prevSisa,prevLbl:mLbl(prevYM+'-01')};
+  return{filtered:false,curTotal,curPaid,curSisa,prevTotal,prevPaid,prevSisa,prevLbl:mLbl(prevYM+'-01')};
 }
 function sisaAsOf(dateStr){
   return DB.debt.filter(x=>x.date&&x.date<=dateStr).reduce((a,x)=>{
@@ -160,9 +168,13 @@ function renderHutangPage(){
   setText('sc-debt-total',fRp(s.curTotal));
   setText('sc-debt-paid',fRp(s.curPaid));
   setText('sc-debt-sisa',fRp(s.curSisa));
-  setTxChg('sc-debt-total-chg',s.curTotal,s.prevTotal,s.prevLbl);
-  setTxChg('sc-debt-paid-chg',s.curPaid,s.prevPaid,s.prevLbl);
-  setTxChg('sc-debt-sisa-chg',s.curSisa,s.prevSisa,s.prevLbl);
+  if(s.filtered){
+    ['sc-debt-total-chg','sc-debt-paid-chg','sc-debt-sisa-chg'].forEach(id=>{const el=document.getElementById(id);if(el){el.className='sc-chg neu';el.textContent='📊 Sesuai filter aktif';}});
+  } else {
+    setTxChg('sc-debt-total-chg',s.curTotal,s.prevTotal,s.prevLbl);
+    setTxChg('sc-debt-paid-chg',s.curPaid,s.prevPaid,s.prevLbl);
+    setTxChg('sc-debt-sisa-chg',s.curSisa,s.prevSisa,s.prevLbl);
+  }
   const today=td();
   const in30=new Date();in30.setDate(in30.getDate()+30);
   const in30Str=in30.toISOString().slice(0,10);

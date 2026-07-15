@@ -2,9 +2,9 @@
 
 // Peta id halaman -> nama file di folder /pages
 const PAGE_FILES = {
-  dashboard:'dashboard', laporan:'laporan-posisi', labarugi:'laporan-labarugi', aruskas:'laporan-aruskas',
+  dashboard:'dashboard', laporan:'laporan-posisi',
   ca:'current-asset', ce:'cash-equivalent', nc:'non-current-asset', inv:'investment',
-  hutang:'hutang', exp:'pengeluaran', inc:'pemasukan', settings:'settings'
+  hutang:'hutang', exp:'pengeluaran', inc:'pemasukan'
 };
 
 async function init(){
@@ -43,7 +43,29 @@ async function doSnap(){
   DB.snaps.sort((a,b)=>a.snapshot_date.localeCompare(b.snapshot_date));
   refreshCharts();
 }
-function reRender(){const p=document.querySelector('.page.active')?.id;if(p==='page-ca')rCA();if(p==='page-ce'){rAR();rII();}if(p==='page-nc'){rPPE();rINTG();}if(p==='page-inv')rINV();if(p==='page-inc')renderIncPage();if(p==='page-exp')renderExpPage();if(p==='page-hutang')renderHutangPage();}
+
+// Refresh penuh Dashboard: dipakai saat nav('dashboard') maupun saat re-render (ganti mata uang, dsb)
+function refreshDashboard(){
+  const ym=td().slice(0,7);
+  const dp=document.getElementById('dash-pick');if(dp)dp.value=ym;
+  onDashMonth(ym,'nav');
+  updateStats();initCharts();updateAlokasiChart();updateInvDChart();updateRecvPieChart();refreshCharts();
+}
+
+// Render ulang halaman yang sedang aktif — dipanggil setelah CRUD save atau ganti mata uang/bahasa,
+// supaya semua angka (fRp) ikut terformat ulang tanpa perlu fetch ulang fragment HTML.
+function reRender(){
+  const p=document.querySelector('.page.active')?.id;
+  if(p==='page-ca')rCA();
+  if(p==='page-ce'){rAR();rII();}
+  if(p==='page-nc'){rPPE();rINTG();}
+  if(p==='page-inv')rINV();
+  if(p==='page-inc')renderIncPage();
+  if(p==='page-exp')renderExpPage();
+  if(p==='page-hutang')renderHutangPage();
+  if(p==='page-dashboard')refreshDashboard();
+  if(p==='page-laporan')renderLaporanAll();
+}
 
 // ══════════════════════════════════════════════════════════════
 // ROUTER — fetch fragment HTML dari /pages lalu render kontennya
@@ -74,15 +96,8 @@ async function nav(id,el){
   if(id==='inc')renderIncPage();
   if(id==='exp')renderExpPage();
   if(id==='hutang')renderHutangPage();
-  if(id==='settings')fillSettingsForm();
-  if(id==='laporan'){const lym=document.getElementById('lap-pick')?.value||td().slice(0,7);onLapMonth(lym,'nav');}
-  if(id==='labarugi'){const lym=document.getElementById('lr-pick')?.value||td().slice(0,7);onLRMonth(lym,'nav');}
-  if(id==='aruskas'){const lym=document.getElementById('ak-pick')?.value||td().slice(0,7);onAKMonth(lym,'nav');}
-  if(id==='dashboard'){
-    const ym=td().slice(0,7);
-    const dp=document.getElementById('dash-pick');if(dp)dp.value=ym;
-    onDashMonth(ym,'nav');updateStats();initCharts();updateAlokasiChart();updateInvDChart();updateRecvPieChart();refreshCharts();
-  }
+  if(id==='laporan')initLapPage();
+  if(id==='dashboard')refreshDashboard();
   applyAppSettings(); // logo/avatar/nama akun ikut dipasang ulang kalau ada elemen baru di fragment
   window.scrollTo({top:0,behavior:'smooth'});
 }

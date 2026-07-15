@@ -1,4 +1,4 @@
-// Halaman Setting (profil, logo, avatar)
+// Popup Profile (pengganti halaman Setting) — logo, avatar, nama akun/aplikasi
 
 function loadAppSettings(){
   try{APPSET=JSON.parse(localStorage.getItem('appSettings')||'{}');}catch(e){APPSET={};}
@@ -39,6 +39,13 @@ function fillSettingsForm(){
   if(avP){avP.innerHTML=APPSET.avatar?`<img src="${APPSET.avatar}" style="width:100%;height:100%;object-fit:cover">`:((APPSET.accName||'R').trim().charAt(0)||'R').toUpperCase();avP.dataset.value=APPSET.avatar||'';}
   const foP=document.getElementById('set-fologo-preview');
   if(foP){foP.innerHTML=APPSET.foLogo?`<img src="${APPSET.foLogo}" style="width:100%;height:100%;object-fit:contain">`:'Belum ada';foP.dataset.value=APPSET.foLogo||'';}
+}
+function openProfileModal(){
+  fillSettingsForm();
+  document.getElementById('profile-mo').classList.add('open');
+}
+function closeProfileModal(){
+  document.getElementById('profile-mo').classList.remove('open');
 }
 function saveAppSettings(){
   APPSET.appName=(document.getElementById('set-app-name')?.value||'').trim()||'Lap. Keuangan Pribadi';
