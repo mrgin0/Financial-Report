@@ -1,0 +1,50 @@
+<div class="page active" id="page-hutang">
+  <div class="chd" style="margin-bottom:13px">
+    <div class="ptitle" style="margin-bottom:0">💳 <span>Hutang</span></div>
+    <button class="btn-add" onclick="openM('debt')">+ Tambah Hutang</button>
+  </div>
+  <div class="sg">
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Hutang</div><div class="sc-val" id="sc-debt-total">Rp 0</div><div class="sc-chg neu" id="sc-debt-total-chg">—</div></div><div class="sc-ic ic-o">💳</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Terbayar</div><div class="sc-val" id="sc-debt-paid">Rp 0</div><div class="sc-chg neu" id="sc-debt-paid-chg">—</div></div><div class="sc-ic ic-g">✅</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Sisa Hutang</div><div class="sc-val" id="sc-debt-sisa">Rp 0</div><div class="sc-chg neu" id="sc-debt-sisa-chg">—</div></div><div class="sc-ic ic-p">📄</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Hutang Jatuh Tempo</div><div class="sc-val" id="sc-debt-jt">0</div><div class="sc-chg neu" id="sc-debt-jt-chg">—</div></div><div class="sc-ic ic-b">📅</div></div>
+  </div>
+  <div class="card mb12">
+    <div class="chd"><div class="ctitle">Analisis Hutang — Trend &amp; Kreditur</div>
+      <div class="pbtns" id="debt-per-btns">
+        <button class="pb active" onclick="setDebtPeriod('7d',this)">7H</button>
+        <button class="pb" onclick="setDebtPeriod('30d',this)">30H</button>
+        <button class="pb" onclick="setDebtPeriod('1y',this)">1T</button>
+        <button class="pb" onclick="setDebtPeriod('all',this)">ALL</button>
+      </div>
+    </div>
+    <div class="chart-2col">
+      <div class="chart-h"><canvas id="c-debt-trend"></canvas></div>
+      <div class="donut-wrap">
+        <canvas id="c-debt-donut" width="170" height="170" style="max-width:170px"></canvas>
+        <div id="debt-donut-legend" style="width:100%;font-size:11.5px"></div>
+        <div style="display:flex;justify-content:space-between;width:100%;font-weight:700;font-size:12.5px;border-top:1px solid var(--bd);margin-top:2px;padding-top:8px"><span>Total Sisa</span><span id="debt-donut-total">Rp 0</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="tx-layout">
+    <div class="card">
+      <div class="ctitle" style="margin-bottom:9px">Daftar Hutang</div>
+      <div class="tw"><table class="ct" id="t-debt"></table></div>
+    </div>
+    <div class="card">
+      <div class="ctitle" style="margin-bottom:10px">Filter</div>
+      <div class="filt-fg"><label>Periode</label><select id="debt-f-period"><option value="bulan_ini">Bulan Ini</option><option value="bulan_lalu">Bulan Lalu</option><option value="all">Semua</option><option value="custom">Custom</option></select></div>
+      <div class="filt-fg"><label>Dari Tanggal</label><input type="date" id="debt-f-from"></div>
+      <div class="filt-fg"><label>Sampai Tanggal</label><input type="date" id="debt-f-to"></div>
+      <div class="filt-fg"><label>Kreditur</label><select id="debt-f-cred"><option value="">Semua Kreditur</option></select></div>
+      <div class="filt-fg"><label>Status</label><select id="debt-f-status"><option value="">Semua Status</option><option value="Aman">Aman</option><option value="Jatuh Tempo">Jatuh Tempo</option><option value="Lunas">Lunas</option></select></div>
+      <button class="btn-filt" onclick="applyDebtFilter()">🔽 Terapkan Filter</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="ctitle" style="margin-bottom:4px">Ringkasan Hutang berdasarkan Jatuh Tempo</div>
+    <div class="rgk-grid" id="debt-rgk"></div>
+  </div>
+</div>
+
