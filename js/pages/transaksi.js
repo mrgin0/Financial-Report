@@ -52,6 +52,17 @@ function refreshTxFilterOptions(){
   const expMethodSel=document.getElementById('exp-f-method');
   if(expMethodSel){const cur=expMethodSel.value;expMethodSel.innerHTML='<option value="">Semua Metode</option>'+DB.ca.map(x=>`<option value="${x.name}">${x.name}</option>`).join('');expMethodSel.value=cur;}
 }
+function applyIncTopFilter(){
+  // isi ulang field filter yang lama pake nilai dari filter baru ini...
+  const period=document.getElementById('inc-top-period')?.value;
+  const from=document.getElementById('inc-top-from')?.value;
+  const to=document.getElementById('inc-top-to')?.value;
+  const pOld=document.getElementById('inc-f-period');if(pOld)pOld.value=period;
+  const fOld=document.getElementById('inc-f-from');if(fOld)fOld.value=from;
+  const tOld=document.getElementById('inc-f-to');if(tOld)tOld.value=to;
+  // ...lalu panggil fungsi filter yang SUDAH ADA, tinggal dipakai ulang
+  applyTxFilter('inc');
+}
 function applyTxFilter(type){
   const period=document.getElementById(type+'-f-period')?.value||'all';
   let from=document.getElementById(type+'-f-from')?.value||null;
