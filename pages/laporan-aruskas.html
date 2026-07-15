@@ -1,0 +1,26 @@
+<div class="page active" id="page-aruskas">
+  <div class="ptitle">💵 <span>Laporan Arus Kas</span></div>
+  <div class="card mb12">
+    <div class="ctitle" style="margin-bottom:9px">Filter Periode</div>
+    <div class="fr" style="grid-template-columns:1fr 1fr 1fr;align-items:end">
+      <div class="filt-fg" style="margin-bottom:0"><label>Periode Bulan</label><input type="month" id="ak-pick" class="mpick" style="width:100%" onchange="onAKMonth(this.value)"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Dari Tanggal</label><input type="date" id="ak-f-from"></div>
+      <div class="filt-fg" style="margin-bottom:0"><label>Sampai Tanggal</label><input type="date" id="ak-f-to"></div>
+    </div>
+    <button class="btn-filt" style="margin-top:9px;max-width:220px" onclick="akDateFilter()">🔽 Terapkan Filter Tanggal</button>
+  </div>
+  <div class="card">
+    <div class="chd">
+      <div><div class="ctitle">Arus Kas Detail</div><div class="cmonth" id="ak-month">—</div></div>
+      <div class="dwrap"><div class="pbtns">
+        <button class="pb" onclick="akRange('1m',this)">1 Bln</button>
+        <button class="pb" onclick="akRange('6m',this)">6 Bln</button>
+        <button class="pb" onclick="akRange('1y',this)">1 Thn</button>
+        <button class="pb" onclick="akRange('5y',this)">5 Thn</button>
+        <button class="pb" onclick="akRange('all',this)">All</button>
+      </div></div>
+    </div>
+    <div id="fin-ak"></div>
+  </div>
+</div>
+
