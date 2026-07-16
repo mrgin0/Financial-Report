@@ -1,0 +1,52 @@
+<div class="page active" id="page-inc">
+  <div class="chd" style="margin-bottom:13px">
+    <div class="ptitle" style="margin-bottom:0">📥 <span>Pemasukan Uang</span></div>
+    <button class="btn-add" onclick="openM('inc')">+ Tambah Pemasukan</button>
+  </div>
+  <div class="sg">
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Pemasukan</div><div class="sc-val" id="sc-inc-total">Rp 0</div><div class="sc-chg neu" id="sc-inc-total-chg">—</div></div><div class="sc-ic ic-b">💼</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Rata-rata per Hari</div><div class="sc-val" id="sc-inc-avg">Rp 0</div><div class="sc-chg neu" id="sc-inc-avg-chg">—</div></div><div class="sc-ic ic-p">📅</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Transaksi</div><div class="sc-val" id="sc-inc-count">0</div><div class="sc-chg neu" id="sc-inc-count-chg">—</div></div><div class="sc-ic ic-g">📋</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Pemasukan Hari Ini</div><div class="sc-val" id="sc-inc-today">Rp 0</div><div class="sc-chg neu" id="sc-inc-today-chg">—</div></div><div class="sc-ic ic-o">📄</div></div>
+  </div>
+  <div class="card mb12">
+    <div class="chd"><div class="ctitle">Analisis Pemasukan — Trend &amp; Sumber</div>
+      <div class="pbtns" id="inc-per-btns">
+        <button class="pb active" onclick="setTxPeriod('inc','7d',this)">7H</button>
+        <button class="pb" onclick="setTxPeriod('inc','30d',this)">30H</button>
+        <button class="pb" onclick="setTxPeriod('inc','1y',this)">1T</button>
+        <button class="pb" onclick="setTxPeriod('inc','all',this)">ALL</button>
+      </div>
+    </div>
+    <div class="chart-2col">
+      <div class="chart-h"><canvas id="c-inc-trend"></canvas></div>
+      <div class="donut-wrap">
+        <canvas id="c-inc-donut" width="170" height="170" style="max-width:170px"></canvas>
+        <div id="inc-donut-legend" style="width:100%;font-size:11.5px"></div>
+        <div style="display:flex;justify-content:space-between;width:100%;font-weight:700;font-size:12.5px;border-top:1px solid var(--bd);margin-top:2px;padding-top:8px"><span>Total</span><span id="inc-donut-total">Rp 0</span></div>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:6px"><button class="btn-add" style="background:var(--bg);color:var(--txt);border:1px solid var(--bd)" onclick="openCatMgr('inc')">⚙ Kelola Kategori</button></div>
+  </div>
+  <div class="tx-layout">
+    <div class="card">
+      <div class="ctitle" style="margin-bottom:9px">Riwayat Pemasukan</div>
+      <div class="tw"><table class="ct" id="t-inc"></table></div>
+    </div>
+    <div class="card">
+      <div class="ctitle" style="margin-bottom:10px">Filter</div>
+      <div class="filt-fg"><label>Periode</label><select id="inc-f-period"><option value="bulan_ini">Bulan Ini</option><option value="bulan_lalu">Bulan Lalu</option><option value="all">Semua</option><option value="custom">Custom</option></select></div>
+      <div class="filt-fg"><label>Dari Tanggal</label><input type="date" id="inc-f-from"></div>
+      <div class="filt-fg"><label>Sampai Tanggal</label><input type="date" id="inc-f-to"></div>
+      <div class="filt-fg"><label>Sumber</label><select id="inc-f-src"><option value="">Semua Sumber</option></select></div>
+      <div class="filt-fg"><label>Kategori</label><select id="inc-f-cat"><option value="">Semua Kategori</option></select></div>
+      <div class="filt-fg"><label>Metode</label><select id="inc-f-method"><option value="">Semua Metode</option></select></div>
+      <button class="btn-filt" onclick="applyTxFilter('inc')">🔽 Terapkan Filter</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="ctitle" style="margin-bottom:4px">Ringkasan Pemasukan berdasarkan Sumber</div>
+    <div class="rgk-grid" id="inc-rgk"></div>
+  </div>
+</div>
+
