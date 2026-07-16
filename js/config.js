@@ -3,7 +3,7 @@
 // Ambil dari: Firebase Console → ⚙️ Project Settings → Your apps → (Web app) → SDK config
 // ══════════════════════════════════════════════════════════════
 const firebaseConfig = {
-  apiKey: AIzaSyD0LuYrwJ3pZ2H7l52N472uD0aQpHLi_40",
+  apiKey: "AIzaSyD0LuYrwJ3pZ2H7l52N472uD0aQpHLi_40",
   authDomain: "laporan-keuangan-9b7b0.firebaseapp.com",
   projectId: "laporan-keuangan-9b7b0",
   storageBucket: "laporan-keuangan-9b7b0.firebasestorage.app",
