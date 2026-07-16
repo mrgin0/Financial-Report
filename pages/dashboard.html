@@ -1,0 +1,99 @@
+<div class="page active" id="page-dashboard">
+  <div class="sg">
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="total_aset">Total Aset</div><div class="sc-val" id="sv-tot">0</div><div class="sc-chg neu" id="sc-tot">—</div></div><div class="sc-ic ic-b">📈</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="total_cur">Total Current Asset</div><div class="sc-val" id="sv-cur">0</div><div class="sc-chg neu" id="sc-cur">—</div></div><div class="sc-ic ic-g">💼</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="non_cur">Non Current Asset</div><div class="sc-val" id="sv-nc">0</div><div class="sc-chg neu" id="sc-nc">—</div></div><div class="sc-ic ic-o">🏢</div></div>
+    <div class="sc"><div class="sc-inf"><div class="sc-lbl" data-i="asset_today">Asset Hari Ini</div><div class="sc-val" id="sv-td">0</div><div class="sc-chg neu" id="sc-td">—</div></div><div class="sc-ic ic-p">🗄️</div></div>
+  </div>
+  <div class="g2">
+    <!-- Laporan mini -->
+    <div class="card">
+      <div class="chd">
+        <div><div class="ctitle" data-i="laporan_pos">Laporan Posisi Keuangan</div><div class="cmonth" id="dash-month">—</div></div>
+        <div class="dwrap">
+          <input type="month" id="dash-pick" class="mpick" onchange="onDashMonth(this.value,'month')">
+          <div class="pbtns">
+            <button class="pb" onclick="dashRange('1m',this)" data-i="p_1b">1 Bln</button>
+            <button class="pb" onclick="dashRange('6m',this)" data-i="p_6b">6 Bln</button>
+            <button class="pb" onclick="dashRange('1y',this)" data-i="p_1t">1 Thn</button>
+            <button class="pb" onclick="dashRange('5y',this)" data-i="p_5t">5 Thn</button>
+            <button class="pb" onclick="dashRange('all',this)" data-i="p_all">All</button>
+          </div>
+        </div>
+      </div>
+      <div id="fin-dash"></div>
+      <div class="btn-row">
+        <button class="btn btn-do" onclick="downloadPDF('dash')" data-i="btn_pdf">📄 Download PDF</button>
+        <button class="btn btn-sec" onclick="nav('laporan',document.getElementById('nav-laporan'))" data-i="btn_detail">📋 Detail</button>
+      </div>
+    </div>
+    <!-- Growth Aset Chart -->
+    <div class="card">
+      <div class="chd"><span class="ctitle" data-i="growth_aset">History Growth Aset</span>
+        <div class="pbtns" id="pb-growth">
+          <button class="pb" onclick="setPeriod('growth','7d',this)">7H</button>
+          <button class="pb active" onclick="setPeriod('growth','1m',this)" data-i="p_1b">1 Bln</button>
+          <button class="pb" onclick="setPeriod('growth','6m',this)" data-i="p_6b">6 Bln</button>
+          <button class="pb" onclick="setPeriod('growth','1y',this)" data-i="p_1t">1 Thn</button>
+          <button class="pb" onclick="setPeriod('growth','all',this)" data-i="p_all">All</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-growth" height="145"></canvas><div class="zoom-hint" data-i="zoom_hint">Scroll to zoom · Drag to pan</div><div class="zoom-btns"><button class="zb" onclick="resetZoom('growth')">⟳ Reset</button></div></div>
+      <div style="margin-top:14px">
+        <div class="ctitle" style="margin-bottom:8px" data-i="alokasi_total">Alokasi Total Asset</div>
+        <div class="dw"><canvas id="c-alok" class="dc"></canvas><div style="flex:1;min-width:0"><div id="alok-leg"></div><div class="lgtot"><span data-i="total">Total</span><span id="alok-tot">0</span></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="g3">
+    <div class="card">
+      <div class="chd"><span class="ctitle" data-i="growth_recv">Growth Receivable</span>
+        <div class="pbtns" id="pb-recv">
+          <button class="pb" onclick="setPeriod('recv','7d',this)">7H</button>
+          <button class="pb active" onclick="setPeriod('recv','1m',this)" data-i="p_1b">1 Bln</button>
+          <button class="pb" onclick="setPeriod('recv','6m',this)" data-i="p_6b">6 Bln</button>
+          <button class="pb" onclick="setPeriod('recv','1y',this)" data-i="p_1t">1 Thn</button>
+          <button class="pb" onclick="setPeriod('recv','all',this)" data-i="p_all">All</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-recv" height="110"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoom('recv')">⟳ Reset</button></div></div>
+      <div style="margin-top:12px">
+        <div class="ctitle" style="margin-bottom:8px">Alokasi Piutang per Penghutang</div>
+        <div class="dw">
+          <canvas id="c-recv-pie" style="width:85px;height:85px;flex-shrink:0"></canvas>
+          <div style="flex:1;min-width:0"><div id="recv-pie-leg"></div><div class="lgtot" style="width:100%"><span>Total Piutang</span><span id="recv-pie-tot">0</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chd"><span class="ctitle" data-i="inv_chart">Investment Growth</span>
+        <div class="pbtns" id="pb-invg">
+          <button class="pb" onclick="setPeriod('invg','7d',this)">7H</button>
+          <button class="pb active" onclick="setPeriod('invg','1m',this)" data-i="p_1b">1 Bln</button>
+          <button class="pb" onclick="setPeriod('invg','6m',this)" data-i="p_6b">6 Bln</button>
+          <button class="pb" onclick="setPeriod('invg','1y',this)" data-i="p_1t">1 Thn</button>
+          <button class="pb" onclick="setPeriod('invg','all',this)" data-i="p_all">All</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-invg" height="100"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoom('invg')">⟳ Reset</button></div></div>
+      <div style="margin-top:11px">
+        <div class="ctitle" style="margin-bottom:6px" data-i="alokasi_inv">Alokasi Investment</div>
+        <div class="dw"><canvas id="c-invd" style="width:85px;height:85px;flex-shrink:0"></canvas><div style="flex:1;min-width:0"><div id="invd-leg"></div><div class="lgtot" style="width:100%"><span data-i="total">Total</span><span id="invd-tot">0</span></div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chd"><span class="ctitle" data-i="gain_loss">Investment Gain/Loss</span>
+        <div class="pbtns" id="pb-gain">
+          <button class="pb" onclick="setPeriod('gain','7d',this)">7H</button>
+          <button class="pb active" onclick="setPeriod('gain','1m',this)" data-i="p_1b">1 Bln</button>
+          <button class="pb" onclick="setPeriod('gain','6m',this)" data-i="p_6b">6 Bln</button>
+          <button class="pb" onclick="setPeriod('gain','1y',this)" data-i="p_1t">1 Thn</button>
+          <button class="pb" onclick="setPeriod('gain','all',this)" data-i="p_all">All</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-gain" height="120"></canvas><div class="zoom-btns"><button class="zb" onclick="resetZoom('gain')">⟳ Reset</button></div></div>
+      <div class="gain-leg"><div class="gl-item"><div class="gl-box" style="background:#22c55e"></div><span data-i="gain">Gain</span></div><div class="gl-item"><div class="gl-box" style="background:#ef4444"></div><span data-i="loss">Loss</span></div></div>
+    </div>
+  </div>
+</div>
+
