@@ -140,7 +140,7 @@ function tickClocks(){
 // ══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded',()=>{
   if(window.innerWidth<=768){const m=document.getElementById('main');if(m)m.classList.add('full');}
-  loadAppSettings();
+  applyAppSettings();
   tickClocks();setInterval(tickClocks,1000);
   setInterval(fetchFX,5*60*1000);
   // sisanya (fetch dashboard + init data) ditangani auth.js->bootApp() begitu status login diketahui

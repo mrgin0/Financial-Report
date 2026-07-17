@@ -119,11 +119,18 @@ function applyMasterUI(isMaster){
 auth.onAuthStateChanged(async(user)=>{
   if(user){
     CURRENT_USER=user;CURRENT_UID=user.uid;
-    try{
-      const prof=await db.collection('users').doc(user.uid).get();
-      CURRENT_PROFILE=prof.exists?prof.data():{email:user.email};
-    }catch(e){ CURRENT_PROFILE={email:user.email}; }
+    let prof;
+    try{ prof=await db.collection('users').doc(user.uid).get(); }
+    catch(e){ CURRENT_PROFILE={email:user.email}; prof=null; }
+    if(prof && !prof.exists){
+      // Akun sudah dihapus master (users/{uid} udah gak ada) — paksa logout
+      showToast('⛔ Akun kamu sudah dihapus/dinonaktifkan master. Hubungi master kalau ini keliru.');
+      await auth.signOut();
+      return; // onAuthStateChanged bakal kepanggil lagi dengan user=null
+    }
+    CURRENT_PROFILE = prof ? prof.data() : (CURRENT_PROFILE||{email:user.email});
     showAppShell();
+    applyAppSettings();
     applyMasterUI(checkIsMaster());
     await bootApp();
   } else {
