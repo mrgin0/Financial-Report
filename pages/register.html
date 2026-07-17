@@ -1,0 +1,31 @@
+<div class="auth-wrap">
+  <div class="auth-card card">
+    <div style="text-align:center;margin-bottom:18px">
+      <div class="logo-ic" style="margin:0 auto 10px;width:44px;height:44px;font-size:20px">📊</div>
+      <h2 style="margin-bottom:2px">Daftar Akun</h2>
+      <div style="font-size:12px;color:var(--mu)">Akses baru perlu di-approve master dulu</div>
+    </div>
+
+    <div id="reg-step1">
+      <div class="fg"><label>Nama Usaha / Akun</label><input id="reg-biz" placeholder="cth: Usaha Kopi Andi"></div>
+      <div class="fg"><label>Email</label><input type="email" id="reg-email" placeholder="nama@email.com"></div>
+      <button class="btn-add" style="width:100%;justify-content:center" onclick="submitAccessRequest()">1. Ajukan Akses</button>
+      <div style="text-align:center;margin-top:12px;font-size:11.5px;color:var(--mu)">
+        Sudah pernah ajukan &amp; sudah di-approve master?
+        <a href="#" onclick="showCompleteRegisterForm();return false" style="color:var(--pr);font-weight:700;display:block;margin-top:4px">Lanjut buat akun →</a>
+      </div>
+    </div>
+
+    <div id="reg-step2" style="display:none">
+      <div style="font-size:11.5px;color:var(--mu);margin-bottom:10px">Kalau email kamu udah di-approve master, set password buat akun kamu di sini:</div>
+      <div class="fg"><label>Email (yang sudah di-approve)</label><input type="email" id="reg2-email" placeholder="nama@email.com"></div>
+      <div class="fg"><label>Password</label><input type="password" id="reg2-pass" placeholder="min. 6 karakter"></div>
+      <div class="fg"><label>Konfirmasi Password</label><input type="password" id="reg2-pass2" placeholder="ulangi password"></div>
+      <button class="btn-add" style="width:100%;justify-content:center" onclick="completeRegister()">2. Buat Akun</button>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;font-size:12px">
+      Sudah punya akun? <a href="#" onclick="authNav('login');return false" style="color:var(--pr);font-weight:700">Masuk</a>
+    </div>
+  </div>
+</div>
