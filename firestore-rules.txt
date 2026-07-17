@@ -5,11 +5,13 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
     // GANTI 'GANTI_EMAIL_MASTER' di bawah supaya SAMA PERSIS dengan MASTER_EMAIL di js/config.js
-    function isMaster() { return isSignedIn() && request.auth.token.email == 'raihan.nor.falah@mhs.politala.ac.id'; }
+    function isMaster() { return isSignedIn() && request.auth.token.email == 'GANTI_EMAIL_MASTER'; }
 
-    // Profil tiap akun (nama usaha, dsb) — cuma pemiliknya sendiri yang boleh baca/tulis
+    // Profil tiap akun (nama usaha, dsb) — cuma pemiliknya sendiri yang boleh baca/tulis,
+    // MASTER juga boleh HAPUS (dipakai fitur "Hapus Akun" di halaman Admin)
     match /users/{uid} {
       allow read, write: if isOwner(uid);
+      allow delete: if isMaster();
     }
 
     // Permintaan akses (register tahap 1) — siapa aja (belum login) boleh BIKIN,
@@ -27,14 +29,15 @@ service cloud.firestore {
     }
 
     // Semua data keuangan (Current Asset, Income, Expenses, Debts, dst) —
-    // wajib login DAN dokumennya harus punya field uid == uid yang lagi login
+    // wajib login DAN dokumennya harus punya field uid == uid yang lagi login,
+    // KECUALI master yang juga boleh baca/hapus data akun lain (buat fitur Hapus Akun)
     match /{collection}/{docId} {
       allow read, update, delete: if collection in [
         'current_assets','accounts_receivable','inventory',
         'property_plant_equipment','intangible_assets','investments',
         'income','expenses','debts','debt_payments',
         'payment_history','laporan_snapshots'
-      ] && isSignedIn() && resource.data.uid == request.auth.uid;
+      ] && isSignedIn() && (resource.data.uid == request.auth.uid || isMaster());
 
       allow create: if collection in [
         'current_assets','accounts_receivable','inventory',

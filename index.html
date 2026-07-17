@@ -120,6 +120,19 @@
   </div>
 </div>
 
+<!-- HAPUS AKUN (khusus Admin) — wajib tunggu 30 detik sebelum tombol aktif -->
+<div class="cfm-mo" id="delacc-mo" onclick="if(event.target===this)closeDeleteAccountModal()">
+  <div class="cfm-box">
+    <div class="cfm-icon">⚠️</div>
+    <div class="cfm-title">Hapus Akun Ini?</div>
+    <div class="cfm-msg" id="delacc-msg">Semua data akun ini akan dihapus permanen.</div>
+    <div class="cfm-btns">
+      <button class="cfm-no" onclick="closeDeleteAccountModal()">Batal</button>
+      <button class="cfm-yes" id="delacc-confirm-btn" disabled onclick="runDeleteAccount()">Tunggu 30s…</button>
+    </div>
+  </div>
+</div>
+
 <!-- PAYMENT HISTORY MODAL -->
 <div class="mo" id="phist-mo" onclick="if(event.target===this)document.getElementById('phist-mo').classList.remove('open')" style="align-items:center">
   <div class="modal" style="max-width:700px">
