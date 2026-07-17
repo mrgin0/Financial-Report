@@ -3,12 +3,12 @@
 // Ambil dari: Firebase Console → ⚙️ Project Settings → Your apps → (Web app) → SDK config
 // ══════════════════════════════════════════════════════════════
 const firebaseConfig = {
-  apiKey: "GANTI_DENGAN_API_KEY_KAMU",
-  authDomain: "GANTI.firebaseapp.com",
-  projectId: "GANTI",
-  storageBucket: "GANTI.appspot.com",
-  messagingSenderId: "GANTI",
-  appId: "GANTI"
+  apiKey: "AIzaSyD0LuYrwJ3pZ2H7l52N472uD0aQpHLi_40",
+  authDomain: "laporan-keuangan-9b7b0.firebaseapp.com",
+  projectId: "laporan-keuangan-9b7b0",
+  storageBucket: "laporan-keuangan-9b7b0.firebasestorage.app",
+  messagingSenderId: "248122424099",
+  appId: "1:248122424099:web:3be217282bdbf44003ea96"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
