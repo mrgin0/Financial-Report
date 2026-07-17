@@ -179,11 +179,37 @@ async function runDeleteAccount(){
     }
     await db.collection('users').doc(uid).delete();
     await db.collection('allowed_emails').doc(email).delete();
-    showToast('🗑️ Akun '+email+' & seluruh datanya sudah dihapus');
+
+    // Hapus juga SEMUA entri access_requests buat email ini, biar bener2 ilang dari Riwayat
+    // (bukan cuma balik jadi "belum daftar")
+    const reqSnap=await db.collection('access_requests').where('email','==',email).get();
+    await Promise.all(reqSnap.docs.map(d=>d.ref.delete()));
+
     closeDeleteAccountModal();
     renderAdminPage();
+
+    // PENTING: ini cuma bersihin data Firestore. Login Firebase Authentication-nya
+    // TIDAK BISA dihapus dari sini (batasan Firebase tanpa Cloud Functions berbayar) —
+    // wajib dihapus manual sekali di Firebase Console.
+    const consoleUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/authentication/users`;
+    showDeleteFollowupNotice(email,uid,consoleUrl);
   }catch(e){
     showToast('❌ Gagal hapus: '+e.message);
     btn.disabled=false;btn.textContent='🗑️ Ya, Hapus Akun Ini';
+  }
+}
+function showDeleteFollowupNotice(email,uid,consoleUrl){
+  showToast('🗑️ Data '+email+' sudah dihapus dari aplikasi');
+  const box=document.getElementById('admin-followup-notice');
+  if(box){
+    box.style.display='block';
+    box.innerHTML=`
+      <b>⚠️ Satu langkah lagi:</b> data di aplikasi udah bersih, tapi login akun
+      <b>${esc(email)}</b> masih ada di Firebase Authentication (gak bisa dihapus otomatis
+      dari sini). Buka
+      <a href="${consoleUrl}" target="_blank" rel="noopener" style="color:var(--pr);font-weight:700">Firebase Console → Authentication</a>,
+      cari User UID <code style="background:var(--bg);padding:1px 5px;border-radius:4px">${esc(uid)}</code>,
+      lalu hapus manual biar orang itu beneran gak bisa login lagi.
+      <button class="btn-sm bd" style="margin-left:8px" onclick="document.getElementById('admin-followup-notice').style.display='none'">Tutup</button>`;
   }
 }
