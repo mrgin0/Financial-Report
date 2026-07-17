@@ -247,3 +247,14 @@ body.dark .dbadge.lunas{background:rgba(37,99,235,.18)}
 .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
 .auth-card{width:100%;max-width:400px}
 .auth-card h2{font-size:19px}
+
+/* Freeze/sticky kolom pertama tabel pas digeser ke samping (mobile) */
+.ct th.sticky-col,.ct td.sticky-col{position:sticky;left:0;z-index:2;background:var(--card)}
+.ct thead th.sticky-col{background:var(--bg);z-index:3}
+.ct td.sticky-col,.ct th.sticky-col{box-shadow:2px 0 5px rgba(0,0,0,.10)}
+
+/* Filter 3 kolom (Laporan Posisi Keuangan) — collapse ke 1 kolom di HP */
+.filt-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;align-items:end}
+@media(max-width:768px){.filt-3col{grid-template-columns:1fr}}
+
+@media(max-width:420px){.btn-ic span{display:none}.btn-ic{padding:6px 8px}.hr2{gap:4px}}
