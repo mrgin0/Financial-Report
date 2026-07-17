@@ -69,7 +69,7 @@ async function renderAdminPage(){
               backupBtn=`<button class="btn-sm" style="background:#dbeafe;color:#2563eb" onclick="backupAccountData('${escQ(uid)}','${escQ(r.email)}')">💾 Backup Data</button>`;
               delBtn=`<button class="btn-sm bd" onclick="confirmDeleteAccount('${escQ(uid)}','${escQ(r.email)}')">🗑️ Hapus Akun</button>`;
             } else {
-              delBtn=`<span style="font-size:10px;color:var(--mu)">belum daftar</span>`;
+              delBtn=`<span style="font-size:10px;color:var(--mu)">belum daftar</span> <button class="btn-sm bd" onclick="removeStaleRequest('${escQ(r.email)}')">🗑️ Hapus dari Riwayat</button>`;
             }
           }catch(e){}
         }
@@ -103,6 +103,26 @@ async function rejectRequest(reqId){
     showToast('🗑️ Ditolak');
     renderAdminPage();
   }catch(e){ showToast('❌ '+e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// HAPUS RIWAYAT "belum daftar" — bekas approve yg emailnya gak pernah
+// dipakai buat beneran bikin akun. Gak ada data keuangan yg kehapus
+// (gak ada uid sama sekali), jadi pakai konfirmasi biasa (bukan yg 30 detik).
+// ══════════════════════════════════════════════════════════════
+function removeStaleRequest(email){
+  document.getElementById('cfm-tt').textContent='Hapus dari Riwayat?';
+  document.getElementById('cfm-mg').textContent=`Permintaan akses "${email}" (belum pernah dipakai daftar) akan dihapus dari riwayat. Kalau orang ini mau daftar lagi nanti, dia harus Ajukan Akses dari awal.`;
+  cfmCb=async()=>{
+    try{
+      const reqSnap=await db.collection('access_requests').where('email','==',email).get();
+      await Promise.all(reqSnap.docs.map(d=>d.ref.delete()));
+      await db.collection('allowed_emails').doc(email).delete().catch(()=>{});
+      showToast('🗑️ Riwayat '+email+' sudah dihapus');
+      renderAdminPage();
+    }catch(e){ showToast('❌ '+e.message); }
+  };
+  document.getElementById('cfm').classList.add('open');
 }
 
 // ══════════════════════════════════════════════════════════════
