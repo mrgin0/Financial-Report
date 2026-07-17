@@ -28,20 +28,24 @@ async function renderAdminPage(){
     } else {
       // Buat entri 'approved', cek apakah orangnya udah beneran daftar (ada usedBy=uid di allowed_emails)
       const htmlParts=await Promise.all(rows2.map(async r=>{
-        let delBtn='';
+        let delBtn='',backupBtn='';
         if(r.status==='approved'){
           try{
             const aDoc=await db.collection('allowed_emails').doc(r.email).get();
             const usedBy=aDoc.exists?aDoc.data().usedBy:null;
-            delBtn = usedBy
-              ? `<button class="btn-sm bd" onclick="confirmDeleteAccount('${escQ(usedBy)}','${escQ(r.email)}')">🗑️ Hapus Akun</button>`
-              : `<span style="font-size:10px;color:var(--mu)">belum daftar</span>`;
+            if(usedBy){
+              backupBtn=`<button class="btn-sm" style="background:#dbeafe;color:#2563eb" onclick="backupAccountData('${escQ(usedBy)}','${escQ(r.email)}')">💾 Backup Data</button>`;
+              delBtn=`<button class="btn-sm bd" onclick="confirmDeleteAccount('${escQ(usedBy)}','${escQ(r.email)}')">🗑️ Hapus Akun</button>`;
+            } else {
+              delBtn=`<span style="font-size:10px;color:var(--mu)">belum daftar</span>`;
+            }
           }catch(e){}
         }
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;gap:8px;flex-wrap:wrap">
-          <span>${esc(r.email)}</span>
-          <div style="display:flex;align-items:center;gap:8px">
+          <div><b>${esc(r.businessName||'(tanpa nama usaha)')}</b><br><span style="font-size:11px;color:var(--mu)">${esc(r.email)}</span></div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span class="dbadge ${r.status==='approved'?'aman':'jt'}">${r.status==='approved'?'Disetujui':'Ditolak'}</span>
+            ${backupBtn}
             ${delBtn}
           </div>
         </div>`;
@@ -66,6 +70,34 @@ async function rejectRequest(reqId){
     showToast('🗑️ Ditolak');
     renderAdminPage();
   }catch(e){ showToast('❌ '+e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// BACKUP DATA — download semua data 1 akun jadi 1 file JSON
+// ══════════════════════════════════════════════════════════════
+async function backupAccountData(uid,email){
+  showToast('⏳ Menyiapkan backup…');
+  try{
+    const data={};
+    for(const col of ALL_DATA_COLLECTIONS){
+      const snap=await db.collection(col).where('uid','==',uid).get();
+      data[col]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    }
+    const profSnap=await db.collection('users').doc(uid).get();
+    data._profile=profSnap.exists?profSnap.data():null;
+    data._meta={email,uid,exportedAt:new Date().toISOString()};
+
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`backup-${email.replace(/[^a-z0-9]/gi,'_')}-${td()}.json`;
+    document.body.appendChild(a);a.click();a.remove();
+    URL.revokeObjectURL(url);
+    showToast('✅ Backup berhasil didownload');
+  }catch(e){
+    showToast('❌ Gagal backup: '+e.message);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
