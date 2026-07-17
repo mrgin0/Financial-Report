@@ -74,6 +74,10 @@ function getCategories(){
 const SORT_STATE={};
 const PAGE_STATE={};
 const RENDER_MAP={'t-ca':()=>rCA(),'t-ar':()=>rAR(),'t-ii':()=>rII(),'t-ppe':()=>rPPE(),'t-intg':()=>rINTG(),'t-inv':()=>rINV()};
+const STICKY_COL={ // tabel id -> index kolom yang di-freeze (0-based)
+  't-ca':1, 't-ar':1, 't-ii':1, 't-ppe':1, 't-intg':1, 't-inv':1,
+  't-debt':1, 't-exp':2, 't-inc':2,
+};
 function mkTbl(id,ths,rows){
   const el=document.getElementById(id);if(!el)return;
   if(!SORT_STATE[id])SORT_STATE[id]={col:-1,asc:true};
@@ -97,6 +101,17 @@ function mkTbl(id,ths,rows){
   const pageRows=ps.size==='all'?rows:rows.slice(start,start+size);
 
   el.innerHTML=`<thead><tr>${thHtml}</tr></thead>`+(pageRows.length?`<tbody>${pageRows.join('')}</tbody>`:noR(ths.length));
+
+  // Freeze kolom (kalau tabel ini terdaftar) — biar tetep kelihatan pas digeser ke samping di HP
+  const stickyIdx=STICKY_COL[id];
+  if(stickyIdx!=null){
+    const headCell=el.querySelector('thead tr')?.children[stickyIdx];
+    if(headCell)headCell.classList.add('sticky-col');
+    el.querySelectorAll('tbody tr').forEach(tr=>{
+      const cell=tr.children[stickyIdx];
+      if(cell)cell.classList.add('sticky-col');
+    });
+  }
 
   // Render pagination controls in sibling element
   renderPager(id,total,totalPages);
