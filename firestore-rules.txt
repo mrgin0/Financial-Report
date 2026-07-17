@@ -5,7 +5,7 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
     // GANTI 'GANTI_EMAIL_MASTER' di bawah supaya SAMA PERSIS dengan MASTER_EMAIL di js/config.js
-    function isMaster() { return isSignedIn() && request.auth.token.email == 'GANTI_EMAIL_MASTER'; }
+    function isMaster() { return isSignedIn() && request.auth.token.email == 'raihan.nor.falah@mhs.politala.ac.id'; }
 
     // Profil tiap akun (nama usaha, dsb) — cuma pemiliknya sendiri yang boleh baca/tulis,
     // MASTER juga boleh HAPUS (dipakai fitur "Hapus Akun" di halaman Admin)
