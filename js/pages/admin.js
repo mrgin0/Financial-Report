@@ -48,7 +48,13 @@ async function renderAdminPage(){
       </div>` : '';
 
     const snap2=await db.collection('access_requests').where('status','in',['approved','rejected']).get();
-    const rows2=snap2.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+    let rows2=snap2.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+    // Dedupe by email — kalau ada yg submit "Ajukan Akses" berkali-kali, cuma tampilin yg paling baru
+    const seenEmails=new Set();
+    rows2=rows2.filter(r=>{
+      if(seenEmails.has(r.email))return false;
+      seenEmails.add(r.email);return true;
+    });
 
     if(!rows2.length){
       hist.innerHTML = masterRowHtml || '<div style="color:var(--mu);font-size:12px">Belum ada riwayat</div>';
