@@ -4,10 +4,27 @@ const ALL_DATA_COLLECTIONS=['current_assets','accounts_receivable','inventory',
   'property_plant_equipment','intangible_assets','investments',
   'income','expenses','debts','debt_payments','payment_history','laporan_snapshots'];
 
+async function findUidForEmail(email,allowedData){
+  if(allowedData && allowedData.usedBy) return allowedData.usedBy;
+  // Fallback: allowed_emails.usedBy kadang gagal ke-set (misal sempat error pas register) —
+  // cek langsung ke koleksi users berdasarkan field email, biar tetep kedeteksi.
+  try{
+    const snap=await db.collection('users').where('email','==',email).limit(1).get();
+    if(!snap.empty) return snap.docs[0].id;
+  }catch(e){}
+  return null;
+}
+function roleBadge(isMasterRow){
+  return isMasterRow
+    ? `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:#fef3c7;color:#92400e;letter-spacing:.3px">MASTER</span>`
+    : `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--bg);color:var(--mu);border:1px solid var(--bd);letter-spacing:.3px">USER</span>`;
+}
+
 async function renderAdminPage(){
   const list=document.getElementById('admin-requests-list');
   const hist=document.getElementById('admin-history-list');
   if(!list)return;
+  hist.innerHTML='<div style="color:var(--mu);font-size:12px">Memuat…</div>';
   try{
     const snap=await db.collection('access_requests').where('status','==','pending').get();
     const rows=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
@@ -20,22 +37,31 @@ async function renderAdminPage(){
         </div>
       </div>`).join('') : '<div style="color:var(--mu);font-size:12px">📭 Gak ada permintaan pending</div>';
 
+    // Baris akun MASTER — di-pin paling atas, cuma tombol Backup, gak ada Hapus
+    const masterRowHtml = (CURRENT_UID && CURRENT_USER) ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;gap:8px;flex-wrap:wrap;background:rgba(245,158,11,.06)">
+        <div><b>${esc(CURRENT_PROFILE.businessName||'Master')}</b><br><span style="font-size:11px;color:var(--mu)">${esc(CURRENT_USER.email)}</span></div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          ${roleBadge(true)}
+          <button class="btn-sm" style="background:#dbeafe;color:#2563eb" onclick="backupAccountData('${escQ(CURRENT_UID)}','${escQ(CURRENT_USER.email)}')">💾 Backup Data</button>
+        </div>
+      </div>` : '';
+
     const snap2=await db.collection('access_requests').where('status','in',['approved','rejected']).get();
     const rows2=snap2.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
 
     if(!rows2.length){
-      hist.innerHTML='<div style="color:var(--mu);font-size:12px">Belum ada riwayat</div>';
+      hist.innerHTML = masterRowHtml || '<div style="color:var(--mu);font-size:12px">Belum ada riwayat</div>';
     } else {
-      // Buat entri 'approved', cek apakah orangnya udah beneran daftar (ada usedBy=uid di allowed_emails)
       const htmlParts=await Promise.all(rows2.map(async r=>{
         let delBtn='',backupBtn='';
         if(r.status==='approved'){
           try{
             const aDoc=await db.collection('allowed_emails').doc(r.email).get();
-            const usedBy=aDoc.exists?aDoc.data().usedBy:null;
-            if(usedBy){
-              backupBtn=`<button class="btn-sm" style="background:#dbeafe;color:#2563eb" onclick="backupAccountData('${escQ(usedBy)}','${escQ(r.email)}')">💾 Backup Data</button>`;
-              delBtn=`<button class="btn-sm bd" onclick="confirmDeleteAccount('${escQ(usedBy)}','${escQ(r.email)}')">🗑️ Hapus Akun</button>`;
+            const uid=await findUidForEmail(r.email, aDoc.exists?aDoc.data():null);
+            if(uid){
+              backupBtn=`<button class="btn-sm" style="background:#dbeafe;color:#2563eb" onclick="backupAccountData('${escQ(uid)}','${escQ(r.email)}')">💾 Backup Data</button>`;
+              delBtn=`<button class="btn-sm bd" onclick="confirmDeleteAccount('${escQ(uid)}','${escQ(r.email)}')">🗑️ Hapus Akun</button>`;
             } else {
               delBtn=`<span style="font-size:10px;color:var(--mu)">belum daftar</span>`;
             }
@@ -44,16 +70,17 @@ async function renderAdminPage(){
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;gap:8px;flex-wrap:wrap">
           <div><b>${esc(r.businessName||'(tanpa nama usaha)')}</b><br><span style="font-size:11px;color:var(--mu)">${esc(r.email)}</span></div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            ${roleBadge(false)}
             <span class="dbadge ${r.status==='approved'?'aman':'jt'}">${r.status==='approved'?'Disetujui':'Ditolak'}</span>
             ${backupBtn}
             ${delBtn}
           </div>
         </div>`;
       }));
-      hist.innerHTML=htmlParts.join('');
+      hist.innerHTML = masterRowHtml + htmlParts.join('');
     }
   }catch(e){
-    list.innerHTML='<div style="color:var(--er);font-size:12px">❌ '+e.message+'</div>';
+    hist.innerHTML='<div style="color:var(--er);font-size:12px">❌ '+e.message+'</div>';
   }
 }
 async function approveRequest(reqId,email,businessName){
