@@ -386,7 +386,7 @@ async function saveM(){
       const updAt   =priceDt?new Date(priceDt).toISOString():nowIso;
       const oldRec=DB.inv.find(x=>x.id===mId);
       const oldName=oldRec?oldRec.name:name;
-      pay={name,type:typ,current_price:curPrice,updated_at:updAt,note:noteVal};
+      pay={name,type:typ,current_price:curPrice,updated_at:updAt};
       if(oldName && oldName!==name)invRenameSiblings={oldName,newName:name};
       // Harga Sekarang & Tipe itu satu nilai buat SELURUH investasi ini (bukan per-lot) —
       // cascade ke semua lot lain biar gak "flip-flop" tergantung lot mana yg kebetulan
