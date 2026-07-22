@@ -179,7 +179,7 @@ function getSortVal(r,tid,col){
     't-ii':   [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date',r=>(+(r.current_price||0))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},r=>r.updated_at||'','note',null],
     't-ppe':  [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date','depreciation_date',r=>(+(r.current_price||+(r.buy_price||r.amount||0)))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},'note',null],
     't-intg': [null,'name','amount','date','note',null],
-    't-inv':  [null,'name','type',r=>r.totalBuy,r=>r.avgBuyPrice,r=>r.updatedAt||'',r=>r.unrealized,r=>r.pct,'note',null],
+    't-inv':  [null,'name','type',r=>r.totalBuy,r=>r.avgBuyPrice,r=>r.nilaiSkrg,r=>r.updatedAt||'',r=>r.unrealized,r=>r.pct,null],
     't-inc':  [null,'date','source','category','description','method',r=>+(r.amount||0),'note',null],
     't-exp':  [null,'date','category','description','method',r=>+(r.amount||0),'note',null],
     't-debt': ['date','name','purpose',r=>+(r.amount||0),r=>+(r.paid||0),r=>debtSisa(r),'due_date',r=>debtStatus(r),null],
@@ -263,6 +263,7 @@ async function saveM(){
   let pay={};
   let oldTxRec=null;
   let invRenameSiblings=null;
+  let invPriceCascade=null;
 
   if(mType==='ca'){
     const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
@@ -382,10 +383,15 @@ async function saveM(){
       // gak punya input itu lagi — riwayat pembelian per-lot tetap akurat, diedit lewat Detail).
       const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||0;
       const priceDt =document.getElementById('f-price-dt')?.value;
+      const updAt   =priceDt?new Date(priceDt).toISOString():nowIso;
       const oldRec=DB.inv.find(x=>x.id===mId);
       const oldName=oldRec?oldRec.name:name;
-      pay={name,type:typ,current_price:curPrice,updated_at:priceDt?new Date(priceDt).toISOString():nowIso,note:noteVal};
+      pay={name,type:typ,current_price:curPrice,updated_at:updAt,note:noteVal};
       if(oldName && oldName!==name)invRenameSiblings={oldName,newName:name};
+      // Harga Sekarang & Tipe itu satu nilai buat SELURUH investasi ini (bukan per-lot) —
+      // cascade ke semua lot lain biar gak "flip-flop" tergantung lot mana yg kebetulan
+      // paling baru pas dibuka lagi nanti.
+      invPriceCascade={name:oldName,newName:name,currentPrice:curPrice,updatedAt:updAt,type:typ};
     } else {
       const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
       const qty     =parseFloat(document.getElementById('f-qty')?.value)||0;
@@ -417,6 +423,13 @@ async function saveM(){
       const{oldName,newName}=invRenameSiblings;
       const siblings=DB.inv.filter(x=>x.name===oldName&&x.id!==mId);
       if(siblings.length)await Promise.all(siblings.map(s=>sbU('investments',s.id,{name:newName})));
+      DB.inv=await sbG('investments');
+    }
+    if(mType==='inv'&&invPriceCascade){
+      const finalName=pay.name; // nama akhir (udah kepakai kalau ada rename barusan)
+      const{currentPrice,updatedAt,type}=invPriceCascade;
+      const siblings=DB.inv.filter(x=>x.name===finalName&&x.id!==mId);
+      if(siblings.length)await Promise.all(siblings.map(s=>sbU('investments',s.id,{current_price:currentPrice,updated_at:updatedAt,type})));
       DB.inv=await sbG('investments');
     }
     if(mType==='inc'||mType==='exp'){
