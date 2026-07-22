@@ -179,7 +179,7 @@ function getSortVal(r,tid,col){
     't-ii':   [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date',r=>(+(r.current_price||0))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},r=>r.updated_at||'','note',null],
     't-ppe':  [null,'name','qty',r=>+(r.buy_price||r.amount||0),r=>+(r.current_price||r.buy_price||r.amount||0),'date','depreciation_date',r=>(+(r.current_price||+(r.buy_price||r.amount||0)))-(+(r.buy_price||r.amount||0)),r=>{const bp=+(r.buy_price||r.amount||0);const sp=+(r.current_price||bp);return bp>0?((sp-bp)/bp*100):0;},'note',null],
     't-intg': [null,'name','amount','date','note',null],
-    't-inv':  [null,'name','type',r=>+(r.total_buy||r.amount||0),'date',r=>(+(r.current_price||0))*(+(r.qty||0)),r=>r.updated_at||'',r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return ns-tb;},r=>{const tb=+(r.total_buy||r.amount||0);const ns=(+(r.current_price||0))*(+(r.qty||0));return tb>0?((ns-tb)/tb*100):0;},'note',null],
+    't-inv':  [null,'name','type',r=>r.totalBuy,r=>r.avgBuyPrice,r=>r.updatedAt||'',r=>r.unrealized,r=>r.pct,'note',null],
     't-inc':  [null,'date','source','category','description','method',r=>+(r.amount||0),'note',null],
     't-exp':  [null,'date','category','description','method',r=>+(r.amount||0),'note',null],
     't-debt': ['date','name','purpose',r=>+(r.amount||0),r=>+(r.paid||0),r=>debtSisa(r),'due_date',r=>debtStatus(r),null],
@@ -374,18 +374,18 @@ async function saveM(){
   }
   else if(mType==='inv'){
     const typ=getInvTypValue();
-    const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
-    const qty     =parseFloat(document.getElementById('f-qty')?.value)||0;
-    const totalBuy=parseFloat(document.getElementById('f-total-buy')?.value)||(buyPrice*qty);
-    const nowIso  =new Date().toISOString();
+    const nowIso=new Date().toISOString();
     if(mId){
-      const curPrice  =parseFloat(document.getElementById('f-cur-price')?.value)||buyPrice;
-      const priceDt   =document.getElementById('f-price-dt')?.value;
-      const unrealized=parseFloat(document.getElementById('f-unrealized')?.value)||0;
-      pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:curPrice,
-           unrealized_gain:unrealized,amount:totalBuy,gain:unrealized,date,
-           updated_at:priceDt?new Date(priceDt).toISOString():nowIso,note:noteVal};
+      // Edit grup investasi: cuma ubah Tipe, Harga Sekarang, Tanggal Update, Note.
+      // buy_price/qty/total_buy/date milik lot ini SENGAJA tidak disentuh (form Edit udah
+      // gak punya input itu lagi — riwayat pembelian per-lot tetap akurat, diedit lewat Detail).
+      const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||0;
+      const priceDt =document.getElementById('f-price-dt')?.value;
+      pay={type:typ,current_price:curPrice,updated_at:priceDt?new Date(priceDt).toISOString():nowIso,note:noteVal};
     } else {
+      const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
+      const qty     =parseFloat(document.getElementById('f-qty')?.value)||0;
+      const totalBuy=parseFloat(document.getElementById('f-total-buy')?.value)||(buyPrice*qty);
       pay={name,type:typ,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:buyPrice,
            unrealized_gain:0,amount:totalBuy,gain:0,date,updated_at:nowIso,note:noteVal};
     }
