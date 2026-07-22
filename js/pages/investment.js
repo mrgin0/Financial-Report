@@ -36,7 +36,7 @@ function rINV(){
   let groups=getInvGroups();
   groups=sortArr(groups,'t-inv');
   mkTbl('t-inv',
-    ['#','Nama Investasi','Tipe','Nilai Beli','Rata-rata Harga Beli','Tgl Update','Unrealized Gain/Loss','Gain/Loss %','Note','Aksi'],
+    ['#','Nama Investasi','Tipe','Nilai Beli','Rata-rata Harga Beli','Total Harga Sekarang','Tgl Update','Unrealized Gain/Loss','Gain/Loss %','Aksi'],
     groups.map((g,i)=>{
       const isUp=g.unrealized>=0;
       const updAt=g.updatedAt?new Date(g.updatedAt).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'—';
@@ -45,10 +45,10 @@ function rINV(){
         <td><span class="badge bp">${esc(g.type)}</span></td>
         <td>${fRp(g.totalBuy)}</td>
         <td style="font-variant-numeric:tabular-nums">${fRp(g.avgBuyPrice)}</td>
+        <td style="font-variant-numeric:tabular-nums">${g.curPrice>0?fRp(g.nilaiSkrg):'—'}</td>
         <td>${updAt}</td>
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'↑ +':'↓ -'}${fRp(Math.abs(g.unrealized))}</td>
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${g.pct.toFixed(2)}%</td>
-        ${noteCell(g.note)}
         <td style="white-space:nowrap">
           <button class="btn-sm" style="background:#dbeafe;color:#2563eb" onclick="openAddLot('${escQ(g.name)}')">+ Tambah</button>
           <button class="btn-sm" style="background:#ede9fe;color:#7c3aed" onclick="openInvDetail('${escQ(g.name)}')">📋 Detail</button>
