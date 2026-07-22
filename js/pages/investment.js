@@ -165,8 +165,7 @@ function buildInvFormEdit(r,group){
 </div>
 <div style="font-size:10.5px;margin-top:-5px;margin-bottom:5px;padding:6px 10px;background:var(--bg);border-radius:6px">
   <span id="gain-formula-txt">Nilai Skrg ${fRp(nilaiSkrg)} − Beli ${fRp(totalBuy)} = <b style="color:${unrealized>=0?'var(--ok)':'var(--er)'}">${unrealized>=0?'+':''}${fRp(unrealized)} (${unrealized>=0?'+':''}${pct}%)</b></span>
-</div>
-<div class="fg"><label>Note (opsional)</label><input id="f-note" value="${esc(r.note||'')}" placeholder="Catatan tambahan..."></div>`;
+</div>`;
 }
 function calcUnrealizedGroup(totalQty,totalBuy){
   const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||0;
@@ -185,30 +184,43 @@ let addLotTarget=null;
 function openAddLot(name){
   const group=getInvGroups().find(g=>g.name===name);
   if(!group){showToast('❌ Data tidak ditemukan');return;}
-  addLotTarget={name:group.name,type:group.type};
+  addLotTarget={name:group.name,type:group.type,editId:null};
   document.getElementById('lot-mo-title').textContent='+ Tambah Investasi: '+group.name;
   document.getElementById('lot-mo-body').innerHTML=buildAddLotForm(group.name,group.type);
+  document.getElementById('inv-lot-mo').classList.add('open');
+}
+function openEditLot(id){
+  const lot=DB.inv.find(x=>x.id===id);
+  if(!lot){showToast('❌ Data tidak ditemukan');return;}
+  addLotTarget={name:lot.name,type:lot.type,editId:id};
+  document.getElementById('lot-mo-title').textContent='✏️ Edit Transaksi: '+lot.name;
+  document.getElementById('lot-mo-body').innerHTML=buildAddLotForm(lot.name,lot.type,lot);
   document.getElementById('inv-lot-mo').classList.add('open');
 }
 function closeAddLotModal(){
   document.getElementById('inv-lot-mo').classList.remove('open');
   addLotTarget=null;
 }
-function buildAddLotForm(name,type){
+function buildAddLotForm(name,type,lot){
+  const buyPrice=lot?+(lot.buy_price||0):0;
+  const qty=lot?+(lot.qty||0):0;
+  const totalBuy=lot?+(lot.total_buy||lot.amount||0):0;
+  const dateVal=lot?(lot.date||td()):td();
+  const noteVal2=lot?(lot.note||''):'';
   return`
 <div class="fg"><label>Nama Investasi</label><input value="${esc(name)}" disabled style="opacity:.7"></div>
 <div class="fg"><label>Tipe</label><input value="${esc(type)}" disabled style="opacity:.7"></div>
 <div class="fr">
-  <div class="fg"><label>Harga Beli per Unit (Rp)</label><input id="lot-buy-price" type="number" min="0" value="0" oninput="syncLotTotalBuy()"></div>
-  <div class="fg"><label>Jumlah / Qty</label><input id="lot-qty" type="number" min="0" step="any" value="0" oninput="syncLotTotalBuy()"></div>
+  <div class="fg"><label>Harga Beli per Unit (Rp)</label><input id="lot-buy-price" type="number" min="0" value="${buyPrice}" oninput="syncLotTotalBuy()"></div>
+  <div class="fg"><label>Jumlah / Qty</label><input id="lot-qty" type="number" min="0" step="any" value="${qty}" oninput="syncLotTotalBuy()"></div>
 </div>
 <div class="fg">
   <label>Total Beli (Rp) <span style="font-size:9px;color:var(--mu);font-weight:400">— otomatis atau edit manual</span></label>
-  <input id="lot-total-buy" type="number" min="0" value="0" style="font-weight:700;color:var(--pr)" oninput="markLotManualTotal()">
+  <input id="lot-total-buy" type="number" min="0" value="${totalBuy}" style="font-weight:700;color:var(--pr)" oninput="markLotManualTotal()">
   <div id="lot-total-buy-note" style="font-size:10px;color:var(--mu);margin-top:2px">Dihitung otomatis dari Harga × Qty</div>
 </div>
-<div class="fg"><label>Tanggal Beli</label><input id="lot-dt" type="date" value="${td()}"></div>
-<div class="fg"><label>Note (opsional)</label><input id="lot-note" value="" placeholder="Catatan tambahan..."></div>
+<div class="fg"><label>Tanggal Beli</label><input id="lot-dt" type="date" value="${dateVal}"></div>
+<div class="fg"><label>Note (opsional)</label><input id="lot-note" value="${esc(noteVal2)}" placeholder="Catatan tambahan..."></div>
 <input type="hidden" id="lot-manual-total" value="0">`;
 }
 function syncLotTotalBuy(){
@@ -226,7 +238,7 @@ function markLotManualTotal(){
 }
 async function saveAddLot(){
   if(!addLotTarget)return;
-  const {name,type}=addLotTarget;
+  const {name,type,editId}=addLotTarget;
   const buyPrice=parseFloat(document.getElementById('lot-buy-price')?.value)||0;
   const qty=parseFloat(document.getElementById('lot-qty')?.value)||0;
   const totalBuy=parseFloat(document.getElementById('lot-total-buy')?.value)||(buyPrice*qty);
@@ -234,16 +246,24 @@ async function saveAddLot(){
   const note=(document.getElementById('lot-note')?.value||'').trim();
   if(qty<=0){showToast('⚠️ Isi jumlah/qty dulu');return;}
   try{
-    const nowIso=new Date().toISOString();
-    const res=await sbI('investments',{
-      name,type,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:buyPrice,
-      unrealized_gain:0,amount:totalBuy,gain:0,date,updated_at:nowIso,note
-    });
-    const rec=Array.isArray(res)?res[0]:res;
-    if(rec)DB.inv.push(rec);
+    if(editId){
+      await sbU('investments',editId,{buy_price:buyPrice,qty,total_buy:totalBuy,date,note});
+      const idx=DB.inv.findIndex(x=>x.id===editId);
+      if(idx>-1)Object.assign(DB.inv[idx],{buy_price:buyPrice,qty,total_buy:totalBuy,date,note});
+      showToast('✅ Transaksi diupdate');
+    } else {
+      const nowIso=new Date().toISOString();
+      const res=await sbI('investments',{
+        name,type,buy_price:buyPrice,qty,total_buy:totalBuy,current_price:buyPrice,
+        unrealized_gain:0,amount:totalBuy,gain:0,date,updated_at:nowIso,note
+      });
+      const rec=Array.isArray(res)?res[0]:res;
+      if(rec)DB.inv.push(rec);
+      showToast('✅ Investasi ditambahkan ke '+name);
+    }
     closeAddLotModal();
     doSnap().catch(()=>{});updateAll();reRender();
-    showToast('✅ Investasi ditambahkan ke '+name);
+    if(document.getElementById('inv-detail-mo')?.classList.contains('open'))openInvDetail(name);
   }catch(e){ showToast('❌ '+e.message); }
 }
 
@@ -261,7 +281,7 @@ function openInvDetail(name){
       <td style="padding:6px 8px;border-top:1px solid var(--bd)">${l.qty||0}</td>
       <td style="padding:6px 8px;border-top:1px solid var(--bd)"><b>${fRp(l.total_buy||l.amount||0)}</b></td>
       <td style="padding:6px 8px;border-top:1px solid var(--bd)">${l.note?esc(l.note):'—'}</td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)"><button class="btn-sm bd" onclick="delInvLot('${l.id}')">Hapus</button></td>
+      <td style="padding:6px 8px;border-top:1px solid var(--bd);white-space:nowrap"><button class="btn-sm be" onclick="openEditLot('${l.id}')">Edit</button> <button class="btn-sm bd" onclick="delInvLot('${l.id}')">Hapus</button></td>
     </tr>`).join('');
   document.getElementById('detail-mo-body').innerHTML=`
     <div style="overflow-x:auto">
