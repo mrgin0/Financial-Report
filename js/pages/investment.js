@@ -146,7 +146,7 @@ function buildInvFormEdit(r,group){
   const pct=totalBuy>0?((unrealized/totalBuy)*100).toFixed(2):'0.00';
 
   return`
-<div class="fg"><label>Nama Investasi</label><input value="${esc(r.name||'')}" disabled style="opacity:.7"></div>
+<div class="fg"><label>Nama Investasi</label><input id="f-nm" value="${esc(r.name||'')}"></div>
 <div class="fg"><label>Tipe</label>${buildInvTypeSelect(r.type||'')}</div>
 <div class="fg" style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-top:2px">
   <label style="margin-bottom:6px">Rata-rata Beli per Unit <span style="font-weight:400;font-size:9px;color:var(--mu)">— otomatis dari ${group.lots.length} transaksi</span></label>
