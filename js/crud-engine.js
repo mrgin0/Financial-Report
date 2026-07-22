@@ -262,6 +262,7 @@ async function saveM(){
   if(!name){showToast('⚠️ Nama tidak boleh kosong');return;}
   let pay={};
   let oldTxRec=null;
+  let invRenameSiblings=null;
 
   if(mType==='ca'){
     const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
@@ -376,12 +377,15 @@ async function saveM(){
     const typ=getInvTypValue();
     const nowIso=new Date().toISOString();
     if(mId){
-      // Edit grup investasi: cuma ubah Tipe, Harga Sekarang, Tanggal Update, Note.
+      // Edit grup investasi: Nama, Tipe, Harga Sekarang, Tanggal Update, Note.
       // buy_price/qty/total_buy/date milik lot ini SENGAJA tidak disentuh (form Edit udah
       // gak punya input itu lagi — riwayat pembelian per-lot tetap akurat, diedit lewat Detail).
       const curPrice=parseFloat(document.getElementById('f-cur-price')?.value)||0;
       const priceDt =document.getElementById('f-price-dt')?.value;
-      pay={type:typ,current_price:curPrice,updated_at:priceDt?new Date(priceDt).toISOString():nowIso,note:noteVal};
+      const oldRec=DB.inv.find(x=>x.id===mId);
+      const oldName=oldRec?oldRec.name:name;
+      pay={name,type:typ,current_price:curPrice,updated_at:priceDt?new Date(priceDt).toISOString():nowIso,note:noteVal};
+      if(oldName && oldName!==name)invRenameSiblings={oldName,newName:name};
     } else {
       const buyPrice=parseFloat(document.getElementById('f-buy-price')?.value)||0;
       const qty     =parseFloat(document.getElementById('f-qty')?.value)||0;
@@ -409,6 +413,12 @@ async function saveM(){
     if(mId){await sbU(TMAP[mType],mId,pay);}
     else{const res=await sbI(TMAP[mType],pay);const rec=Array.isArray(res)?res[0]:res;if(rec)DB[DARR[mType]].push(rec);}
     DB[DARR[mType]]=await sbG(TMAP[mType]);
+    if(mType==='inv'&&invRenameSiblings){
+      const{oldName,newName}=invRenameSiblings;
+      const siblings=DB.inv.filter(x=>x.name===oldName&&x.id!==mId);
+      if(siblings.length)await Promise.all(siblings.map(s=>sbU('investments',s.id,{name:newName})));
+      DB.inv=await sbG('investments');
+    }
     if(mType==='inc'||mType==='exp'){
       const sign=mType==='inc'?1:-1;
       if(mId&&oldTxRec)await applyAssetDelta(oldTxRec.method,-sign*(+oldTxRec.amount||0));
