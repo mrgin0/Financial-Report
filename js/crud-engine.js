@@ -183,6 +183,7 @@ function getSortVal(r,tid,col){
     't-inc':  [null,'date','source','category','description','method',r=>+(r.amount||0),'note',null],
     't-exp':  [null,'date','category','description','method',r=>+(r.amount||0),'note',null],
     't-debt': ['date','name','purpose',r=>+(r.amount||0),r=>+(r.paid||0),r=>debtSisa(r),'due_date',r=>debtStatus(r),null],
+    't-ca-detail': ['date','desc','type',r=>+(r.amount||0),null],
   };
   const m=maps[tid];if(!m||col>=m.length)return'';
   const fn=m[col];
