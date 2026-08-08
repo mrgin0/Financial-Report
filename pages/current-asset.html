@@ -5,13 +5,6 @@
 
 <!-- DETAIL CURRENT ASSET — riwayat gabungan uang masuk/keluar, pagination + filter tanggal -->
 <div class="mo" id="ca-detail-mo" onclick="if(event.target===this)closeCADetailModal()">
-  <div class="modal" style="max-width:680px">
-    <h3 id="ca-detail-title">📋 Riwayat</h3>
-    <div class="fr" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
-      <div class="fg" style="margin-bottom:0"><label>Dari Tanggal</label><input type="date" id="ca-detail-from"></div>
-      <div class="fg" style="margin-bottom:0"><label>Sampai Tanggal</label><input type="date" id="ca-detail-to"></div>
-    </div>
-    <button class="btn-filt" style="max-width:200px;margin-bottom:10px" onclick="applyCADetailFilter()">🔽 Terapkan Filter</button>
     <div class="tw"><table class="ct" id="t-ca-detail"></table></div>
     <div id="ca-detail-summary" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"></div>
     <div style="font-size:10px;color:var(--mu);margin-top:6px">Catatan: penyesuaian saldo manual (edit langsung nominal di Current Asset) & riwayat jual Inventory/PPE/Intangible belum bisa dihapus dari sini.</div>
