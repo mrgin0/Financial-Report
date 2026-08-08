@@ -4,27 +4,13 @@ const ALL_DATA_COLLECTIONS=['current_assets','accounts_receivable','inventory',
   'property_plant_equipment','intangible_assets','investments',
   'income','expenses','debts','debt_payments','payment_history','laporan_snapshots'];
 
-async function findUidForEmail(email,allowedData){
-  if(allowedData && allowedData.usedBy) return allowedData.usedBy;
-  // Fallback: allowed_emails.usedBy kadang gagal ke-set (misal sempat error pas register) —
-  // cek langsung ke koleksi users berdasarkan field email, biar tetep kedeteksi.
-  try{
-    const snap=await db.collection('users').where('email','==',email).limit(1).get();
-    if(!snap.empty) return snap.docs[0].id;
-  }catch(e){}
-  return null;
-}
-function roleBadge(isMasterRow){
-  return isMasterRow
-    ? `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:#fef3c7;color:#92400e;letter-spacing:.3px">MASTER</span>`
-    : `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--bg);color:var(--mu);border:1px solid var(--bd);letter-spacing:.3px">USER</span>`;
-}
-
 async function renderAdminPage(){
   const list=document.getElementById('admin-requests-list');
   const hist=document.getElementById('admin-history-list');
   if(!list)return;
-  hist.innerHTML='<div style="color:var(--mu);font-size:12px">Memuat…</div>';
+
+  // Query 1: permintaan pending — diisolasi sendiri biar kalau gagal, errornya
+  // kelihatan DI SINI juga (sebelumnya nyangkut selamanya di teks "Memuat...").
   try{
     const snap=await db.collection('access_requests').where('status','==','pending').get();
     const rows=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
@@ -36,17 +22,22 @@ async function renderAdminPage(){
           <button class="btn-sm bd" onclick="rejectRequest('${r.id}')">✕ Tolak</button>
         </div>
       </div>`).join('') : '<div style="color:var(--mu);font-size:12px">📭 Gak ada permintaan pending</div>';
+  }catch(e){
+    list.innerHTML='<div style="color:var(--er);font-size:12px">❌ '+e.message+'</div>';
+  }
 
-    // Baris akun MASTER — di-pin paling atas, cuma tombol Backup, gak ada Hapus
-    const masterRowHtml = (CURRENT_UID && CURRENT_USER) ? `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;gap:8px;flex-wrap:wrap;background:rgba(245,158,11,.06)">
-        <div><b>${esc(CURRENT_PROFILE.businessName||'Master')}</b><br><span style="font-size:11px;color:var(--mu)">${esc(CURRENT_USER.email)}</span></div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          ${roleBadge(true)}
-          <button class="btn-sm" style="background:#dbeafe;color:#2563eb" onclick="backupAccountData('${escQ(CURRENT_UID)}','${escQ(CURRENT_USER.email)}')">💾 Backup Data</button>
-        </div>
-      </div>` : '';
+  // Baris akun MASTER — di-pin paling atas, cuma tombol Backup, gak ada Hapus
+  const masterRowHtml = (CURRENT_UID && CURRENT_USER) ? `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;gap:8px;flex-wrap:wrap;background:rgba(245,158,11,.06)">
+      <div><b>${esc(CURRENT_PROFILE.businessName||'Master')}</b><br><span style="font-size:11px;color:var(--mu)">${esc(CURRENT_USER.email)}</span></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        ${roleBadge(true)}
+        <button class="btn-sm" style="background:#dbeafe;color:#2563eb" onclick="backupAccountData('${escQ(CURRENT_UID)}','${escQ(CURRENT_USER.email)}')">💾 Backup Data</button>
+      </div>
+    </div>` : '';
 
+  // Query 2: riwayat disetujui/ditolak — diisolasi sendiri juga
+  try{
     const snap2=await db.collection('access_requests').where('status','in',['approved','rejected']).get();
     let rows2=snap2.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
     // Dedupe by email — kalau ada yg submit "Ajukan Akses" berkali-kali, cuma tampilin yg paling baru
@@ -89,6 +80,23 @@ async function renderAdminPage(){
     hist.innerHTML='<div style="color:var(--er);font-size:12px">❌ '+e.message+'</div>';
   }
 }
+
+async function findUidForEmail(email,allowedData){
+  if(allowedData && allowedData.usedBy) return allowedData.usedBy;
+  // Fallback: allowed_emails.usedBy kadang gagal ke-set (misal sempat error pas register) —
+  // cek langsung ke koleksi users berdasarkan field email, biar tetep kedeteksi.
+  try{
+    const snap=await db.collection('users').where('email','==',email).limit(1).get();
+    if(!snap.empty) return snap.docs[0].id;
+  }catch(e){}
+  return null;
+}
+function roleBadge(isMasterRow){
+  return isMasterRow
+    ? `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:#fef3c7;color:#92400e;letter-spacing:.3px">MASTER</span>`
+    : `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--bg);color:var(--mu);border:1px solid var(--bd);letter-spacing:.3px">USER</span>`;
+}
+
 async function approveRequest(reqId,email,businessName){
   try{
     await db.collection('allowed_emails').doc(email).set({approved:true,businessName});
@@ -107,8 +115,7 @@ async function rejectRequest(reqId){
 
 // ══════════════════════════════════════════════════════════════
 // HAPUS RIWAYAT "belum daftar" — bekas approve yg emailnya gak pernah
-// dipakai buat beneran bikin akun. Gak ada data keuangan yg kehapus
-// (gak ada uid sama sekali), jadi pakai konfirmasi biasa (bukan yg 30 detik).
+// dipakai buat beneran bikin akun.
 // ══════════════════════════════════════════════════════════════
 function removeStaleRequest(email){
   document.getElementById('cfm-tt').textContent='Hapus dari Riwayat?';
@@ -155,9 +162,6 @@ async function backupAccountData(uid,email){
 
 // ══════════════════════════════════════════════════════════════
 // HAPUS AKUN — konfirmasi wajib tunggu 30 detik sebelum tombol aktif
-// (hapus SEMUA data Firestore akun itu + profilnya. Login Firebase Auth-nya
-//  sendiri gak bisa dihapus dari sini — cukup diblokir total lewat rules +
-//  auth.js otomatis nendang keluar begitu users/{uid} udah gak ada)
 // ══════════════════════════════════════════════════════════════
 let delAccTarget=null,delAccTimer=null;
 
@@ -200,17 +204,12 @@ async function runDeleteAccount(){
     await db.collection('users').doc(uid).delete();
     await db.collection('allowed_emails').doc(email).delete();
 
-    // Hapus juga SEMUA entri access_requests buat email ini, biar bener2 ilang dari Riwayat
-    // (bukan cuma balik jadi "belum daftar")
     const reqSnap=await db.collection('access_requests').where('email','==',email).get();
     await Promise.all(reqSnap.docs.map(d=>d.ref.delete()));
 
     closeDeleteAccountModal();
     renderAdminPage();
 
-    // PENTING: ini cuma bersihin data Firestore. Login Firebase Authentication-nya
-    // TIDAK BISA dihapus dari sini (batasan Firebase tanpa Cloud Functions berbayar) —
-    // wajib dihapus manual sekali di Firebase Console.
     const consoleUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/authentication/users`;
     showDeleteFollowupNotice(email,uid,consoleUrl);
   }catch(e){
