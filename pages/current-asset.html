@@ -1,20 +1,5 @@
 <div class="page active" id="page-ca">
   <div class="ptitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span data-i="current_asset">Current Asset</span></div>
-
-  <div class="card mb12">
-    <div class="ctitle" style="margin-bottom:9px">Filter Ringkasan Pemasukan/Pengeluaran</div>
-    <div class="fr" style="grid-template-columns:1fr 1fr;align-items:end">
-      <div class="fg" style="margin-bottom:0"><label>Dari Tanggal</label><input type="date" id="ca-sum-from"></div>
-      <div class="fg" style="margin-bottom:0"><label>Sampai Tanggal</label><input type="date" id="ca-sum-to"></div>
-    </div>
-    <button class="btn-filt" style="margin-top:9px;max-width:200px" onclick="applyCASummaryFilter()">🔽 Terapkan Filter</button>
-  </div>
-
-  <div class="sg" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
-    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Pemasukan</div><div class="sc-val" id="ca-sum-inc">Rp 0</div><div class="sc-chg neu" id="ca-sum-inc-note">Semua waktu</div></div><div class="sc-ic ic-g">📥</div></div>
-    <div class="sc"><div class="sc-inf"><div class="sc-lbl">Total Pengeluaran</div><div class="sc-val" id="ca-sum-exp">Rp 0</div><div class="sc-chg neu" id="ca-sum-exp-note">Semua waktu</div></div><div class="sc-ic ic-o">📤</div></div>
-  </div>
-
   <div class="card"><div class="chd"><div class="ctitle" data-i="ca_desc">Kas, Bank & Penghasilan Platform</div><button class="btn-add" onclick="openM('ca')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ca"></table></div></div>
 </div>
 
