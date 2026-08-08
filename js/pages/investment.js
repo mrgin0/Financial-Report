@@ -401,12 +401,45 @@ function openInvDetail(name,tab){
   if(!group){showToast('❌ Data tidak ditemukan');return;}
   detailActiveTab=tab||'buy';
   detailTargetName=name;
+  invDetailPageState={buy:{size:10,page:1},sell:{size:10,page:1}};
   document.getElementById('detail-mo-title').textContent='📜 Riwayat: '+group.name;
   renderDetailTabs(group);
   document.getElementById('inv-detail-mo').classList.add('open');
 }
 function switchDetailTab(tab){
   detailActiveTab=tab;
+  const group=getInvGroups().find(g=>g.name===detailTargetName);
+  if(group)renderDetailTabs(group);
+}
+let invDetailPageState={buy:{size:10,page:1},sell:{size:10,page:1}};
+function renderInvDetailPager(tab,totalItems){
+  const pager=document.getElementById('inv-detail-pager');
+  if(!pager)return;
+  const ps=invDetailPageState[tab];
+  if(totalItems===0){pager.innerHTML='';return;}
+  const size=ps.size==='all'?totalItems||1:ps.size;
+  const totalPages=Math.max(1,Math.ceil(totalItems/size));
+  const sizes=[10,50,'all'];
+  pager.innerHTML=`
+    <div class="pager-info">Menampilkan ${ps.size==='all'?totalItems:Math.min(ps.size,totalItems-(ps.page-1)*ps.size)} dari ${totalItems} data</div>
+    <div class="pager-controls">
+      <select class="pager-size" onchange="changeInvDetailPageSize('${tab}',this.value)">
+        ${sizes.map(s=>`<option value="${s}" ${ps.size==s?'selected':''}>${s==='all'?'Semua':s+' baris'}</option>`).join('')}
+      </select>
+      ${ps.size!=='all'?`
+      <button class="pager-btn" onclick="changeInvDetailPage('${tab}',${ps.page-1})" ${ps.page<=1?'disabled':''}>‹</button>
+      <span class="pager-num">${ps.page} / ${totalPages}</span>
+      <button class="pager-btn" onclick="changeInvDetailPage('${tab}',${ps.page+1})" ${ps.page>=totalPages?'disabled':''}>›</button>`:''}
+    </div>`;
+}
+function changeInvDetailPageSize(tab,val){
+  invDetailPageState[tab].size=val==='all'?'all':parseInt(val);
+  invDetailPageState[tab].page=1;
+  const group=getInvGroups().find(g=>g.name===detailTargetName);
+  if(group)renderDetailTabs(group);
+}
+function changeInvDetailPage(tab,page){
+  invDetailPageState[tab].page=Math.max(1,page);
   const group=getInvGroups().find(g=>g.name===detailTargetName);
   if(group)renderDetailTabs(group);
 }
@@ -418,7 +451,15 @@ function renderDetailTabs(group){
   const th=(t)=>`<th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">${t}</th>`;
 
   if(isBuy){
-    const rows=group.lots.map(l=>`
+    const ps=invDetailPageState.buy;
+    const allLots=group.lots;
+    const totalItems=allLots.length;
+    const size=ps.size==='all'?totalItems||1:ps.size;
+    const totalPages=Math.max(1,Math.ceil(totalItems/size));
+    if(ps.page>totalPages)ps.page=totalPages||1;
+    const start=(ps.page-1)*size;
+    const pageLots=ps.size==='all'?allLots:allLots.slice(start,start+size);
+    const rows=pageLots.map(l=>`
       <tr>
         <td style="padding:6px 8px;border-top:1px solid var(--bd)">${l.date||'—'}</td>
         <td style="padding:6px 8px;border-top:1px solid var(--bd)">${fRp(l.buy_price||0)}</td>
@@ -434,12 +475,22 @@ function renderDetailTabs(group){
         <tbody>${rows||`<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--mu)">Belum ada transaksi pembelian</td></tr>`}</tbody>
       </table>
       </div>
+      <div id="inv-detail-pager" class="tbl-pager"></div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
         <span>Total ${group.lots.length} transaksi beli</span>
         <span><b>Total Dibeli: ${group.totalBoughtQty}</b> · <b>Sisa Sekarang: ${group.totalQty}</b></span>
       </div>`;
+    renderInvDetailPager('buy',totalItems);
   } else {
-    const rows=(group.sales||[]).map(s=>`
+    const ps=invDetailPageState.sell;
+    const allSales=group.sales||[];
+    const totalItems=allSales.length;
+    const size=ps.size==='all'?totalItems||1:ps.size;
+    const totalPages=Math.max(1,Math.ceil(totalItems/size));
+    if(ps.page>totalPages)ps.page=totalPages||1;
+    const start=(ps.page-1)*size;
+    const pageSales=ps.size==='all'?allSales:allSales.slice(start,start+size);
+    const rows=pageSales.map(s=>`
       <tr>
         <td style="padding:6px 8px;border-top:1px solid var(--bd)">${s.date||'—'}</td>
         <td style="padding:6px 8px;border-top:1px solid var(--bd)">${fRp(s.sell_price||0)}</td>
@@ -456,10 +507,12 @@ function renderDetailTabs(group){
         <tbody>${rows||`<tr><td colspan="7" style="padding:14px;text-align:center;color:var(--mu)">Belum ada transaksi penjualan</td></tr>`}</tbody>
       </table>
       </div>
+      <div id="inv-detail-pager" class="tbl-pager"></div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
         <span>Total ${(group.sales||[]).length} transaksi jual</span>
         <span><b>Total Terjual: ${group.soldQty}</b> unit · <b style="color:var(--ok)">Hasil Jual: ${fRp(group.totalSellRevenue||0)}</b></span>
       </div>`;
+    renderInvDetailPager('sell',totalItems);
   }
 }
 function closeInvDetailModal(){
