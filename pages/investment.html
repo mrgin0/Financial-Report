@@ -12,7 +12,16 @@
   </div>
 </div>
 
-<!-- DETAIL RIWAYAT PEMBELIAN -->
+<!-- JUAL INVESTASI -->
+<div class="mo" id="inv-sell-mo" onclick="if(event.target===this)closeSellModal()">
+  <div class="modal" style="max-width:440px">
+    <h3 id="sell-mo-title">💰 Jual Investasi</h3>
+    <div id="sell-mo-body"></div>
+    <div class="mbtns"><button class="mb-c" onclick="closeSellModal()">Batal</button><button class="mb-s" onclick="saveSell()">💾 Simpan</button></div>
+  </div>
+</div>
+
+<!-- DETAIL RIWAYAT (Pembelian & Penjualan) -->
 <div class="mo" id="inv-detail-mo" onclick="if(event.target===this)closeInvDetailModal()">
   <div class="modal" style="max-width:560px">
     <h3 id="detail-mo-title">📜 Riwayat Pembelian</h3>
@@ -20,5 +29,3 @@
     <div class="mbtns"><button class="mb-c" onclick="closeInvDetailModal()">Tutup</button></div>
   </div>
 </div>
-
-
