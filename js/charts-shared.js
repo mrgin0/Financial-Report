@@ -144,21 +144,29 @@ function setPeriod(type,period,btn){
     CHS.invg.update();
   }
   if(type==='gain'&&CHS.gain){
-    let items=[...DB.inv];
-    if(period!=='all'&&items.length){
-      let cut=null;
-      if(period==='7d'){cut=new Date();cut.setDate(cut.getDate()-7);}
-      else if(period==='1m'){cut=new Date(new Date().getFullYear(),new Date().getMonth()-1,1);}
-      else if(period==='6m'){cut=new Date(new Date().getFullYear(),new Date().getMonth()-6,1);}
-      else if(period==='1y'){cut=new Date(new Date().getFullYear()-1,new Date().getMonth(),1);}
-      if(cut){cut.setHours(0,0,0,0);items=items.filter(x=>{if(!x.date)return true;return new Date(x.date+'T00:00:00')>=cut;});}
-    }
-    const data=items.map(i=>+(+i.gain).toFixed(0));
-    CHS.gain.data.labels=items.map(i=>i.name.length>12?i.name.slice(0,12)+'…':i.name);
-    CHS.gain.data.datasets[0].data=data;
-    CHS.gain.data.datasets[0].backgroundColor=data.map(v=>v>=0?'rgba(34,197,94,.85)':'rgba(239,68,68,.85)');
-    CHS.gain.data.datasets[0].borderColor=data.map(v=>v>=0?'#16a34a':'#dc2626');
-    CHS.gain.update();
+    // Sinkron sama tabel Investment: pakai getInvGroups() (hasil grup per nama, udah
+    // memperhitungkan rata-rata harga beli & sisa qty setelah dikurangi penjualan) —
+    // BUKAN baca DB.inv mentah per-lot lagi (field lot.gain gak pernah diupdate makanya dulu salah).
+    loadInvSales().then(()=>{
+      let groups=getInvGroups().filter(g=>g.totalQty>0);
+      if(period!=='all'&&groups.length){
+        let cut=null;
+        if(period==='7d'){cut=new Date();cut.setDate(cut.getDate()-7);}
+        else if(period==='1m'){cut=new Date(new Date().getFullYear(),new Date().getMonth()-1,1);}
+        else if(period==='6m'){cut=new Date(new Date().getFullYear(),new Date().getMonth()-6,1);}
+        else if(period==='1y'){cut=new Date(new Date().getFullYear()-1,new Date().getMonth(),1);}
+        if(cut){
+          cut.setHours(0,0,0,0);
+          groups=groups.filter(g=>!g.updatedAt||new Date(g.updatedAt)>=cut);
+        }
+      }
+      const data=groups.map(g=>+g.unrealized.toFixed(0));
+      CHS.gain.data.labels=groups.map(g=>g.name.length>12?g.name.slice(0,12)+'…':g.name);
+      CHS.gain.data.datasets[0].data=data;
+      CHS.gain.data.datasets[0].backgroundColor=data.map(v=>v>=0?'rgba(34,197,94,.85)':'rgba(239,68,68,.85)');
+      CHS.gain.data.datasets[0].borderColor=data.map(v=>v>=0?'#16a34a':'#dc2626');
+      CHS.gain.update();
+    });
   }
 }
 function updateAlokasiChart(){
