@@ -324,6 +324,7 @@ function buildSellForm(group){
   <div id="sell-total-note" style="font-size:10px;color:var(--mu);margin-top:2px">Dihitung otomatis dari Harga × Qty</div>
 </div>
 <div class="fg"><label>Tanggal Jual</label><input id="sell-dt" type="date" value="${td()}"></div>
+<div class="fg"><label>Uang Hasil Jual Masuk Ke</label>${buildMethodSelect('','sell-fund-to')}</div>
 <div class="fg"><label>Note (opsional)</label><input id="sell-note" value="" placeholder="Catatan tambahan..."></div>
 <input type="hidden" id="sell-manual-total" value="0">`;
 }
@@ -348,15 +349,20 @@ async function saveSell(){
   const totalSell=parseFloat(document.getElementById('sell-total')?.value)||(sellPrice*qty);
   const date=document.getElementById('sell-dt')?.value||td();
   const note=(document.getElementById('sell-note')?.value||'').trim();
+  const fundTo=document.getElementById('sell-fund-to')?.value||'';
   if(qty<=0){showToast('⚠️ Isi jumlah yang dijual');return;}
   if(qty>availableQty){showToast('⚠️ Jumlah dijual melebihi sisa yang dipegang ('+availableQty+' unit)');return;}
   try{
-    const res=await sbI('investment_sales',{name,qty,sell_price:sellPrice,total_sell:totalSell,date,note});
+    const res=await sbI('investment_sales',{name,qty,sell_price:sellPrice,total_sell:totalSell,date,note,fund_to:fundTo||null});
     const rec=Array.isArray(res)?res[0]:res;
     if(rec)INV_SALES.push(rec);
+    if(fundTo){
+      await applyAssetDelta(fundTo,totalSell);
+      DB.ca=await sbG('current_assets');
+    }
     closeSellModal();
     doSnap().catch(()=>{});updateAll();reRender();
-    showToast('✅ Penjualan '+name+' dicatat');
+    showToast('✅ Penjualan '+name+' dicatat'+(fundTo?' & saldo '+fundTo+' bertambah '+fRp(totalSell):''));
     if(document.getElementById('inv-detail-mo')?.classList.contains('open')){
       detailActiveTab='sell';detailTargetName=name;
       const group=getInvGroups().find(g=>g.name===name);
@@ -366,11 +372,16 @@ async function saveSell(){
 }
 function delInvSale(id){
   document.getElementById('cfm-tt').textContent='Hapus Riwayat Penjualan Ini?';
-  document.getElementById('cfm-mg').textContent='Satu transaksi penjualan akan dihapus permanen dari riwayat.';
+  document.getElementById('cfm-mg').textContent='Satu transaksi penjualan akan dihapus permanen dari riwayat. Kalau hasil jualnya udah masuk ke Current Asset, saldo itu otomatis dikurangi lagi.';
   cfmCb=async()=>{
     try{
+      const sale=INV_SALES.find(x=>x.id===id);
       await sbD('investment_sales',id);
       INV_SALES=INV_SALES.filter(x=>x.id!==id);
+      if(sale&&sale.fund_to){
+        await applyAssetDelta(sale.fund_to,-(+(sale.total_sell||0)));
+        DB.ca=await sbG('current_assets');
+      }
       showToast('🗑️ Riwayat penjualan dihapus');
       doSnap().catch(()=>{});updateAll();reRender();
       if(document.getElementById('inv-detail-mo')?.classList.contains('open')){
@@ -434,14 +445,15 @@ function renderDetailTabs(group){
         <td style="padding:6px 8px;border-top:1px solid var(--bd)">${fRp(s.sell_price||0)}</td>
         <td style="padding:6px 8px;border-top:1px solid var(--bd)">${s.qty||0}</td>
         <td style="padding:6px 8px;border-top:1px solid var(--bd)"><b style="color:var(--ok)">${fRp(s.total_sell||0)}</b></td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)">${s.fund_to?esc(s.fund_to):'—'}</td>
         <td style="padding:6px 8px;border-top:1px solid var(--bd)">${s.note?esc(s.note):'—'}</td>
         <td style="padding:6px 8px;border-top:1px solid var(--bd)"><button class="btn-sm bd" onclick="delInvSale('${s.id}')">Hapus</button></td>
       </tr>`).join('');
     body.innerHTML=tabsHtml+`
       <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:11.5px">
-        <thead><tr style="background:var(--bg)">${th('Tanggal Jual')}${th('Harga Jual/Unit')}${th('Qty')}${th('Total Dijual')}${th('Note')}${th('Aksi')}</tr></thead>
-        <tbody>${rows||`<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--mu)">Belum ada transaksi penjualan</td></tr>`}</tbody>
+        <thead><tr style="background:var(--bg)">${th('Tanggal Jual')}${th('Harga Jual/Unit')}${th('Qty')}${th('Total Dijual')}${th('Uang Masuk Ke')}${th('Note')}${th('Aksi')}</tr></thead>
+        <tbody>${rows||`<tr><td colspan="7" style="padding:14px;text-align:center;color:var(--mu)">Belum ada transaksi penjualan</td></tr>`}</tbody>
       </table>
       </div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
@@ -476,8 +488,12 @@ function delInvGroup(name){
   cfmCb=async()=>{
     try{
       const buyIds=DB.inv.filter(x=>x.name===name).map(x=>x.id);
-      const sellIds=INV_SALES.filter(x=>x.name===name).map(x=>x.id);
-      await Promise.all([...buyIds.map(id=>sbD('investments',id)),...sellIds.map(id=>sbD('investment_sales',id))]);
+      const sales=INV_SALES.filter(x=>x.name===name);
+      await Promise.all([...buyIds.map(id=>sbD('investments',id)),...sales.map(s=>sbD('investment_sales',s.id))]);
+      for(const s of sales){
+        if(s.fund_to)await applyAssetDelta(s.fund_to,-(+(s.total_sell||0)));
+      }
+      if(sales.some(s=>s.fund_to))DB.ca=await sbG('current_assets');
       DB.inv=DB.inv.filter(x=>x.name!==name);
       INV_SALES=INV_SALES.filter(x=>x.name!==name);
       showToast('🗑️ '+name+' dihapus');
