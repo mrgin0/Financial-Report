@@ -1,7 +1,19 @@
 // Halaman Investment — 1 baris per NAMA investasi (gabungan semua transaksi/lot pembelian)
 
+let INV_SALES=[];
+let invSalesLoaded=false;
+let detailTargetName=null;
+let detailActiveTab='buy';
+
+async function loadInvSales(force){
+  if(invSalesLoaded&&!force)return;
+  try{ INV_SALES=await sbG('investment_sales'); invSalesLoaded=true; }
+  catch(e){ console.warn('Gagal load investment_sales:',e.message); }
+}
+
 // ══════════════════════════════════════════════════════════════
-// GROUPING — gabungin semua lot (transaksi beli) jadi 1 ringkasan per nama
+// GROUPING — gabungin semua lot (transaksi beli) jadi 1 ringkasan per nama,
+// dikurangi qty yang udah dijual (investment_sales)
 // ══════════════════════════════════════════════════════════════
 function getInvGroups(){
   const byName={};
@@ -16,23 +28,36 @@ function getInvGroups(){
     const thisUpdated=r.updated_at||r.date||'';
     if(thisUpdated>curUpdated){g.latestLot=r;g.type=r.type;}
   });
+  const soldByName={};
+  INV_SALES.forEach(s=>{soldByName[s.name]=(soldByName[s.name]||0)+(+(s.qty||0));});
+
   return Object.values(byName).map(g=>{
+    const soldQty=soldByName[g.name]||0;
+    const remainingQty=Math.max(0,g.totalQty-soldQty);
     const curPrice=+(g.latestLot.current_price||g.latestLot.buy_price||0);
-    const avgBuyPrice=g.totalQty>0?g.totalBuy/g.totalQty:0;
-    const nilaiSkrg=curPrice*g.totalQty;
-    const unrealized=nilaiSkrg-g.totalBuy;
-    const pct=g.totalBuy>0?((unrealized/g.totalBuy)*100):0;
+    const avgBuyPrice=g.totalQty>0?g.totalBuy/g.totalQty:0; // rata-rata beli dihitung dari SEMUA yg pernah dibeli
+    const costBasisRemaining=avgBuyPrice*remainingQty;       // "Nilai Beli" yg ditampilkan = modal dari sisa yg masih dipegang
+    const nilaiSkrg=curPrice*remainingQty;
+    const unrealized=nilaiSkrg-costBasisRemaining;
+    const pct=costBasisRemaining>0?((unrealized/costBasisRemaining)*100):0;
+    const sales=INV_SALES.filter(s=>s.name===g.name).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    const totalSellRevenue=sales.reduce((a,s)=>a+(+(s.total_sell||0)),0);
+    const realizedGain=totalSellRevenue-(avgBuyPrice*soldQty);
     return{
       name:g.name,type:g.type,
       lots:g.lots.sort((a,b)=>(a.date||'').localeCompare(b.date||'')),
-      totalQty:g.totalQty,totalBuy:g.totalBuy,avgBuyPrice,curPrice,nilaiSkrg,unrealized,pct,
+      sales,
+      totalQty:remainingQty,totalBoughtQty:g.totalQty,soldQty,
+      totalBuy:costBasisRemaining,avgBuyPrice,curPrice,nilaiSkrg,unrealized,pct,
+      realizedGain,totalSellRevenue,
       latestLot:g.latestLot,latestId:g.latestLot.id,
       updatedAt:g.latestLot.updated_at,note:g.latestLot.note||''
     };
   });
 }
 
-function rINV(){
+async function rINV(){
+  await loadInvSales();
   let groups=getInvGroups();
   groups=sortArr(groups,'t-inv');
   mkTbl('t-inv',
@@ -41,7 +66,7 @@ function rINV(){
       const isUp=g.unrealized>=0;
       const updAt=g.updatedAt?new Date(g.updatedAt).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'—';
       return`<tr>
-        <td>${i+1}</td><td><b>${esc(g.name)}</b></td>
+        <td>${i+1}</td><td><b>${esc(g.name)}</b>${g.soldQty>0?`<div style="font-size:9.5px;color:var(--mu);font-weight:400">sisa ${g.totalQty} dari ${g.totalBoughtQty}</div>`:''}</td>
         <td><span class="badge bp">${esc(g.type)}</span></td>
         <td>${fRp(g.totalBuy)}</td>
         <td style="font-variant-numeric:tabular-nums">${fRp(g.avgBuyPrice)}</td>
@@ -51,6 +76,7 @@ function rINV(){
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${g.pct.toFixed(2)}%</td>
         <td style="white-space:nowrap">
           <button class="btn-sm" style="background:#dbeafe;color:#2563eb" onclick="openAddLot('${escQ(g.name)}')">+ Tambah</button>
+          <button class="btn-sm" style="background:#dcfce7;color:#15803d" onclick="openSellModal('${escQ(g.name)}')">💰 Jual</button>
           <button class="btn-sm" style="background:#ede9fe;color:#7c3aed" onclick="openInvDetail('${escQ(g.name)}')">📋 Detail</button>
           <button class="btn-sm be" onclick="openEditInvGroup('${escQ(g.name)}')">Edit</button>
           <button class="btn-sm bd" onclick="delInvGroup('${escQ(g.name)}')">Hapus</button>
@@ -124,9 +150,9 @@ function markManualTotalBuy(){
 function calcTotalBuy(){syncTotalBuy();}
 
 // ══════════════════════════════════════════════════════════════
-// EDIT INVESTASI (per nama/grup) — cuma ubah Tipe, Harga Sekarang, Tanggal Update, Note.
+// EDIT INVESTASI (per nama/grup) — cuma ubah Tipe, Harga Sekarang, Tanggal Update.
 // Rata-rata Beli per Unit ditampilin READ-ONLY (dihitung dari semua lot), Tanggal Beli
-// dihapus dari sini karena tiap lot punya tanggalnya masing-masing (lihat Detail).
+// dan Note dihapus dari sini karena keduanya milik tiap lot masing-masing (lihat Detail).
 // ══════════════════════════════════════════════════════════════
 function openEditInvGroup(name){
   const group=getInvGroups().find(g=>g.name===name);
@@ -178,7 +204,7 @@ function calcUnrealizedGroup(totalQty,totalBuy){
 }
 
 // ══════════════════════════════════════════════════════════════
-// TAMBAH INVESTASI (lot baru buat investasi yang UDAH ADA) — tombol "+ Tambah" per baris
+// TAMBAH / EDIT LOT PEMBELIAN
 // ══════════════════════════════════════════════════════════════
 let addLotTarget=null;
 function openAddLot(name){
@@ -268,40 +294,161 @@ async function saveAddLot(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// DETAIL — riwayat semua transaksi pembelian buat 1 nama investasi
+// JUAL INVESTASI
 // ══════════════════════════════════════════════════════════════
-function openInvDetail(name){
+let sellTarget=null;
+function openSellModal(name){
   const group=getInvGroups().find(g=>g.name===name);
   if(!group){showToast('❌ Data tidak ditemukan');return;}
-  document.getElementById('detail-mo-title').textContent='📜 Riwayat Pembelian: '+group.name;
-  const rows=group.lots.map(l=>`
-    <tr>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)">${l.date||'—'}</td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)">${fRp(l.buy_price||0)}</td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)">${l.qty||0}</td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)"><b>${fRp(l.total_buy||l.amount||0)}</b></td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)">${l.note?esc(l.note):'—'}</td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd);white-space:nowrap"><button class="btn-sm be" onclick="openEditLot('${l.id}')">Edit</button> <button class="btn-sm bd" onclick="delInvLot('${l.id}')">Hapus</button></td>
-    </tr>`).join('');
-  document.getElementById('detail-mo-body').innerHTML=`
-    <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;font-size:11.5px">
-      <thead><tr style="background:var(--bg)">
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Tanggal Beli</th>
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Harga Beli/Unit</th>
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Qty</th>
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Total Beli</th>
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Note</th>
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Aksi</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
-      <span>Total ${group.lots.length} transaksi</span>
-      <span><b>Total Qty: ${group.totalQty}</b> · <b>Total Beli: ${fRp(group.totalBuy)}</b></span>
-    </div>`;
+  if(group.totalQty<=0){showToast('⚠️ Sisa qty investasi ini 0, gak ada yang bisa dijual');return;}
+  sellTarget={name:group.name,availableQty:group.totalQty};
+  document.getElementById('sell-mo-title').textContent='💰 Jual: '+group.name;
+  document.getElementById('sell-mo-body').innerHTML=buildSellForm(group);
+  document.getElementById('inv-sell-mo').classList.add('open');
+}
+function closeSellModal(){
+  document.getElementById('inv-sell-mo').classList.remove('open');
+  sellTarget=null;
+}
+function buildSellForm(group){
+  return`
+<div class="fg"><label>Nama Investasi</label><input value="${esc(group.name)}" disabled style="opacity:.7"></div>
+<div class="fg" style="font-size:11px;color:var(--mu);margin-top:-6px">Sisa dipegang saat ini: <b style="color:var(--txt)">${group.totalQty}</b> unit</div>
+<div class="fr">
+  <div class="fg"><label>Jumlah Dijual (Qty)</label><input id="sell-qty" type="number" min="0" max="${group.totalQty}" step="any" value="0" oninput="syncSellTotal()"></div>
+  <div class="fg"><label>Harga Jual per Unit (Rp)</label><input id="sell-price" type="number" min="0" value="${group.curPrice||0}" oninput="syncSellTotal()"></div>
+</div>
+<div class="fg">
+  <label>Total Harga Dijual (Rp) <span style="font-size:9px;color:var(--mu);font-weight:400">— otomatis atau edit manual</span></label>
+  <input id="sell-total" type="number" min="0" value="0" style="font-weight:700;color:var(--ok)" oninput="markSellManualTotal()">
+  <div id="sell-total-note" style="font-size:10px;color:var(--mu);margin-top:2px">Dihitung otomatis dari Harga × Qty</div>
+</div>
+<div class="fg"><label>Tanggal Jual</label><input id="sell-dt" type="date" value="${td()}"></div>
+<div class="fg"><label>Note (opsional)</label><input id="sell-note" value="" placeholder="Catatan tambahan..."></div>
+<input type="hidden" id="sell-manual-total" value="0">`;
+}
+function syncSellTotal(){
+  if(document.getElementById('sell-manual-total')?.value==='1')return;
+  const p=parseFloat(document.getElementById('sell-price')?.value)||0;
+  const q=parseFloat(document.getElementById('sell-qty')?.value)||0;
+  const el=document.getElementById('sell-total');
+  if(el)el.value=(p*q).toFixed(0);
+}
+function markSellManualTotal(){
+  const el=document.getElementById('sell-manual-total');
+  if(el)el.value='1';
+  const note=document.getElementById('sell-total-note');
+  if(note)note.textContent='✏️ Nilai manual';
+}
+async function saveSell(){
+  if(!sellTarget)return;
+  const {name,availableQty}=sellTarget;
+  const qty=parseFloat(document.getElementById('sell-qty')?.value)||0;
+  const sellPrice=parseFloat(document.getElementById('sell-price')?.value)||0;
+  const totalSell=parseFloat(document.getElementById('sell-total')?.value)||(sellPrice*qty);
+  const date=document.getElementById('sell-dt')?.value||td();
+  const note=(document.getElementById('sell-note')?.value||'').trim();
+  if(qty<=0){showToast('⚠️ Isi jumlah yang dijual');return;}
+  if(qty>availableQty){showToast('⚠️ Jumlah dijual melebihi sisa yang dipegang ('+availableQty+' unit)');return;}
+  try{
+    const res=await sbI('investment_sales',{name,qty,sell_price:sellPrice,total_sell:totalSell,date,note});
+    const rec=Array.isArray(res)?res[0]:res;
+    if(rec)INV_SALES.push(rec);
+    closeSellModal();
+    doSnap().catch(()=>{});updateAll();reRender();
+    showToast('✅ Penjualan '+name+' dicatat');
+    if(document.getElementById('inv-detail-mo')?.classList.contains('open')){
+      detailActiveTab='sell';detailTargetName=name;
+      const group=getInvGroups().find(g=>g.name===name);
+      if(group)renderDetailTabs(group);
+    }
+  }catch(e){ showToast('❌ '+e.message); }
+}
+function delInvSale(id){
+  document.getElementById('cfm-tt').textContent='Hapus Riwayat Penjualan Ini?';
+  document.getElementById('cfm-mg').textContent='Satu transaksi penjualan akan dihapus permanen dari riwayat.';
+  cfmCb=async()=>{
+    try{
+      await sbD('investment_sales',id);
+      INV_SALES=INV_SALES.filter(x=>x.id!==id);
+      showToast('🗑️ Riwayat penjualan dihapus');
+      doSnap().catch(()=>{});updateAll();reRender();
+      if(document.getElementById('inv-detail-mo')?.classList.contains('open')){
+        const group=getInvGroups().find(g=>g.name===detailTargetName);
+        if(group)renderDetailTabs(group);
+      }
+    }catch(e){ showToast('❌ '+e.message); }
+  };
+  document.getElementById('cfm').classList.add('open');
+}
+
+// ══════════════════════════════════════════════════════════════
+// DETAIL — 2 tab: Riwayat Pembelian & Riwayat Penjualan
+// ══════════════════════════════════════════════════════════════
+function openInvDetail(name,tab){
+  const group=getInvGroups().find(g=>g.name===name);
+  if(!group){showToast('❌ Data tidak ditemukan');return;}
+  detailActiveTab=tab||'buy';
+  detailTargetName=name;
+  document.getElementById('detail-mo-title').textContent='📜 Riwayat: '+group.name;
+  renderDetailTabs(group);
   document.getElementById('inv-detail-mo').classList.add('open');
+}
+function switchDetailTab(tab){
+  detailActiveTab=tab;
+  const group=getInvGroups().find(g=>g.name===detailTargetName);
+  if(group)renderDetailTabs(group);
+}
+function renderDetailTabs(group){
+  const isBuy=detailActiveTab==='buy';
+  const tabBtn=(label,tab,active)=>`<button class="btn-sm" style="${active?'background:var(--pr);color:#fff':'background:var(--bg);color:var(--txt);border:1px solid var(--bd)'}" onclick="switchDetailTab('${tab}')">${label}</button>`;
+  const tabsHtml=`<div style="display:flex;gap:6px;margin-bottom:12px">${tabBtn('Riwayat Pembelian','buy',isBuy)}${tabBtn('Riwayat Penjualan','sell',!isBuy)}</div>`;
+  const body=document.getElementById('detail-mo-body');
+  const th=(t)=>`<th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">${t}</th>`;
+
+  if(isBuy){
+    const rows=group.lots.map(l=>`
+      <tr>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)">${l.date||'—'}</td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)">${fRp(l.buy_price||0)}</td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)">${l.qty||0}</td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)"><b>${fRp(l.total_buy||l.amount||0)}</b></td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)">${l.note?esc(l.note):'—'}</td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd);white-space:nowrap"><button class="btn-sm be" onclick="openEditLot('${l.id}')">Edit</button> <button class="btn-sm bd" onclick="delInvLot('${l.id}')">Hapus</button></td>
+      </tr>`).join('');
+    body.innerHTML=tabsHtml+`
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <thead><tr style="background:var(--bg)">${th('Tanggal Beli')}${th('Harga Beli/Unit')}${th('Qty')}${th('Total Beli')}${th('Note')}${th('Aksi')}</tr></thead>
+        <tbody>${rows||`<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--mu)">Belum ada transaksi pembelian</td></tr>`}</tbody>
+      </table>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+        <span>Total ${group.lots.length} transaksi beli</span>
+        <span><b>Total Dibeli: ${group.totalBoughtQty}</b> · <b>Sisa Sekarang: ${group.totalQty}</b></span>
+      </div>`;
+  } else {
+    const rows=(group.sales||[]).map(s=>`
+      <tr>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)">${s.date||'—'}</td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)">${fRp(s.sell_price||0)}</td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)">${s.qty||0}</td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)"><b style="color:var(--ok)">${fRp(s.total_sell||0)}</b></td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)">${s.note?esc(s.note):'—'}</td>
+        <td style="padding:6px 8px;border-top:1px solid var(--bd)"><button class="btn-sm bd" onclick="delInvSale('${s.id}')">Hapus</button></td>
+      </tr>`).join('');
+    body.innerHTML=tabsHtml+`
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <thead><tr style="background:var(--bg)">${th('Tanggal Jual')}${th('Harga Jual/Unit')}${th('Qty')}${th('Total Dijual')}${th('Note')}${th('Aksi')}</tr></thead>
+        <tbody>${rows||`<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--mu)">Belum ada transaksi penjualan</td></tr>`}</tbody>
+      </table>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+        <span>Total ${(group.sales||[]).length} transaksi jual</span>
+        <span><b>Total Terjual: ${group.soldQty}</b> unit · <b style="color:var(--ok)">Hasil Jual: ${fRp(group.totalSellRevenue||0)}</b></span>
+      </div>`;
+  }
 }
 function closeInvDetailModal(){
   document.getElementById('inv-detail-mo').classList.remove('open');
@@ -314,20 +461,25 @@ function delInvLot(id){
       await sbD('investments',id);
       DB.inv=DB.inv.filter(x=>x.id!==id);
       showToast('🗑️ Transaksi dihapus');
-      closeInvDetailModal();
       doSnap().catch(()=>{});updateAll();reRender();
+      if(document.getElementById('inv-detail-mo')?.classList.contains('open')){
+        const group=getInvGroups().find(g=>g.name===detailTargetName);
+        if(group)renderDetailTabs(group);else closeInvDetailModal();
+      }
     }catch(e){ showToast('❌ '+e.message); }
   };
   document.getElementById('cfm').classList.add('open');
 }
 function delInvGroup(name){
   document.getElementById('cfm-tt').textContent='Hapus Investasi Ini?';
-  document.getElementById('cfm-mg').textContent=`Semua transaksi pembelian "${name}" (semua lot) akan dihapus permanen.`;
+  document.getElementById('cfm-mg').textContent=`Semua transaksi pembelian & penjualan "${name}" akan dihapus permanen.`;
   cfmCb=async()=>{
     try{
-      const ids=DB.inv.filter(x=>x.name===name).map(x=>x.id);
-      await Promise.all(ids.map(id=>sbD('investments',id)));
+      const buyIds=DB.inv.filter(x=>x.name===name).map(x=>x.id);
+      const sellIds=INV_SALES.filter(x=>x.name===name).map(x=>x.id);
+      await Promise.all([...buyIds.map(id=>sbD('investments',id)),...sellIds.map(id=>sbD('investment_sales',id))]);
       DB.inv=DB.inv.filter(x=>x.name!==name);
+      INV_SALES=INV_SALES.filter(x=>x.name!==name);
       showToast('🗑️ '+name+' dihapus');
       doSnap().catch(()=>{});updateAll();reRender();
     }catch(e){ showToast('❌ '+e.message); }
