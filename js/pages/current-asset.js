@@ -2,10 +2,7 @@
 
 RENDER_MAP['t-ca-detail']=()=>renderCADetailTable();
 
-let caSummaryFilter={from:null,to:null};
-
 function rCA(){
-  renderCASummaryCards();
   const data=sortArr(DB.ca,'t-ca');
   mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal Update','Note','Aksi'],
     data.map((r,i)=>`<tr>
@@ -20,34 +17,6 @@ function rCA(){
         <button class="btn-sm bd" onclick="delR('ca','${r.id}','${escQ(r.name)}')">Hapus</button>
       </td>
     </tr>`));
-}
-
-// ══════════════════════════════════════════════════════════════
-// POIN 3: 2 kartu ringkasan Total Pemasukan & Total Pengeluaran (semua Current
-// Asset digabung) + filter tanggal, di atas tabel Current Asset.
-// ══════════════════════════════════════════════════════════════
-function applyCASummaryFilter(){
-  const from=document.getElementById('ca-sum-from')?.value||null;
-  const to=document.getElementById('ca-sum-to')?.value||null;
-  caSummaryFilter={from,to};
-  renderCASummaryCards();
-  showToast('✅ Filter diterapkan');
-}
-function renderCASummaryCards(){
-  const elInc=document.getElementById('ca-sum-inc');
-  if(!elInc)return; // elemen belum ada di DOM (halaman belum dirender)
-  const {from,to}=caSummaryFilter;
-  const incArr=(DB.inc||[]).filter(x=>(!from||x.date>=from)&&(!to||x.date<=to));
-  const expArr=(DB.exp||[]).filter(x=>(!from||x.date>=from)&&(!to||x.date<=to));
-  const totalInc=incArr.reduce((a,x)=>a+(+x.amount||0),0);
-  const totalExp=expArr.reduce((a,x)=>a+(+x.amount||0),0);
-  setText('ca-sum-inc',fRp(totalInc));
-  setText('ca-sum-exp',fRp(totalExp));
-  const label=(from||to)?`${from||'awal'} s/d ${to||'sekarang'}`:'Semua waktu';
-  const noteInc=document.getElementById('ca-sum-inc-note');
-  const noteExp=document.getElementById('ca-sum-exp-note');
-  if(noteInc){noteInc.className='sc-chg neu';noteInc.textContent=label;}
-  if(noteExp){noteExp.className='sc-chg neu';noteExp.textContent=label;}
 }
 
 // ══════════════════════════════════════════════════════════════
