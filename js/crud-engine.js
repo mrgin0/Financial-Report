@@ -270,41 +270,14 @@ async function saveM(){
     pay={name,category:getCatValue(),amount,date,note:noteVal};
   }
   else if(mType==='ar'){
+    // Poin 3: form Edit sekarang cuma ngubah data inti Piutang (Nama, Total Tagihan,
+    // Status, Tanggal, Jatuh Tempo, Note) — logic "Tambah Pembayaran" udah DIPINDAH
+    // ke modal terpisah (openPayAR/savePayAR di cash-equivalent.js), gak nyentuh saveM lagi.
     const amount=parseFloat(document.getElementById('f-amt')?.value)||0;
     const status=document.getElementById('f-sts')?.value||'Outstanding';
     const due_date=document.getElementById('f-due')?.value||null;
     if(mId){
-      const existingPaid=parseFloat(document.getElementById('f-paid-total')?.value)||0;
-      const addPayment=parseFloat(document.getElementById('f-paid-add')?.value)||0;
-      const via=document.getElementById('f-via')?.value||'';
-      const payDate=document.getElementById('f-pay-date')?.value||td();
-      const newPaid=Math.min(existingPaid+addPayment,amount);
-      let newStatus=status;
-      if(newPaid>=amount&&amount>0)newStatus='Paid';
-      else if(newPaid>0&&newPaid<amount)newStatus='Partial';
-
-      pay={name,amount,date,due_date,status:newStatus,paid:newPaid,payment_via:via||null,note:noteVal};
-
-      // Insert payment_history record (real table, not JSON)
-      if(addPayment>0){
-        try{
-          await sbI('payment_history',{
-            ar_id:mId,
-            amount:addPayment,
-            paid_date:payDate,
-            via:via||null,
-            paid_total:newPaid,
-            sisa:Math.max(0,amount-newPaid)
-          });
-          DB.payHist=await sbG('payment_history','&order=paid_date.asc');
-        }catch(e){console.warn('payment_history insert failed:',e.message);}
-      }
-
-      // Update CA balance if via selected
-      if(addPayment>0&&via){
-        const caItem=DB.ca.find(x=>x.name===via);
-        if(caItem){await sbU('current_assets',caItem.id,{amount:(+(caItem.amount||0))+addPayment,date:payDate});DB.ca=await sbG('current_assets');}
-      }
+      pay={name,amount,date,due_date,status,note:noteVal};
     } else {
       pay={name,amount,date,due_date,status,paid:0,note:noteVal};
     }
