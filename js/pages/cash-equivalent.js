@@ -15,6 +15,7 @@ function rAR(){
         <td><button class="btn-sm" style="background:#ede9fe;color:#7c3aed" onclick="showPayHistory('${r.id}')">📋 Detail</button></td>
         ${noteCell(r.note)}
         <td style="white-space:nowrap">
+          <button class="btn-sm" style="background:#dcfce7;color:#15803d" onclick="openPayAR('${r.id}')" ${sisa<=0?'disabled':''}>💰 Bayar</button>
           <button class="btn-sm be" onclick="openE('ar','${r.id}')">Edit</button>
           <button class="btn-sm bd" onclick="delR('ar','${r.id}','${escQ(r.name)}')">Hapus</button>
         </td>
@@ -41,7 +42,11 @@ function rII(){
         <td style="font-weight:700;color:${isUp?'#059669':'#dc2626'}">${isUp?'+':''}${tumbuhPct}%</td>
         <td>${updAt}</td>
         ${noteCell(r.note)}
-        <td><button class="btn-sm be" onclick="openE('ii','${r.id}')">Edit</button><button class="btn-sm bd" onclick="delR('ii','${r.id}','${escQ(r.name)}')">Hapus</button></td>
+        <td style="white-space:nowrap">
+          <button class="btn-sm" style="background:#dcfce7;color:#15803d" onclick="openSellII('${r.id}')" ${qty<=0?'disabled':''}>💰 Jual</button>
+          <button class="btn-sm be" onclick="openE('ii','${r.id}')">Edit</button>
+          <button class="btn-sm bd" onclick="delR('ii','${r.id}','${escQ(r.name)}')">Hapus</button>
+        </td>
       </tr>`;
     }));
 }
@@ -58,37 +63,14 @@ function buildARFormAdd(){
 </div>
 <div class="fg"><label>Note (opsional)</label><input id="f-note" value="" placeholder="Catatan tambahan..."></div>`;
 }
+// Poin 3: form Edit sekarang cuma data inti Piutang. Bagian "Tambah Pembayaran"
+// (dulu nempel di sini) udah dipindah ke modal terpisah lewat tombol "💰 Bayar" di tabel.
 function buildARFormEdit(r){
   const paid=+(r.paid||0);
   const total=+(r.amount||0);
   const sisa=Math.max(0,total-paid);
-  const caNames=DB.ca.map(x=>x.name);
-  const logs=getPayHistFor(r.id);
-  const historyHTML=logs.length?`
-<div style="margin-top:8px">
-  <div style="font-size:9.5px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px">📜 Riwayat Pembayaran</div>
-  <div style="overflow-x:auto;border-radius:7px;border:1px solid var(--bd)">
-    <table style="width:100%;border-collapse:collapse;font-size:10.5px">
-      <thead><tr style="background:var(--bg)">
-        <th style="padding:5px 8px;text-align:left;color:var(--mu);font-weight:700">Tgl Bayar</th>
-        <th style="padding:5px 8px;text-align:right;color:var(--mu);font-weight:700">Bayar</th>
-        <th style="padding:5px 8px;text-align:right;color:var(--mu);font-weight:700">Total Bayar</th>
-        <th style="padding:5px 8px;text-align:right;color:var(--mu);font-weight:700">Sisa</th>
-        <th style="padding:5px 8px;text-align:left;color:var(--mu);font-weight:700">Via</th>
-      </tr></thead>
-      <tbody>${logs.map(l=>`<tr style="border-top:1px solid var(--bd)">
-        <td style="padding:5px 8px">${l.paid_date}</td>
-        <td style="padding:5px 8px;text-align:right;color:var(--ok);font-weight:700">${fRp(l.amount)}</td>
-        <td style="padding:5px 8px;text-align:right">${fRp(l.paid_total)}</td>
-        <td style="padding:5px 8px;text-align:right;color:var(--er)">${fRp(l.sisa)}</td>
-        <td style="padding:5px 8px">${l.via||'—'}</td>
-      </tr>`).join('')}</tbody>
-    </table>
-  </div>
-</div>`:'';
-
   return`
-<div class="fg"><label>Nama Penghutang</label><input id="f-nm" value="${r.name||''}"></div>
+<div class="fg"><label>Nama Penghutang</label><input id="f-nm" value="${esc(r.name||'')}"></div>
 <div class="fr">
   <div class="fg"><label>Total Tagihan (Rp)</label><input id="f-amt" type="number" min="0" value="${total}"></div>
   <div class="fg"><label>Status</label><select id="f-sts">
@@ -99,34 +81,13 @@ function buildARFormEdit(r){
   <div class="fg"><label>Tanggal Awal Hutang</label><input id="f-dt" type="date" value="${r.date||td()}"></div>
   <div class="fg"><label>Jatuh Tempo</label><input id="f-due" type="date" value="${r.due_date||''}"></div>
 </div>
-<div style="background:var(--bg);border-radius:9px;padding:12px;margin-top:4px">
-  <div style="font-size:10px;font-weight:800;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">💳 Tambah Pembayaran</div>
-  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:11.5px;flex-wrap:wrap">
-    <span style="color:var(--mu)">Sudah bayar:</span>
-    <b style="color:var(--ok)">${fRp(paid)}</b>
-    <span style="color:var(--mu)">Sisa:</span>
-    <b style="color:var(--er)">${fRp(sisa)}</b>
-  </div>
-  <div class="fr">
-    <div class="fg"><label>Jumlah Pembayaran (Rp)</label>
-      <input id="f-paid-add" type="number" min="0" placeholder="0" value="0" oninput="calcNewPaid()">
-    </div>
-    <div class="fg"><label>Tanggal Pembayaran</label>
-      <input id="f-pay-date" type="date" value="${td()}">
-    </div>
-  </div>
-  <div class="fg"><label>Via Pembayaran</label>
-    <select id="f-via">
-      <option value="">— Tidak ada —</option>
-      ${caNames.map(n=>`<option value="${n}">${n}</option>`).join('')}
-    </select>
-  </div>
-  <div id="paid-preview" style="font-size:10.5px;color:var(--mu);margin-top:4px;padding:5px 8px;background:var(--card);border-radius:6px;min-height:24px"></div>
-  <input type="hidden" id="f-paid-total" value="${paid}">
-  ${historyHTML}
+<div class="fg" style="background:var(--bg);border-radius:8px;padding:10px 12px;font-size:11.5px;color:var(--mu)">
+  Sudah Bayar: <b style="color:var(--ok)">${fRp(paid)}</b> &nbsp;·&nbsp; Sisa: <b style="color:var(--er)">${fRp(sisa)}</b>
+  <div style="font-size:10px;margin-top:4px">Buat nambah pembayaran, tutup form ini terus klik tombol <b>💰 Bayar</b> di tabel.</div>
 </div>
 <div class="fg" style="margin-top:9px"><label>Note (opsional)</label><input id="f-note" value="${esc(r.note||'')}" placeholder="Catatan tambahan..."></div>`;
 }
+// (dipertahankan apa adanya — masih dipakai form Edit Hutang di hutang.js)
 function calcNewPaid(){
   const add=parseFloat(document.getElementById('f-paid-add')?.value)||0;
   const existing=parseFloat(document.getElementById('f-paid-total')?.value)||0;
@@ -169,6 +130,80 @@ function showPayHistory(arId){
   document.getElementById('phist-body').innerHTML=rows||`<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--mu);font-style:italic">Belum ada riwayat pembayaran</td></tr>`;
   document.getElementById('phist-mo').classList.add('open');
 }
+
+// ══════════════════════════════════════════════════════════════
+// POIN 3: modal "Bayar" berdiri sendiri (terpisah dari Edit Piutang)
+// ══════════════════════════════════════════════════════════════
+let payARTarget=null;
+function openPayAR(id){
+  const r=DB.ar.find(x=>x.id===id);
+  if(!r){showToast('❌ Data tidak ditemukan');return;}
+  const sisa=Math.max(0,(+(r.amount||0))-(+(r.paid||0)));
+  if(sisa<=0){showToast('✅ Piutang ini udah lunas');return;}
+  payARTarget=id;
+  document.getElementById('ar-pay-title').textContent='💰 Bayar: '+r.name;
+  document.getElementById('ar-pay-body').innerHTML=buildPayARForm(r);
+  document.getElementById('ar-pay-mo').classList.add('open');
+}
+function closePayARModal(){
+  document.getElementById('ar-pay-mo').classList.remove('open');
+  payARTarget=null;
+}
+function buildPayARForm(r){
+  const paid=+(r.paid||0);
+  const total=+(r.amount||0);
+  const sisa=Math.max(0,total-paid);
+  return`
+<div class="fg" style="font-size:12px;color:var(--mu)">
+  <b style="color:var(--txt)">${esc(r.name)}</b><br>
+  Total Tagihan: <b>${fRp(total)}</b> · Sudah Bayar: <b style="color:var(--ok)">${fRp(paid)}</b> · Sisa: <b style="color:var(--er)">${fRp(sisa)}</b>
+</div>
+<div class="fr" style="margin-top:8px">
+  <div class="fg"><label>Jumlah Pembayaran (Rp)</label><input id="pay-add" type="number" min="0" max="${sisa}" value="0" oninput="calcPayARPreview(${total},${paid})"></div>
+  <div class="fg"><label>Tanggal Pembayaran</label><input id="pay-date" type="date" value="${td()}"></div>
+</div>
+<div class="fg"><label>Via Pembayaran (Current Asset)</label>${buildMethodSelect('','pay-via')}</div>
+<div id="pay-preview" style="font-size:10.5px;color:var(--mu);margin-top:4px;padding:5px 8px;background:var(--bg);border-radius:6px;min-height:24px"></div>`;
+}
+function calcPayARPreview(total,paid){
+  const add=parseFloat(document.getElementById('pay-add')?.value)||0;
+  const payDate=document.getElementById('pay-date')?.value||td();
+  const newTotal=Math.min(paid+add,total);
+  const el=document.getElementById('pay-preview');
+  if(!el)return;
+  if(add>0)el.innerHTML=`✅ Akan terbayar <b style="color:var(--ok)">${fRp(add)}</b> pada <b>${payDate}</b> → Total: <b>${fRp(newTotal)}</b> | Sisa: <b style="color:var(--er)">${fRp(Math.max(0,total-newTotal))}</b>`;
+  else el.innerHTML='';
+}
+async function savePayAR(){
+  if(!payARTarget)return;
+  const r=DB.ar.find(x=>x.id===payARTarget);
+  if(!r){showToast('❌ Data tidak ditemukan');return;}
+  const total=+(r.amount||0);
+  const existingPaid=+(r.paid||0);
+  const addPayment=parseFloat(document.getElementById('pay-add')?.value)||0;
+  const via=document.getElementById('pay-via')?.value||'';
+  const payDate=document.getElementById('pay-date')?.value||td();
+  if(addPayment<=0){showToast('⚠️ Isi jumlah pembayaran');return;}
+  if(addPayment>(total-existingPaid)){showToast('⚠️ Jumlah melebihi sisa tagihan');return;}
+  const newPaid=Math.min(existingPaid+addPayment,total);
+  let newStatus=r.status;
+  if(newPaid>=total&&total>0)newStatus='Paid';
+  else if(newPaid>0&&newPaid<total)newStatus='Partial';
+  try{
+    await sbU('accounts_receivable',payARTarget,{paid:newPaid,status:newStatus});
+    await sbI('payment_history',{ar_id:payARTarget,amount:addPayment,paid_date:payDate,via:via||null,paid_total:newPaid,sisa:Math.max(0,total-newPaid)});
+    DB.payHist=await sbG('payment_history','&order=paid_date.asc');
+    if(via){
+      await applyAssetDelta(via,addPayment);
+      DB.ca=await sbG('current_assets');
+    }
+    DB.ar=await sbG('accounts_receivable');
+    closePayARModal();
+    doSnap().catch(()=>{});updateAll();reRender();
+    showToast('✅ Pembayaran tercatat'+(via?' & saldo '+via+' bertambah':''));
+  }catch(e){ showToast('❌ '+e.message); }
+}
+
 function buildIIForm(r,isEdit){
   const buyPrice  = r ? (+(r.buy_price||r.amount||0)) : 0;
   const curPrice  = r ? (+(r.current_price||buyPrice)) : 0;
@@ -182,4 +217,80 @@ function buildIIForm(r,isEdit){
 <div class="fg"><label>Tanggal Beli</label><input id="f-dt" type="date" value="${r?r.date:td()}"></div>
 ${isEdit?`<div class="fg"><label>Harga Sekarang per Unit (Rp)</label><input id="f-cur-price" type="number" min="0" value="${curPrice}"></div>`:''}
 <div class="fg"><label>Note (opsional)</label><input id="f-note" value="${r?esc(r.note||''):''}" placeholder="Catatan tambahan..."></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// POIN 1: Jual Inventory — kurangin qty, kalau abis baris ikut kehapus,
+// hasil jual (opsional) otomatis masuk ke saldo Current Asset yang dipilih.
+// ══════════════════════════════════════════════════════════════
+let sellIITarget=null;
+function openSellII(id){
+  const item=DB.ii.find(x=>x.id===id);
+  if(!item){showToast('❌ Data tidak ditemukan');return;}
+  const qty=+(item.qty||0);
+  if(qty<=0){showToast('⚠️ Qty item ini 0, gak ada yang bisa dijual');return;}
+  sellIITarget={id,name:item.name,availableQty:qty,curPrice:+(item.current_price||item.buy_price||0)};
+  document.getElementById('ii-sell-title').textContent='💰 Jual: '+item.name;
+  document.getElementById('ii-sell-body').innerHTML=buildSellIIForm(sellIITarget);
+  document.getElementById('ii-sell-mo').classList.add('open');
+}
+function closeSellIIModal(){document.getElementById('ii-sell-mo').classList.remove('open');sellIITarget=null;}
+function buildSellIIForm(t){
+  return`
+<div class="fg"><label>Nama Item</label><input value="${esc(t.name)}" disabled style="opacity:.7"></div>
+<div class="fg" style="font-size:11px;color:var(--mu);margin-top:-6px">Sisa qty: <b style="color:var(--txt)">${t.availableQty}</b></div>
+<div class="fr">
+  <div class="fg"><label>Jumlah Dijual</label><input id="ii-sell-qty" type="number" min="0" max="${t.availableQty}" step="any" value="0" oninput="syncIISellTotal()"></div>
+  <div class="fg"><label>Harga Jual per Unit (Rp)</label><input id="ii-sell-price" type="number" min="0" value="${t.curPrice}" oninput="syncIISellTotal()"></div>
+</div>
+<div class="fg">
+  <label>Total Harga Dijual (Rp) <span style="font-size:9px;color:var(--mu);font-weight:400">— otomatis atau edit manual</span></label>
+  <input id="ii-sell-total" type="number" min="0" value="0" style="font-weight:700;color:var(--ok)" oninput="markIISellManualTotal()">
+  <div id="ii-sell-total-note" style="font-size:10px;color:var(--mu);margin-top:2px">Dihitung otomatis dari Harga × Qty</div>
+</div>
+<div class="fg"><label>Tanggal Jual</label><input id="ii-sell-dt" type="date" value="${td()}"></div>
+<div class="fg"><label>Uang Hasil Jual Masuk Ke</label>${buildMethodSelect('','ii-sell-fund-to')}</div>
+<div class="fg"><label>Note (opsional)</label><input id="ii-sell-note" value="" placeholder="Catatan tambahan..."></div>
+<input type="hidden" id="ii-sell-manual-total" value="0">`;
+}
+function syncIISellTotal(){
+  if(document.getElementById('ii-sell-manual-total')?.value==='1')return;
+  const p=parseFloat(document.getElementById('ii-sell-price')?.value)||0;
+  const q=parseFloat(document.getElementById('ii-sell-qty')?.value)||0;
+  const el=document.getElementById('ii-sell-total');
+  if(el)el.value=(p*q).toFixed(0);
+}
+function markIISellManualTotal(){
+  const el=document.getElementById('ii-sell-manual-total');if(el)el.value='1';
+  const note=document.getElementById('ii-sell-total-note');if(note)note.textContent='✏️ Nilai manual';
+}
+async function saveSellII(){
+  if(!sellIITarget)return;
+  const {id,name,availableQty}=sellIITarget;
+  const qty=parseFloat(document.getElementById('ii-sell-qty')?.value)||0;
+  const sellPrice=parseFloat(document.getElementById('ii-sell-price')?.value)||0;
+  const totalSell=parseFloat(document.getElementById('ii-sell-total')?.value)||(sellPrice*qty);
+  const date=document.getElementById('ii-sell-dt')?.value||td();
+  const note=(document.getElementById('ii-sell-note')?.value||'').trim();
+  const fundTo=document.getElementById('ii-sell-fund-to')?.value||'';
+  if(qty<=0){showToast('⚠️ Isi jumlah yang dijual');return;}
+  if(qty>availableQty){showToast('⚠️ Jumlah dijual melebihi sisa qty ('+availableQty+')');return;}
+  try{
+    await sbI('asset_sales',{source_type:'ii',source_id:id,name,qty,sell_price:sellPrice,total_sell:totalSell,date,note,fund_to:fundTo||null});
+    const item=DB.ii.find(x=>x.id===id);
+    const remainingQty=availableQty-qty;
+    if(remainingQty<=0){
+      await sbD('inventory',id);
+      DB.ii=DB.ii.filter(x=>x.id!==id);
+    } else {
+      const buyPrice=+(item.buy_price||item.amount||0);
+      const newAmount=buyPrice*remainingQty;
+      await sbU('inventory',id,{qty:remainingQty,amount:newAmount});
+      DB.ii=await sbG('inventory');
+    }
+    if(fundTo){await applyAssetDelta(fundTo,totalSell);DB.ca=await sbG('current_assets');}
+    closeSellIIModal();
+    doSnap().catch(()=>{});updateAll();reRender();
+    showToast('✅ Penjualan '+name+' dicatat'+(fundTo?' & saldo '+fundTo+' bertambah':''));
+  }catch(e){ showToast('❌ '+e.message); }
 }
