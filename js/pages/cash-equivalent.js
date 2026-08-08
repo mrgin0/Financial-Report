@@ -111,13 +111,29 @@ function calcNewPaid(){
 function getPayHistFor(arId){
   return DB.payHist.filter(p=>p.ar_id===arId).sort((a,b)=>(a.paid_date||'').localeCompare(b.paid_date||''));
 }
+let currentPhistArId=null;
+let phistPageState={size:10,page:1};
 function showPayHistory(arId){
+  currentPhistArId=arId;
+  phistPageState={size:10,page:1};
+  renderPayHistoryTable();
+  document.getElementById('phist-mo').classList.add('open');
+}
+function renderPayHistoryTable(){
+  const arId=currentPhistArId;
   const r=DB.ar.find(x=>x.id===arId);
   if(!r)return;
   const logs=getPayHistFor(arId);
   const total=+(r.amount||0);
-  const rows=logs.map((l,i)=>`<tr style="border-bottom:1px solid var(--bd)">
-    <td style="padding:8px 10px">${i+1}</td>
+  const ps=phistPageState;
+  const totalItems=logs.length;
+  const size=ps.size==='all'?totalItems||1:ps.size;
+  const totalPages=Math.max(1,Math.ceil(totalItems/size));
+  if(ps.page>totalPages)ps.page=totalPages||1;
+  const start=(ps.page-1)*size;
+  const pageLogs=ps.size==='all'?logs:logs.slice(start,start+size);
+  const rows=pageLogs.map((l,i)=>`<tr style="border-bottom:1px solid var(--bd)">
+    <td style="padding:8px 10px">${start+i+1}</td>
     <td style="padding:8px 10px;font-weight:700">${fRp(total)}</td>
     <td style="padding:8px 10px;color:var(--ok);font-weight:700">${fRp(l.amount)}</td>
     <td style="padding:8px 10px">${l.paid_date||'—'}</td>
@@ -128,7 +144,51 @@ function showPayHistory(arId){
   document.getElementById('phist-title').textContent=r.name;
   document.getElementById('phist-meta').innerHTML=`<span class="badge bb">Hutang Awal: ${fRp(total)}</span> &nbsp; <span class="badge bk">Tgl Hutang: ${r.date||'—'}</span> &nbsp; <span class="badge ${+(r.paid||0)>0?'by':'bb'}">Terbayar: ${fRp(r.paid||0)}</span> &nbsp; <span class="badge br">Sisa: ${fRp(Math.max(0,total-(+(r.paid||0))))}</span>`;
   document.getElementById('phist-body').innerHTML=rows||`<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--mu);font-style:italic">Belum ada riwayat pembayaran</td></tr>`;
-  document.getElementById('phist-mo').classList.add('open');
+  renderPhistPager(totalItems);
+}
+// Nyisipin div pager tepat setelah <table> yang isinya #phist-body, sekali doang
+// (idempotent) — gak perlu tau/ubah struktur modal di index.html sama sekali.
+function ensurePhistPagerEl(){
+  let pager=document.getElementById('phist-pager');
+  if(!pager){
+    const tbody=document.getElementById('phist-body');
+    const table=tbody?.closest('table');
+    if(!table)return null;
+    pager=document.createElement('div');
+    pager.id='phist-pager';
+    pager.className='tbl-pager';
+    table.insertAdjacentElement('afterend',pager);
+  }
+  return pager;
+}
+function renderPhistPager(totalItems){
+  const pager=ensurePhistPagerEl();
+  if(!pager)return;
+  const ps=phistPageState;
+  if(totalItems===0){pager.innerHTML='';return;}
+  const size=ps.size==='all'?totalItems||1:ps.size;
+  const totalPages=Math.max(1,Math.ceil(totalItems/size));
+  const sizes=[10,50,'all'];
+  pager.innerHTML=`
+    <div class="pager-info">Menampilkan ${ps.size==='all'?totalItems:Math.min(ps.size,totalItems-(ps.page-1)*ps.size)} dari ${totalItems} data</div>
+    <div class="pager-controls">
+      <select class="pager-size" onchange="changePhistPageSize(this.value)">
+        ${sizes.map(s=>`<option value="${s}" ${ps.size==s?'selected':''}>${s==='all'?'Semua':s+' baris'}</option>`).join('')}
+      </select>
+      ${ps.size!=='all'?`
+      <button class="pager-btn" onclick="changePhistPage(${ps.page-1})" ${ps.page<=1?'disabled':''}>‹</button>
+      <span class="pager-num">${ps.page} / ${totalPages}</span>
+      <button class="pager-btn" onclick="changePhistPage(${ps.page+1})" ${ps.page>=totalPages?'disabled':''}>›</button>`:''}
+    </div>`;
+}
+function changePhistPageSize(val){
+  phistPageState.size=val==='all'?'all':parseInt(val);
+  phistPageState.page=1;
+  renderPayHistoryTable();
+}
+function changePhistPage(page){
+  phistPageState.page=Math.max(1,page);
+  renderPayHistoryTable();
 }
 
 // ══════════════════════════════════════════════════════════════
