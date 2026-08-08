@@ -32,13 +32,15 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.approved == true && request.resource.data.usedBy == request.auth.uid);
     }
 
-    // Semua data keuangan (Current Asset, Income, Expenses, Debts, Investment, dst) —
-    // wajib login DAN dokumennya harus punya field uid == uid yang lagi login,
-    // KECUALI master yang juga boleh baca/hapus data akun lain (buat fitur Hapus Akun & Backup)
+    // Semua data keuangan (Current Asset, Income, Expenses, Debts, Investment, Inventory/PPE/
+    // Intangible + riwayat penjualannya, dst) — wajib login DAN dokumennya harus punya field
+    // uid == uid yang lagi login, KECUALI master yang juga boleh baca/hapus data akun lain
+    // (buat fitur Hapus Akun & Backup di Admin)
     match /{collection}/{docId} {
       allow read, update, delete: if collection in [
         'current_assets','accounts_receivable','inventory',
         'property_plant_equipment','intangible_assets','investments','investment_sales',
+        'asset_sales',
         'income','expenses','debts','debt_payments',
         'payment_history','laporan_snapshots'
       ] && isSignedIn() && (resource.data.uid == request.auth.uid || isMaster());
@@ -46,6 +48,7 @@ service cloud.firestore {
       allow create: if collection in [
         'current_assets','accounts_receivable','inventory',
         'property_plant_equipment','intangible_assets','investments','investment_sales',
+        'asset_sales',
         'income','expenses','debts','debt_payments',
         'payment_history','laporan_snapshots'
       ] && isSignedIn() && request.resource.data.uid == request.auth.uid;
