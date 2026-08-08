@@ -1,6 +1,11 @@
 // Halaman Current Asset
 
+RENDER_MAP['t-ca-detail']=()=>renderCADetailTable();
+
+let caSummaryFilter={from:null,to:null};
+
 function rCA(){
+  renderCASummaryCards();
   const data=sortArr(DB.ca,'t-ca');
   mkTbl('t-ca',['#','Nama','Kategori','Jumlah','Tanggal Update','Note','Aksi'],
     data.map((r,i)=>`<tr>
@@ -18,12 +23,40 @@ function rCA(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// POIN 2: Detail Current Asset — riwayat gabungan uang masuk/keluar
-// dari semua sumber: Pemasukan, Pengeluaran, bayar Piutang diterima,
-// bayar Hutang, dana masuk dari Hutang baru, jual Investasi, jual aset
-// (Inventory/PPE/Intangible).
+// POIN 3: 2 kartu ringkasan Total Pemasukan & Total Pengeluaran (semua Current
+// Asset digabung) + filter tanggal, di atas tabel Current Asset.
+// ══════════════════════════════════════════════════════════════
+function applyCASummaryFilter(){
+  const from=document.getElementById('ca-sum-from')?.value||null;
+  const to=document.getElementById('ca-sum-to')?.value||null;
+  caSummaryFilter={from,to};
+  renderCASummaryCards();
+  showToast('✅ Filter diterapkan');
+}
+function renderCASummaryCards(){
+  const elInc=document.getElementById('ca-sum-inc');
+  if(!elInc)return; // elemen belum ada di DOM (halaman belum dirender)
+  const {from,to}=caSummaryFilter;
+  const incArr=(DB.inc||[]).filter(x=>(!from||x.date>=from)&&(!to||x.date<=to));
+  const expArr=(DB.exp||[]).filter(x=>(!from||x.date>=from)&&(!to||x.date<=to));
+  const totalInc=incArr.reduce((a,x)=>a+(+x.amount||0),0);
+  const totalExp=expArr.reduce((a,x)=>a+(+x.amount||0),0);
+  setText('ca-sum-inc',fRp(totalInc));
+  setText('ca-sum-exp',fRp(totalExp));
+  const label=(from||to)?`${from||'awal'} s/d ${to||'sekarang'}`:'Semua waktu';
+  const noteInc=document.getElementById('ca-sum-inc-note');
+  const noteExp=document.getElementById('ca-sum-exp-note');
+  if(noteInc){noteInc.className='sc-chg neu';noteInc.textContent=label;}
+  if(noteExp){noteExp.className='sc-chg neu';noteExp.textContent=label;}
+}
+
+// ══════════════════════════════════════════════════════════════
+// POIN 2 (Poin 1 sebelumnya): Detail Current Asset — riwayat gabungan
+// uang masuk/keluar, sekarang pakai tabel mkTbl (pagination 10/50/all,
+// default 10) + filter tanggal custom (Dari–Sampai).
 // ══════════════════════════════════════════════════════════════
 let caDetailTarget=null;
+let caDetailFilter={from:null,to:null};
 let ASSET_SALES=[];
 let assetSalesLoaded=false;
 async function loadAssetSales(force){
@@ -93,40 +126,47 @@ async function openCADetail(caName){
   await loadInvSales();
   await loadAssetSales();
   caDetailTarget=caName;
-  const items=buildCATransactions(caName);
-  const totalMasuk=items.filter(x=>x.type==='masuk').reduce((a,x)=>a+x.amount,0);
-  const totalKeluar=items.filter(x=>x.type==='keluar').reduce((a,x)=>a+x.amount,0);
+  caDetailFilter={from:null,to:null};
+  const fFrom=document.getElementById('ca-detail-from');if(fFrom)fFrom.value='';
+  const fTo=document.getElementById('ca-detail-to');if(fTo)fTo.value='';
+  if(PAGE_STATE['t-ca-detail'])PAGE_STATE['t-ca-detail']={size:10,page:1};
   document.getElementById('ca-detail-title').textContent='📋 Riwayat: '+caName;
-  const rows=items.map(it=>`<tr>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)">${it.date||'—'}</td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)">${esc(it.desc)}</td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)"><span class="dbadge ${it.type==='masuk'?'aman':'jt'}">${it.type==='masuk'?'Masuk':'Keluar'}</span></td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd);text-align:right"><b style="color:${it.type==='masuk'?'var(--ok)':'var(--er)'}">${it.type==='masuk'?'+':'-'}${fRp(it.amount)}</b></td>
-      <td style="padding:6px 8px;border-top:1px solid var(--bd)">${caDetailDelBtn(it)}</td>
-    </tr>`).join('');
-  document.getElementById('ca-detail-body').innerHTML=`
-    <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;font-size:11.5px">
-      <thead><tr style="background:var(--bg)">
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Tanggal</th>
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Keterangan</th>
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Tipe</th>
-        <th style="padding:6px 8px;text-align:right;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Nominal</th>
-        <th style="padding:6px 8px;text-align:left;font-size:9.5px;text-transform:uppercase;color:var(--mu)">Aksi</th>
-      </tr></thead>
-      <tbody>${rows||`<tr><td colspan="5" style="padding:14px;text-align:center;color:var(--mu)">Belum ada riwayat transaksi</td></tr>`}</tbody>
-    </table>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
-      <span style="color:var(--ok)">Total Masuk: <b>${fRp(totalMasuk)}</b></span>
-      <span style="color:var(--er)">Total Keluar: <b>${fRp(totalKeluar)}</b></span>
-    </div>
-    <div style="font-size:10px;color:var(--mu);margin-top:6px">Catatan: penyesuaian saldo manual (edit langsung nominal di Current Asset) & riwayat jual Inventory/PPE/Intangible belum bisa dihapus dari sini.</div>`;
+  renderCADetailTable();
   document.getElementById('ca-detail-mo').classList.add('open');
 }
 function closeCADetailModal(){
   document.getElementById('ca-detail-mo').classList.remove('open');
   caDetailTarget=null;
+}
+function applyCADetailFilter(){
+  const from=document.getElementById('ca-detail-from')?.value||null;
+  const to=document.getElementById('ca-detail-to')?.value||null;
+  caDetailFilter={from,to};
+  if(PAGE_STATE['t-ca-detail'])PAGE_STATE['t-ca-detail'].page=1;
+  renderCADetailTable();
+  showToast('✅ Filter diterapkan');
+}
+function renderCADetailTable(){
+  if(!caDetailTarget)return;
+  let items=buildCATransactions(caDetailTarget);
+  const {from,to}=caDetailFilter;
+  if(from||to)items=items.filter(it=>(!from||(it.date&&it.date>=from))&&(!to||(it.date&&it.date<=to)));
+
+  const totalMasuk=items.filter(x=>x.type==='masuk').reduce((a,x)=>a+x.amount,0);
+  const totalKeluar=items.filter(x=>x.type==='keluar').reduce((a,x)=>a+x.amount,0);
+  const sumEl=document.getElementById('ca-detail-summary');
+  if(sumEl)sumEl.innerHTML=`
+    <span style="color:var(--ok)">Total Masuk: <b>${fRp(totalMasuk)}</b></span>
+    <span style="color:var(--er)">Total Keluar: <b>${fRp(totalKeluar)}</b></span>`;
+
+  mkTbl('t-ca-detail',['Tanggal','Keterangan','Tipe','Nominal','Aksi'],
+    items.map(it=>`<tr>
+      <td>${it.date||'—'}</td>
+      <td>${esc(it.desc)}</td>
+      <td><span class="dbadge ${it.type==='masuk'?'aman':'jt'}">${it.type==='masuk'?'Masuk':'Keluar'}</span></td>
+      <td style="text-align:right"><b style="color:${it.type==='masuk'?'var(--ok)':'var(--er)'}">${it.type==='masuk'?'+':'-'}${fRp(it.amount)}</b></td>
+      <td>${caDetailDelBtn(it)}</td>
+    </tr>`));
 }
 
 // ── Aksi hapus per jenis transaksi (masing-masing balikin saldo CA yang bener) ──
@@ -142,7 +182,7 @@ function delCAIncome(id,name){
       DB.ca=await sbG('current_assets');
       showToast('🗑️ Pemasukan dihapus');
       doSnap().catch(()=>{});updateAll();reRender();
-      if(caDetailTarget)openCADetail(caDetailTarget);
+      if(caDetailTarget)renderCADetailTable();
     }catch(e){ showToast('❌ '+e.message); }
   };
   document.getElementById('cfm').classList.add('open');
@@ -159,7 +199,7 @@ function delCAExpense(id,name){
       DB.ca=await sbG('current_assets');
       showToast('🗑️ Pengeluaran dihapus');
       doSnap().catch(()=>{});updateAll();reRender();
-      if(caDetailTarget)openCADetail(caDetailTarget);
+      if(caDetailTarget)renderCADetailTable();
     }catch(e){ showToast('❌ '+e.message); }
   };
   document.getElementById('cfm').classList.add('open');
@@ -175,7 +215,7 @@ function delCAInvSale(id){
       if(sale&&sale.fund_to){await applyAssetDelta(sale.fund_to,-(+(sale.total_sell||0)));DB.ca=await sbG('current_assets');}
       showToast('🗑️ Riwayat penjualan dihapus');
       doSnap().catch(()=>{});updateAll();reRender();
-      if(caDetailTarget)openCADetail(caDetailTarget);
+      if(caDetailTarget)renderCADetailTable();
     }catch(e){ showToast('❌ '+e.message); }
   };
   document.getElementById('cfm').classList.add('open');
@@ -202,7 +242,7 @@ function delCAArPay(payId,arId){
       DB.payHist=await sbG('payment_history','&order=paid_date.asc');
       showToast('🗑️ Riwayat pembayaran dihapus');
       doSnap().catch(()=>{});updateAll();reRender();
-      if(caDetailTarget)openCADetail(caDetailTarget);
+      if(caDetailTarget)renderCADetailTable();
     }catch(e){ showToast('❌ '+e.message); }
   };
   document.getElementById('cfm').classList.add('open');
@@ -228,7 +268,7 @@ function delCADebtPay(payId,debtId){
       showToast('🗑️ Riwayat pembayaran dihapus');
       doSnap().catch(()=>{});updateAll();reRender();
       if(typeof renderHutangPage==='function'&&document.getElementById('page-hutang')?.classList.contains('active'))renderHutangPage();
-      if(caDetailTarget)openCADetail(caDetailTarget);
+      if(caDetailTarget)renderCADetailTable();
     }catch(e){ showToast('❌ '+e.message); }
   };
   document.getElementById('cfm').classList.add('open');
