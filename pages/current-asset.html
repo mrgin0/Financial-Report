@@ -3,3 +3,11 @@
   <div class="card"><div class="chd"><div class="ctitle" data-i="ca_desc">Kas, Bank & Penghasilan Platform</div><button class="btn-add" onclick="openM('ca')" data-i="btn_add">+ Tambah</button></div><div class="tw"><table class="ct" id="t-ca"></table></div></div>
 </div>
 
+<!-- DETAIL CURRENT ASSET (Poin 2) — riwayat gabungan uang masuk/keluar -->
+<div class="mo" id="ca-detail-mo" onclick="if(event.target===this)closeCADetailModal()">
+  <div class="modal" style="max-width:640px">
+    <h3 id="ca-detail-title">📋 Riwayat</h3>
+    <div id="ca-detail-body"></div>
+    <div class="mbtns"><button class="mb-c" onclick="closeCADetailModal()">Tutup</button></div>
+  </div>
+</div>
