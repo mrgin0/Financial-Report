@@ -6,3 +6,20 @@
   </div>
 </div>
 
+<!-- BAYAR PIUTANG (Poin 3 — dipisah dari Edit) -->
+<div class="mo" id="ar-pay-mo" onclick="if(event.target===this)closePayARModal()">
+  <div class="modal" style="max-width:440px">
+    <h3 id="ar-pay-title">💰 Bayar Piutang</h3>
+    <div id="ar-pay-body"></div>
+    <div class="mbtns"><button class="mb-c" onclick="closePayARModal()">Batal</button><button class="mb-s" onclick="savePayAR()">💾 Simpan</button></div>
+  </div>
+</div>
+
+<!-- JUAL INVENTORY (Poin 1) -->
+<div class="mo" id="ii-sell-mo" onclick="if(event.target===this)closeSellIIModal()">
+  <div class="modal" style="max-width:440px">
+    <h3 id="ii-sell-title">💰 Jual Item</h3>
+    <div id="ii-sell-body"></div>
+    <div class="mbtns"><button class="mb-c" onclick="closeSellIIModal()">Batal</button><button class="mb-s" onclick="saveSellII()">💾 Simpan</button></div>
+  </div>
+</div>
